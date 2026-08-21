@@ -5,7 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('user-facing copy never uses forbidden terms', () {
     const blob = '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
-        '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryBody} ${BalmiCopy.vasaCreditDetail}';
+        '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryBody} ${BalmiCopy.vasaCreditDetail} '
+        '${BalmiCopy.waitingGps} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied}';
     expect(blob.toLowerCase(), isNot(contains('funex')));
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));

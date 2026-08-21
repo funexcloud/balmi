@@ -55,16 +55,28 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(BalmiCopy.positioning, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
-          TrustHeader(snapshot: rec.snapshot),
+          TrustHeader(
+            snapshot: rec.snapshot,
+            waiting: rec.isRecording && (rec.snapshot?.pointCount ?? 0) == 0,
+          ),
           const SizedBox(height: 12),
           Text(BalmiCopy.trustAlways, style: Theme.of(context).textTheme.bodyMedium),
+          if (rec.lastError != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              rec.lastError!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
           const SizedBox(height: 24),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(BalmiCopy.trackMode),
             subtitle: const Text('학교·공원 트랙에서 바퀴를 셉니다'),
             value: _trackMode,
-            onChanged: (v) => setState(() => _trackMode = v),
+            onChanged: rec.isRecording
+                ? null
+                : (v) => setState(() => _trackMode = v),
           ),
           if (_trackMode)
             Padding(
@@ -78,17 +90,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   DropdownMenuItem(value: 200, child: Text('200m')),
                   DropdownMenuItem(value: null, child: Text(BalmiCopy.specFree)),
                 ],
-                onChanged: (v) => setState(() => _specM = v),
+                onChanged: rec.isRecording
+                    ? null
+                    : (v) => setState(() => _specM = v),
               ),
             ),
           FilledButton(
-            onPressed: rec.isRecording
-                ? () => _openRecording(context)
-                : () async {
-                    await rec.start(trackMode: _trackMode, trackSpecM: _specM);
-                    if (context.mounted) _openRecording(context);
-                  },
-            child: Text(rec.isRecording ? '기록 화면' : BalmiCopy.start),
+            onPressed: rec.isStarting
+                ? null
+                : rec.isRecording
+                    ? () => _openRecording(context)
+                    : () => _start(context, rec),
+            child: Text(
+              rec.isStarting
+                  ? BalmiCopy.starting
+                  : rec.isRecording
+                      ? '기록 화면'
+                      : BalmiCopy.start,
+            ),
           ),
           if (rec.isRecording) ...[
             const SizedBox(height: 8),
@@ -105,6 +124,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _start(BuildContext context, RecordingController rec) async {
+    final ok = await rec.start(trackMode: _trackMode, trackSpecM: _specM);
+    if (!context.mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(rec.lastError ?? BalmiCopy.startFailed)),
+      );
+      return;
+    }
+    _openRecording(context);
   }
 
   void _openRecording(BuildContext context) {

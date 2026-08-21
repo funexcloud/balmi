@@ -37,6 +37,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _next() async {
+    if (_index == 2) {
+      await Permission.locationWhenInUse.request();
+      await Permission.notification.request();
+    }
     if (_index < 3) {
       await _page.nextPage(
         duration: const Duration(milliseconds: 280),
@@ -125,7 +129,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: () async {
-              await Permission.locationWhenInUse.request();
+              final whenInUse = await Permission.locationWhenInUse.request();
+              if (!whenInUse.isGranted) return;
+              // Android 11+ denies "always" if requested in the same burst
+              // as when-in-use. Ask only after when-in-use is already granted.
               await Permission.locationAlways.request();
             },
             child: const Text(BalmiCopy.alwaysLocation),

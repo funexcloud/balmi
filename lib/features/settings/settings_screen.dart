@@ -16,7 +16,7 @@ class SettingsScreen extends StatelessWidget {
           const ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(BalmiCopy.about),
-            subtitle: Text('${BalmiCopy.appName} 1.0.0\n${BalmiCopy.oneLiner}'),
+            subtitle: Text('${BalmiCopy.appName} 0.1.1\n${BalmiCopy.oneLiner}'),
           ),
           const Divider(),
           const ListTile(

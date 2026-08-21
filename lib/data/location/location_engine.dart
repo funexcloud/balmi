@@ -27,6 +27,11 @@ class LocationFix {
 /// Release 1 uses [GeolocatorLocationEngine] + flutter_foreground_task instead.
 abstract class LocationEngine {
   Stream<LocationFix> get fixes;
+  String? get lastError;
+  bool get hasFix;
   Future<void> start();
   Future<void> stop();
+
+  /// Retry a one-shot fix (app resumed, still waiting on GPS).
+  Future<void> nudge();
 }

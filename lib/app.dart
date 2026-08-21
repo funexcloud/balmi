@@ -121,8 +121,13 @@ class _RecoveryGateState extends State<_RecoveryGate> {
     if (open != null) {
       final resume = await showRecoveryDialog(context, open);
       if (resume == true) {
-        await rec.resume(open.id);
+        final ok = await rec.resume(open.id);
         if (mounted) {
+          if (!ok && rec.lastError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(rec.lastError!)),
+            );
+          }
           widget.onReady();
           return;
         }

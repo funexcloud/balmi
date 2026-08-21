@@ -5,8 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../core/copy.dart';
 import '../../data/location/geolocator_location_engine.dart';
 import '../../data/location/location_engine.dart';
+import '../../data/location/recording_permissions.dart';
 import '../../data/recording/recording_pipeline.dart';
 import '../../data/recording/recording_snapshot.dart';
 import '../../data/recording/recording_task.dart';
@@ -28,10 +30,20 @@ class RecordingController extends ChangeNotifier {
   LocationEngine? _localLocation;
   CadenceEngine? _localCadence;
   StreamSubscription<LocationFix>? _localLocSub;
+  bool _starting = false;
+  bool _ticking = false;
 
   RecordingSnapshot? snapshot;
   bool get isRecording => snapshot != null;
+  bool get isStarting => _starting;
   String? lastError;
+
+  /// Honest GPS line while a session is open (waiting / error / null).
+  String? get gpsHint {
+    if (!isRecording) return lastError;
+    if ((snapshot?.pointCount ?? 0) > 0) return lastError;
+    return lastError ?? BalmiCopy.waitingGps;
+  }
 
   void attachTaskListener() {
     FlutterForegroundTask.addTaskDataCallback(_onTaskData);
@@ -41,11 +53,26 @@ class RecordingController extends ChangeNotifier {
   void dispose() {
     FlutterForegroundTask.removeTaskDataCallback(_onTaskData);
     _localTimer?.cancel();
+    unawaited(_stopLocal());
     super.dispose();
   }
 
   void _onTaskData(Object data) {
+    // UI isolate is the recorder. Ignore task snapshots so a dead isolate
+    // cannot freeze the header at 0 points.
+    if (_localTimer != null) {
+      if (data is Map && data['error'] != null) {
+        lastError = '${data['error']}';
+        notifyListeners();
+      }
+      return;
+    }
     if (data is Map) {
+      if (data['error'] != null) {
+        lastError = '${data['error']}';
+        notifyListeners();
+        return;
+      }
       final snap = RecordingSnapshot.fromJson(data);
       snapshot = snap;
       notifyListeners();
@@ -85,24 +112,64 @@ class RecordingController extends ChangeNotifier {
     );
   }
 
-  Future<void> start({required bool trackMode, int? trackSpecM}) async {
-    lastError = null;
-    final session = await repo.createSession(
-      trackMode: trackMode,
-      trackSpecM: trackSpecM,
-    );
-    await _begin(session.id, trackMode: trackMode, trackSpecM: trackSpecM);
+  Future<void> nudgeGps() async {
+    await _localLocation?.nudge();
   }
 
-  Future<void> resume(String sessionId) async {
+  /// Returns false when recording cannot start (permissions / GPS off).
+  Future<bool> start({required bool trackMode, int? trackSpecM}) async {
+    if (_starting) return false;
+    _starting = true;
     lastError = null;
+    notifyListeners();
+    try {
+      final denied = await RecordingPermissions.ensure();
+      if (denied != null) {
+        lastError = denied;
+        notifyListeners();
+        return false;
+      }
+      final open = await repo.findRecording();
+      if (open != null) {
+        await _begin(
+          open.id,
+          trackMode: open.trackMode,
+          trackSpecM: open.trackSpecM,
+        );
+        return true;
+      }
+      final session = await repo.createSession(
+        trackMode: trackMode,
+        trackSpecM: trackSpecM,
+      );
+      await _begin(session.id, trackMode: trackMode, trackSpecM: trackSpecM);
+      return true;
+    } catch (error) {
+      lastError = error.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _starting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resume(String sessionId) async {
+    lastError = null;
+    final denied = await RecordingPermissions.ensure();
+    if (denied != null) {
+      lastError = denied;
+      notifyListeners();
+      return false;
+    }
     final session = await repo.sessionById(sessionId);
-    if (session == null) return;
+    if (session == null) return false;
     await _begin(
       sessionId,
       trackMode: session.trackMode,
       trackSpecM: session.trackSpecM,
     );
+    return true;
   }
 
   Future<void> _begin(
@@ -110,7 +177,9 @@ class RecordingController extends ChangeNotifier {
     required bool trackMode,
     int? trackSpecM,
   }) async {
-    final useTaskIsolate = Platform.isAndroid;
+    // Geolocator in the FGS Dart isolate often never emits (helper service
+    // bind race, no Activity). Keep the FGS as a process keep-alive and
+    // record GPS + SQLite on the UI isolate so Start actually stores points.
     await FlutterForegroundTask.saveData(
       key: kFgDbPathKey,
       value: dbPath,
@@ -121,7 +190,7 @@ class RecordingController extends ChangeNotifier {
     );
     await FlutterForegroundTask.saveData(
       key: kFgRecorderKey,
-      value: useTaskIsolate ? 'task' : 'main',
+      value: 'main',
     );
     await FlutterForegroundTask.saveData(
       key: kFgTrackModeKey,
@@ -132,43 +201,29 @@ class RecordingController extends ChangeNotifier {
       value: trackSpecM ?? -1,
     );
 
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.restartService();
-    } else {
-      await FlutterForegroundTask.startService(
-        serviceId: 210,
-        serviceTypes: const [ForegroundServiceTypes.location],
-        notificationTitle: 'balmi 기록 중',
-        notificationText: '통신이 끊겨도 기록은 기기에 전부 저장됩니다',
-        callback: recordingStartCallback,
-      );
+    if (Platform.isAndroid) {
+      final ServiceRequestResult fgs;
+      if (await FlutterForegroundTask.isRunningService) {
+        fgs = await FlutterForegroundTask.restartService();
+      } else {
+        fgs = await FlutterForegroundTask.startService(
+          serviceId: 210,
+          serviceTypes: const [ForegroundServiceTypes.location],
+          notificationTitle: 'balmi 기록 중',
+          notificationText: '통신이 끊겨도 기록은 기기에 전부 저장됩니다',
+          callback: recordingStartCallback,
+        );
+      }
+      if (fgs is ServiceRequestFailure) {
+        lastError = '${BalmiCopy.keepAliveFailed} (${fgs.error})';
+      }
     }
 
-    if (!useTaskIsolate) {
-      await _startLocalPipeline(
-        sessionId,
-        trackMode: trackMode,
-        trackSpecM: trackSpecM,
-      );
-    } else {
-      final session = await repo.sessionById(sessionId);
-      snapshot = RecordingSnapshot(
-        sessionId: sessionId,
-        pointCount: await repo.maxSeq(sessionId),
-        pendingChunks: await repo.pendingChunkCountFor(sessionId),
-        hAccM: null,
-        gpsStrength: 'none',
-        sport: Sport.walk.wire,
-        totalDistM: session?.totalDistM ?? 0,
-        walkDistM: session?.walkDistM ?? 0,
-        runDistM: session?.runDistM ?? 0,
-        startedAtMs: session?.startedAt.millisecondsSinceEpoch ??
-            DateTime.now().millisecondsSinceEpoch,
-        lapCount: (await repo.lapsFor(sessionId)).length,
-        trackMode: trackMode,
-      );
-      notifyListeners();
-    }
+    await _startLocalPipeline(
+      sessionId,
+      trackMode: trackMode,
+      trackSpecM: trackSpecM,
+    );
   }
 
   Future<void> _startLocalPipeline(
@@ -176,6 +231,7 @@ class RecordingController extends ChangeNotifier {
     required bool trackMode,
     int? trackSpecM,
   }) async {
+    await _stopLocal();
     final session = await repo.sessionById(sessionId);
     final pipeline = RecordingPipeline(
       repo: repo,
@@ -185,22 +241,51 @@ class RecordingController extends ChangeNotifier {
       trackSpecM: trackSpecM,
     );
     await pipeline.restore();
+    snapshot = await pipeline.snapshot(DateTime.now());
+    notifyListeners();
     _localLocation = GeolocatorLocationEngine();
     _localCadence = CadenceEngine();
     await _localLocation!.start();
     await _localCadence!.start();
     _localLocSub = _localLocation!.fixes.listen(pipeline.onFix);
     _localTimer?.cancel();
-    _localTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+    unawaited(_tick(pipeline));
+    _localTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      unawaited(_tick(pipeline));
+    });
+  }
+
+  Future<void> _tick(RecordingPipeline pipeline) async {
+    if (_ticking) return;
+    _ticking = true;
+    try {
       pipeline.onCadence(_localCadence?.spm);
+      final engineError = _localLocation?.lastError;
+      if (engineError != null) {
+        lastError = engineError;
+      } else if (_localLocation?.hasFix == true &&
+          lastError != null &&
+          !lastError!.startsWith(BalmiCopy.keepAliveFailed)) {
+        lastError = null;
+      }
       final snap = await pipeline.sampleNow(DateTime.now());
       snapshot = snap;
       notifyListeners();
+      unawaited(
+        FlutterForegroundTask.updateService(
+          notificationTitle: 'balmi 기록 중',
+          notificationText: snap.pointCount == 0
+              ? BalmiCopy.waitingGpsShort
+              : '${snap.pointCount}점 · ${(snap.totalDistM / 1000).toStringAsFixed(2)}km',
+        ),
+      );
       final tts = snap.lapTts;
       if (tts != null && tts.isNotEmpty) {
         await _speak(tts);
       }
-    });
+    } finally {
+      _ticking = false;
+    }
   }
 
   Future<void> stop() async {
@@ -214,6 +299,7 @@ class RecordingController extends ChangeNotifier {
       await FlutterForegroundTask.stopService();
     }
     snapshot = null;
+    lastError = null;
     notifyListeners();
   }
 
@@ -231,5 +317,7 @@ class RecordingController extends ChangeNotifier {
     _localLocSub = null;
     await _localLocation?.stop();
     await _localCadence?.stop();
+    _localLocation = null;
+    _localCadence = null;
   }
 }

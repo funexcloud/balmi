@@ -4,15 +4,24 @@ import '../core/copy.dart';
 import '../data/recording/recording_snapshot.dart';
 
 class TrustHeader extends StatelessWidget {
-  const TrustHeader({super.key, required this.snapshot});
+  const TrustHeader({
+    super.key,
+    required this.snapshot,
+    this.waiting = false,
+  });
 
   final RecordingSnapshot? snapshot;
+  final bool waiting;
 
   @override
   Widget build(BuildContext context) {
     final s = snapshot;
     final pending = s?.pendingChunks ?? 0;
-    final synced = pending == 0 && (s?.pointCount ?? 0) > 0;
+    final points = s?.pointCount ?? 0;
+    final synced = pending == 0 && points > 0;
+    final gpsLabel = waiting && points == 0
+        ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
+        : '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(s?.gpsStrength ?? 'none')}';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -24,11 +33,8 @@ class TrustHeader extends StatelessWidget {
         spacing: 12,
         runSpacing: 8,
         children: [
-          _chip(
-            Icons.signal_cellular_alt,
-            '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(s?.gpsStrength ?? 'none')}',
-          ),
-          _chip(Icons.save_outlined, '${BalmiCopy.localPoints} ${s?.pointCount ?? 0}'),
+          _chip(Icons.signal_cellular_alt, gpsLabel),
+          _chip(Icons.save_outlined, '${BalmiCopy.localPoints} $points'),
           _chip(Icons.cloud_queue, '${BalmiCopy.syncPending} $pending'),
           _chip(
             synced ? Icons.check_circle : Icons.hourglass_empty,

@@ -15,12 +15,14 @@ class RecordingScreen extends StatefulWidget {
   State<RecordingScreen> createState() => _RecordingScreenState();
 }
 
-class _RecordingScreenState extends State<RecordingScreen> {
+class _RecordingScreenState extends State<RecordingScreen>
+    with WidgetsBindingObserver {
   Timer? _clock;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _clock = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -28,8 +30,16 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _clock?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<RecordingController>().nudgeGps();
+    }
   }
 
   @override
@@ -41,6 +51,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         : DateTime.now().difference(
             DateTime.fromMillisecondsSinceEpoch(snap.startedAtMs),
           );
+    final hint = rec.gpsHint;
     return Scaffold(
       appBar: AppBar(title: const Text(BalmiCopy.appName)),
       body: Padding(
@@ -48,9 +59,23 @@ class _RecordingScreenState extends State<RecordingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TrustHeader(snapshot: snap),
+            TrustHeader(
+              snapshot: snap,
+              waiting: (snap?.pointCount ?? 0) == 0,
+            ),
             const SizedBox(height: 12),
             Text(BalmiCopy.trustAlways),
+            if (hint != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                hint,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: (snap?.pointCount ?? 0) == 0
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.error,
+                    ),
+              ),
+            ],
             const Spacer(),
             Text(
               formatElapsed(started),

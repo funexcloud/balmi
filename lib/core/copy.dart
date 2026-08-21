@@ -11,7 +11,17 @@ abstract final class BalmiCopy {
   static const recoveryBody = '이전에 시작했던 걷기가 기기에 그대로 남아 있습니다. 이어서 기록할까요, 여기서 종료할까요? 종료해도 저장된 점은 사라지지 않습니다.';
 
   static const start = '기록 시작';
+  static const starting = '기록 준비 중…';
   static const stop = '기록 종료';
+  static const locationOff = '위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시작해 주세요.';
+  static const locationDenied = '위치 권한이 없어 기록할 수 없어요. 정확한 위치를 허용해 주세요.';
+  static const locationDeniedForever =
+      '위치 권한이 거부되어 있어요. 앱 설정에서 위치를 허용한 뒤 다시 시작해 주세요.';
+  static const waitingGps =
+      'GPS 수신 대기 중이에요. 실내에서는 1–2분이 걸릴 수 있어요. 포인트 수가 오르면 기록이 되고 있는 겁니다.';
+  static const waitingGpsShort = 'GPS 수신 대기 중';
+  static const keepAliveFailed = '백그라운드 알림을 못 켰어요. 화면을 켜 둔 동안은 기록을 이어갑니다.';
+  static const startFailed = '기록을 시작하지 못했어요';
   static const history = '지난 기록';
   static const settings = '설정';
   static const trackMode = '트랙 모드';
