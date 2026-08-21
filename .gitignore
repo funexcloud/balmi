@@ -62,3 +62,4 @@ android/.gradle/
 
 # Docker / local data dumps
 docker-data/
+.gradle-home/

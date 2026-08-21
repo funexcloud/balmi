@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "im.balmi.balmi"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
