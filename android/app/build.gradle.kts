@@ -29,6 +29,15 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // AGP 8+/9 drops v1 (JAR) signing when minSdk >= 24. Some OEM package
+        // installers still reject v2-only APKs with "problem parsing the package".
+        named("debug") {
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
