@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../domain/engines/land_city.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../../widgets/session_row.dart';
@@ -49,6 +50,18 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
   }
 
   Future<void> _select(String id) async {
+    Session? session;
+    for (final s in _sessions) {
+      if (s.id == id) session = s;
+    }
+    if (session != null && !qualifiesForLand(session.totalDistM)) {
+      if (!mounted) return;
+      setState(() {
+        _selected = id;
+        _highlight = null;
+      });
+      return;
+    }
     final repo = context.read<SessionRepository>();
     final pts = await repo.pointsForSession(id);
     final line = [

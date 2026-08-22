@@ -14,6 +14,7 @@ import '../../data/stubs/future_features.dart';
 import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/engines/workout_stats.dart';
+import '../../widgets/farm_scene.dart';
 import '../../widgets/osm_trace_map.dart';
 
 void openLandPreview(BuildContext context) {
@@ -193,29 +194,21 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 300,
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          sliver: SliverToBoxAdapter(
             child: !_loaded
-                ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
-                : OsmTraceMap(
-                    traces: _traces,
-                    emptyLabel: BalmiCopy.landNoPath,
-                    onTap: _onMapTap,
-                    buildings: [
-                      for (final b in _buildings)
-                        FarmMark(
-                          point: LatLng(b.lat, b.lng),
-                          kind: FarmKind.fromWire(b.type),
-                        ),
-                    ],
-                    herds: [
-                      for (final h in _herds)
-                        HerdMark(
-                          point: LatLng(h.lat, h.lng),
-                          kind: HerdKind.fromWire(h.kind),
-                        ),
-                    ],
+                ? const SizedBox(
+                    height: 240,
+                    child: Center(
+                      child: CircularProgressIndicator(color: BalmiColors.plum),
+                    ),
+                  )
+                : FarmScene(
+                    buildings: _builtKinds.toList(),
+                    herds: _herdKinds.toList(),
+                    caredToday: _feed.caredToday,
+                    hasLand: _traces.hasLine,
                   ),
           ),
         ),
@@ -232,6 +225,23 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
                   feedNote: _herds.isEmpty
                       ? null
                       : (feed.caredToday ? BalmiCopy.herdsFed : BalmiCopy.herdsHungry),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  BalmiCopy.landWalkedPath,
+                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 160,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: OsmTraceMap(
+                      traces: _traces,
+                      emptyLabel: BalmiCopy.landNoPath,
+                      onTap: _onMapTap,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(BalmiCopy.farmTend, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),

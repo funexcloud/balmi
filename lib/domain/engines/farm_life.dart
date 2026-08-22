@@ -53,6 +53,18 @@ enum HerdKind {
   }
 }
 
+/// How many of [raised] actually appear on the farm stage (visual cap).
+int herdOnStage(HerdKind kind, int raised) {
+  final cap = switch (kind) {
+    HerdKind.sheep => 8,
+    HerdKind.chicken => 8,
+    HerdKind.garden => 4,
+    HerdKind.cattle => 3,
+  };
+  if (raised <= 0) return 0;
+  return raised > cap ? cap : raised;
+}
+
 /// Closed-session metres needed today so existing herds are "배불러요".
 const dailyCareWalkM = 300.0;
 

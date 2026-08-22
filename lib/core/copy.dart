@@ -109,13 +109,15 @@ abstract final class BalmiCopy {
   static const landEmptyArea = '아직 닫힌 루프가 없어요';
   static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
   static const landNoPath = '아직 등기할 경로가 없습니다';
+  static const landWalkedPath = '내가 걸은 길';
+  static const landWalkHint = '걸어서 땅을 등기하면 목장이 생깁니다';
   static const landTracesHint = '경로가 쌓이면 지도에 표시됩니다';
   static const landLoopAreaHint = '닫힌 경로에서 계산한 면적';
   static const farmOwner = '나는 농장주예요';
   static const farmBudget = '면적 예산';
   static const farmTend = '가꾸기';
   static const farmSpendHint = '닫힌 길·걸은 띠로 등기한 면적만 씁니다. 돈은 없어요.';
-  static const farmPlaceHint = '지도에서 자리를 눌러 가꾸거나, 짓기를 누르면 최근 길에 놓입니다.';
+  static const farmPlaceHint = '짓기를 누르면 장면에 생깁니다. 자리를 고르려면 아래 길에서 누르세요.';
   static const farmNeedFix = '먼저 걸어서 경로를 남겨 주세요';
   static const farmUnlocked = '열림';
   static const farmLocked = '아직';
@@ -135,7 +137,7 @@ abstract final class BalmiCopy {
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';
-  static const raisePlaceHint = '기르기를 고른 뒤 지도에서 자리를 누르거나, 기르기를 누르면 건물 옆에 놓입니다.';
+  static const raisePlaceHint = '기르기를 누르면 장면에 나타납니다. 자리를 고르려면 아래 길에서 누르세요.';
   static const herdUnlockHint =
       '기르기: 양떼 400m · 닭 250m · 텃밭 600m · 한우 1.2km (오늘 기록). 면적은 쓰지 않아요.';
   static const noBudget = '남은 면적이 모자라요. 더 걸어서 땅을 넓히세요.';
@@ -152,7 +154,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.6';
+  static const versionLabel = '0.1.7';
 
   static String gpsStrength(String code) {
     switch (code) {

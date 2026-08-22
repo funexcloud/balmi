@@ -96,6 +96,15 @@ void main() {
     );
   });
 
+  test('stage draws at most eight sheep and no fake zero herds', () {
+    expect(herdOnStage(HerdKind.sheep, 0), 0);
+    expect(herdOnStage(HerdKind.sheep, 3), 3);
+    expect(herdOnStage(HerdKind.sheep, 12), 8);
+    expect(herdOnStage(HerdKind.garden, 6), 4);
+    expect(herdOnStage(HerdKind.cattle, 1), 1);
+    expect(herdOnStage(HerdKind.cattle, 9), 3);
+  });
+
   test('herds are hungry below 300m today', () {
     expect(FeedBudget(todayWalkM: 299, spentFeedM: 0).caredToday, isFalse);
     expect(FeedBudget(todayWalkM: 300, spentFeedM: 0).caredToday, isTrue);

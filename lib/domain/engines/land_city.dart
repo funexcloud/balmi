@@ -40,6 +40,13 @@ enum FarmKind {
 /// Width of the “밟은 띠” used when there is no closed loop yet.
 const pathBandWidthM = 4.0;
 
+/// Indoor / standing sessions below this do not draw on 내 땅 or earn ㎡.
+/// House GPS jitter can scribble a tiny loop without a real walk.
+const minLandSessionDistM = 50.0;
+
+bool qualifiesForLand(double totalDistM) =>
+    totalDistM + 1e-6 >= minLandSessionDistM;
+
 class LandBudget {
   const LandBudget({
     required this.loopM2,

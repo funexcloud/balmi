@@ -31,6 +31,14 @@ void main() {
     expect(budget.unlocked(FarmKind.pastureFence), isTrue);
   });
 
+  test('sessions under 50m do not qualify for land', () {
+    expect(minLandSessionDistM, 50);
+    expect(qualifiesForLand(0), isFalse);
+    expect(qualifiesForLand(49.9), isFalse);
+    expect(qualifiesForLand(50), isTrue);
+    expect(qualifiesForLand(80), isTrue);
+  });
+
   test('loop wins over smaller path band', () {
     final budget = LandBudget(loopM2: 8000, pathBandM2: 2000, spentM2: 0);
     expect(budget.earnedM2, 8000);

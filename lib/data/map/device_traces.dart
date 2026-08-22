@@ -45,6 +45,7 @@ Future<DeviceTraces> loadDeviceTraces(SessionRepository repo) async {
   var n = 0;
   LatLng? last;
   for (final Session s in sessions) {
+    if (!qualifiesForLand(s.totalDistM)) continue;
     distM += s.totalDistM;
     final pts = await repo.pointsForSession(s.id);
     final line = <LatLng>[];
