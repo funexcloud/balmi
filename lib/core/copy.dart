@@ -1,4 +1,4 @@
-/// User-visible Korean copy. Keep this file free of unrelated brand/funeral wording.
+/// User-facing Korean copy. Keep this file free of unrelated brand/funeral wording.
 abstract final class BalmiCopy {
   static const appName = 'balmi';
   static const oneLiner = '통신이 끊겨도, 앱이 죽어도, 단 한 걸음도 잃어버리지 않는 걷기·달리기 기록 앱.';
@@ -13,6 +13,12 @@ abstract final class BalmiCopy {
   static const start = '기록 시작';
   static const starting = '기록 준비 중…';
   static const stop = '기록 종료';
+  static const pause = '기록 일시정지';
+  static const resumeLive = '기록 계속';
+  static const recordingLive = '기록 중';
+  static const readyToRecord = '기록 준비';
+  static const recordTab = '기록';
+  static const landTab = '내 땅';
   static const locationOff = '위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시작해 주세요.';
   static const locationDenied = '위치 권한이 없어 기록할 수 없어요. 정확한 위치를 허용해 주세요.';
   static const locationDeniedForever =
@@ -29,6 +35,16 @@ abstract final class BalmiCopy {
   static const specFree = '자유';
   static const walk = '걷기';
   static const run = '뛰기';
+  static const sportHint = '속도·케이던스 자동 판정 · 구간별 태깅';
+  static const currentPace = '현재 페이스';
+  static const statDistance = '거리';
+  static const statTime = '시간';
+  static const statSpeed = '속도';
+  static const finishAuto = '결승선 자동 감지';
+  static const lastLap = '최근 랩';
+  static const deviceSaved = '기기 저장';
+  static const syncWaiting = '동기화 대기';
+  static const syncComplete = '✓ 서버 동기화 완료';
 
   static const gps = 'GPS';
   static const localPoints = '로컬';
@@ -42,6 +58,7 @@ abstract final class BalmiCopy {
   static const neverSynced = '아직 없음';
   static const originalJudgment = '원래 판정';
   static const overrideSport = '종목 수정';
+  static const sessionDetail = '기록 상세';
 
   static const onboardingWelcome = '안녕하세요, balmi예요';
   static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';
@@ -56,10 +73,27 @@ abstract final class BalmiCopy {
   static const notificationPermission = '알림 (기록 중 표시)';
   static const ignoreBattery = '배터리 최적화 제외';
   static const oemSettings = '제조사 절전 설정 열기';
+  static const permsRequired = '위치 권한은 기록을 위해 꼭 필요해요. 건너뛰면 시작할 수 없습니다.';
+
+  static const registryKicker = 'BALMI REGISTRY';
+  static const registryEyebrow = '발미 등기부';
+  static const landTitle = '걸어서 등기한 내 땅';
+  static const landPreview = '2차 기능 미리보기 — 지금은 실제 등기되지 않습니다';
+  static const landEmptyArea = '아직 닫힌 루프가 없어요';
+  static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
+  static const recentDeed = '최근 등기';
+  static const todayLoop = '오늘 루프';
+  static const landFoot =
+      '닫힌 루프 완성 시 면적이 자동 산출되어 필지로 등기됩니다.\n불인정 시 사유(E01~E04)를 즉시 안내합니다.';
+  static const e01 = 'E01 루프 미폐합 — 시작과 끝이 너무 멀어요';
+  static const e02 = 'E02 GPS 품질 미달 구간이 포함됐어요';
+  static const e03 = 'E03 이동 속도가 이상해요 (차량 의심)';
+  static const e04 = 'E04 면적이 최소 기준에 못 미쳐요';
 
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
+  static const versionLabel = '0.1.3';
 
   static String gpsStrength(String code) {
     switch (code) {
@@ -73,6 +107,21 @@ abstract final class BalmiCopy {
         return '불량';
       default:
         return '없음';
+    }
+  }
+
+  static String gpsChip(String code) {
+    switch (code) {
+      case 'strong':
+        return 'GPS 강';
+      case 'ok':
+        return 'GPS 보통';
+      case 'weak':
+        return 'GPS 약';
+      case 'poor':
+        return 'GPS 불량';
+      default:
+        return 'GPS 없음';
     }
   }
 }

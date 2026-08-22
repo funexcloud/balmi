@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/copy.dart';
+import '../../core/theme.dart';
+import '../../data/location/recording_permissions.dart';
 import '../../data/oem/battery_optimization.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../widgets/balmi_wordmark.dart';
+import '../../widgets/safe_cta.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onDone});
@@ -19,6 +24,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _index = 0;
   String _oem = '';
   bool _ignoring = false;
+  String? _permHint;
 
   @override
   void initState() {
@@ -36,9 +42,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
+  Future<bool> _locationReady() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return false;
+    }
+    final p = await Geolocator.checkPermission();
+    return p == LocationPermission.always ||
+        p == LocationPermission.whileInUse;
+  }
+
   Future<void> _next() async {
+    setState(() => _permHint = null);
     if (_index == 2) {
-      await Permission.locationWhenInUse.request();
+      final denied = await RecordingPermissions.ensure();
+      if (denied != null) {
+        if (!mounted) return;
+        setState(() => _permHint = denied);
+        return;
+      }
+      final whenInUse = await Permission.locationWhenInUse.status;
+      if (!whenInUse.isGranted) {
+        if (!mounted) return;
+        setState(() => _permHint = BalmiCopy.locationDenied);
+        return;
+      }
+      await Permission.locationAlways.request();
       await Permission.notification.request();
     }
     if (_index < 3) {
@@ -46,21 +74,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
       );
-    } else {
-      widget.onDone();
+      return;
     }
+    if (!await _locationReady()) {
+      if (!mounted) return;
+      setState(() => _permHint = BalmiCopy.permsRequired);
+      return;
+    }
+    if (!_ignoring) {
+      await OemBattery.requestIgnore();
+      await _loadOem();
+    }
+    widget.onDone();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: BalmiColors.paper,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: BalmiWordmark(height: 28),
+              ),
+            ),
             Expanded(
               child: PageView(
                 controller: _page,
-                onPageChanged: (i) => setState(() => _index = i),
+                onPageChanged: (i) => setState(() {
+                  _index = i;
+                  _permHint = null;
+                }),
                 children: [
                   _pageBody(
                     title: BalmiCopy.onboardingWelcome,
@@ -75,12 +124,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: FilledButton(
-                onPressed: _next,
-                child: Text(_index < 3 ? BalmiCopy.continueLabel : BalmiCopy.done),
+            if (_permHint != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(
+                  _permHint!,
+                  style: BalmiTheme.body(
+                    size: 13,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
               ),
+            SafePrimaryButton(
+              label: _index < 3 ? BalmiCopy.continueLabel : BalmiCopy.done,
+              onPressed: _next,
             ),
           ],
         ),
@@ -94,18 +151,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 32),
-          Text(
-            BalmiCopy.appName,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(title, style: BalmiTheme.body(size: 26, weight: FontWeight.w800)),
           const SizedBox(height: 16),
-          Text(body, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5)),
+          Text(body, style: BalmiTheme.body(size: 16, height: 1.5)),
         ],
       ),
     );
@@ -117,10 +166,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(BalmiCopy.onboardingPermsTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            BalmiCopy.onboardingPermsTitle,
+            style: BalmiTheme.body(size: 22, weight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
-          Text(BalmiCopy.trustAlways),
+          Text(BalmiCopy.trustAlways, style: BalmiTheme.body(size: 14)),
+          const SizedBox(height: 8),
+          Text(BalmiCopy.permsRequired, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () => Permission.locationWhenInUse.request(),
@@ -131,8 +184,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPressed: () async {
               final whenInUse = await Permission.locationWhenInUse.request();
               if (!whenInUse.isGranted) return;
-              // Android 11+ denies "always" if requested in the same burst
-              // as when-in-use. Ask only after when-in-use is already granted.
               await Permission.locationAlways.request();
             },
             child: const Text(BalmiCopy.alwaysLocation),
@@ -153,12 +204,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(BalmiCopy.onboardingBatteryTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            BalmiCopy.onboardingBatteryTitle,
+            style: BalmiTheme.body(size: 22, weight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
-          Text(BalmiCopy.onboardingBatteryBody),
+          Text(BalmiCopy.onboardingBatteryBody, style: BalmiTheme.body(size: 15, height: 1.5)),
           const SizedBox(height: 8),
-          Text('감지된 기기: ${_oem.isEmpty ? '…' : _oem} · 최적화 제외 ${_ignoring ? '완료' : '필요'}'),
+          Text(
+            '감지된 기기: ${_oem.isEmpty ? '…' : _oem} · 최적화 제외 ${_ignoring ? '완료' : '필요'}',
+            style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+          ),
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () async {

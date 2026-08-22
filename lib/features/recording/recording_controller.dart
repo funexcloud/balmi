@@ -34,9 +34,26 @@ class RecordingController extends ChangeNotifier {
   bool _ticking = false;
 
   RecordingSnapshot? snapshot;
+  bool paused = false;
+  Duration _pausedTotal = Duration.zero;
+  DateTime? _pauseStarted;
+
   bool get isRecording => snapshot != null;
   bool get isStarting => _starting;
   String? lastError;
+
+  Duration get elapsed {
+    if (snapshot == null) return Duration.zero;
+    var d = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(snapshot!.startedAtMs),
+    );
+    d -= _pausedTotal;
+    if (paused && _pauseStarted != null) {
+      d -= DateTime.now().difference(_pauseStarted!);
+    }
+    if (d.isNegative) return Duration.zero;
+    return d;
+  }
 
   /// Honest GPS line while a session is open (waiting / error / null).
   String? get gpsHint {
@@ -131,6 +148,7 @@ class RecordingController extends ChangeNotifier {
       }
       final open = await repo.findRecording();
       if (open != null) {
+        _resetPauseClock();
         await _begin(
           open.id,
           trackMode: open.trackMode,
@@ -142,6 +160,7 @@ class RecordingController extends ChangeNotifier {
         trackMode: trackMode,
         trackSpecM: trackSpecM,
       );
+      _resetPauseClock();
       await _begin(session.id, trackMode: trackMode, trackSpecM: trackSpecM);
       return true;
     } catch (error) {
@@ -164,6 +183,7 @@ class RecordingController extends ChangeNotifier {
     }
     final session = await repo.sessionById(sessionId);
     if (session == null) return false;
+    _resetPauseClock();
     await _begin(
       sessionId,
       trackMode: session.trackMode,
@@ -255,10 +275,42 @@ class RecordingController extends ChangeNotifier {
     });
   }
 
+  void pause() {
+    if (!isRecording || paused) return;
+    paused = true;
+    _pauseStarted = DateTime.now();
+    notifyListeners();
+  }
+
+  void resumeLive() {
+    if (!paused) return;
+    if (_pauseStarted != null) {
+      _pausedTotal += DateTime.now().difference(_pauseStarted!);
+    }
+    _pauseStarted = null;
+    paused = false;
+    notifyListeners();
+  }
+
+  void _resetPauseClock() {
+    paused = false;
+    _pausedTotal = Duration.zero;
+    _pauseStarted = null;
+  }
+
   Future<void> _tick(RecordingPipeline pipeline) async {
     if (_ticking) return;
     _ticking = true;
     try {
+      if (paused) {
+        unawaited(
+          FlutterForegroundTask.updateService(
+            notificationTitle: 'balmi 일시정지',
+            notificationText: '기록이 멈춰 있습니다. 포인트는 기기에 남아 있습니다.',
+          ),
+        );
+        return;
+      }
       pipeline.onCadence(_localCadence?.spm);
       final engineError = _localLocation?.lastError;
       if (engineError != null) {
@@ -288,7 +340,7 @@ class RecordingController extends ChangeNotifier {
     }
   }
 
-  Future<void> stop() async {
+  Future<String?> stop() async {
     FlutterForegroundTask.sendDataToTask('stop');
     await _stopLocal();
     final id = snapshot?.sessionId;
@@ -300,7 +352,9 @@ class RecordingController extends ChangeNotifier {
     }
     snapshot = null;
     lastError = null;
+    _resetPauseClock();
     notifyListeners();
+    return id;
   }
 
   Future<void> endRecovered(String sessionId) async {

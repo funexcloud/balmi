@@ -202,6 +202,15 @@ class SessionRepository {
     return row.read(expr) ?? 0;
   }
 
+  Future<int> syncedPointCount(String sessionId) async {
+    final expr = db.points.id.count();
+    final q = db.selectOnly(db.points)
+      ..addColumns([expr])
+      ..where(db.points.sessionId.equals(sessionId) & db.points.synced.equals(1));
+    final row = await q.getSingle();
+    return row.read(expr) ?? 0;
+  }
+
   Future<int> pendingChunkCountFor(String sessionId) async {
     final expr = db.syncQueue.chunkId.count();
     final q = db.selectOnly(db.syncQueue)

@@ -7,10 +7,11 @@ import 'core/theme.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sync/sync_worker.dart';
-import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/recording/recording_controller.dart';
 import 'features/recovery/recovery_dialog.dart';
+import 'features/session_detail/session_detail_screen.dart';
+import 'features/shell/app_shell.dart';
 
 class BalmiApp extends StatefulWidget {
   const BalmiApp({
@@ -133,6 +134,15 @@ class _RecoveryGateState extends State<_RecoveryGate> {
         }
       } else {
         await rec.endRecovered(open.id);
+        if (mounted) {
+          widget.onReady();
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SessionDetailScreen(sessionId: open.id),
+            ),
+          );
+          return;
+        }
       }
     }
     if (mounted) widget.onReady();
@@ -140,6 +150,6 @@ class _RecoveryGateState extends State<_RecoveryGate> {
 
   @override
   Widget build(BuildContext context) {
-    return const HomeScreen();
+    return const AppShell();
   }
 }

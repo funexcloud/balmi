@@ -34,3 +34,26 @@ String formatElapsed(Duration d) {
   if (h > 0) return '$h:$m:$s';
   return '$m:$s';
 }
+
+/// Current pace from km/h, mockup form `m'ss"`. Slow/unknown → `--'--"`.
+String formatPace(double speedKmh) {
+  if (speedKmh <= 0.5) return '--\'--"';
+  final p = 60 / speedKmh;
+  var m = p.floor();
+  var s = ((p - m) * 60).round();
+  if (s == 60) {
+    m += 1;
+    s = 0;
+  }
+  return '$m\'${s.toString().padLeft(2, '0')}"';
+}
+
+String formatLapClock(double lapTimeS) {
+  final total = lapTimeS.round().clamp(0, 24 * 3600);
+  final m = total ~/ 60;
+  final s = total % 60;
+  return '$m\'${s.toString().padLeft(2, '0')}"';
+}
+
+String formatSpeedKmh(double speedKmh) => '${speedKmh.toStringAsFixed(1)}km/h';
+

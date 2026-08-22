@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
 import '../../core/format.dart';
+import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/models/sport.dart';
+import '../../widgets/balmi_app_bar.dart';
+import '../../widgets/balmi_wordmark.dart';
 
 class SessionDetailScreen extends StatefulWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -56,12 +59,15 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Widget build(BuildContext context) {
     final s = _session;
     return Scaffold(
-      appBar: AppBar(title: const Text('기록 상세')),
+      backgroundColor: BalmiColors.paper,
+      appBar: const BalmiAppBar(title: BalmiCopy.sessionDetail),
       body: s == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                const BalmiWordmark(height: 22),
+                const SizedBox(height: 16),
                 Text(
                   walkRunResultLine(
                     walkDuration: _walk,
@@ -69,30 +75,40 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                     runDuration: _run,
                     runMeters: s.runDistM,
                   ),
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
-                Text('${formatKm(s.totalDistM)} km · ${formatDateTime(s.startedAt)}'),
-                const SizedBox(height: 24),
-                Text(BalmiCopy.integrity, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text('${BalmiCopy.totalPoints}: $_totalPoints'),
-                Text('${BalmiCopy.excludedPoints}: $_excluded'),
                 Text(
-                  '${BalmiCopy.lastSynced}: ${_lastSynced == null ? BalmiCopy.neverSynced : formatDateTime(_lastSynced!)}',
+                  '${formatKm(s.totalDistM)} km · ${formatDateTime(s.startedAt)}',
+                  style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
+                ),
+                const HeartbeatDivider(),
+                Text(BalmiCopy.integrity, style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
+                const SizedBox(height: 8),
+                _kv(BalmiCopy.totalPoints, '$_totalPoints'),
+                _kv(BalmiCopy.excludedPoints, '$_excluded'),
+                _kv(
+                  BalmiCopy.lastSynced,
+                  _lastSynced == null ? BalmiCopy.neverSynced : formatDateTime(_lastSynced!),
                 ),
                 const SizedBox(height: 24),
-                Text('구간', style: Theme.of(context).textTheme.titleLarge),
+                Text('구간', style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
                 const SizedBox(height: 8),
                 ..._segments.map(_segmentTile),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text('랩', style: Theme.of(context).textTheme.titleLarge),
+                  Text('랩', style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
                   ..._laps.map(
                     (l) => ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('${l.lapNo}바퀴 · ${formatLapTts(lapNo: l.lapNo, lapTimeS: l.lapTimeS)}'),
-                      subtitle: Text('${l.lapDistM.round()} m'),
+                      title: Text(
+                        '${l.lapNo}바퀴 · ${formatLapTts(lapNo: l.lapNo, lapTimeS: l.lapTimeS)}',
+                        style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+                      ),
+                      subtitle: Text(
+                        '${l.lapDistM.round()} m',
+                        style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+                      ),
                     ),
                   ),
                 ],
@@ -101,16 +117,32 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
   }
 
+  Widget _kv(String k, String v) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(k, style: BalmiTheme.body(size: 14, color: BalmiColors.sub))),
+          Text(v, style: BalmiTheme.num(size: 15)),
+        ],
+      ),
+    );
+  }
+
   Widget _segmentTile(Segment seg) {
     final sport = Sport.fromWire(seg.sport);
     final judged = Sport.fromWire(seg.judgedSport);
     return Card(
       child: ListTile(
-        title: Text(sport == Sport.run ? BalmiCopy.run : BalmiCopy.walk),
+        title: Text(
+          sport == Sport.run ? BalmiCopy.run : BalmiCopy.walk,
+          style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+        ),
         subtitle: Text(
           '${formatKm(seg.distM)} km · ${BalmiCopy.originalJudgment}: '
           '${judged == Sport.run ? BalmiCopy.run : BalmiCopy.walk}'
           '${seg.userOverride == 1 ? ' · 수정됨' : ''}',
+          style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
         ),
         trailing: TextButton(
           onPressed: () async {

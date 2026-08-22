@@ -42,6 +42,7 @@ class RecordingPipeline {
   int seq = 0;
   int _chunkFrom = 1;
   String? lastLapTts;
+  double? lastLapTimeS;
 
   double walkDistM = 0;
   double runDistM = 0;
@@ -68,6 +69,7 @@ class RecordingPipeline {
     if (trackMode) {
       final stored = await repo.lapsFor(sessionId);
       if (stored.isNotEmpty) {
+        lastLapTimeS = stored.last.lapTimeS;
         final points = await repo.pointsForSession(sessionId);
         final firstAccurate = points.where((p) {
           final acc = p.hAccM;
@@ -183,6 +185,7 @@ class RecordingPipeline {
             lapDistM: lapDist,
           );
           lastLapTts = formatLapTts(lapNo: lap.lapNo, lapTimeS: lap.lapTimeS);
+          lastLapTimeS = lap.lapTimeS;
           if (trackSpecM != null && trackSpecM! > 0) {
             distance.meters = specDist;
           }
@@ -228,6 +231,8 @@ class RecordingPipeline {
 
   Future<RecordingSnapshot> snapshot(DateTime now) async {
     final pending = await repo.pendingChunkCountFor(sessionId);
+    final synced = await repo.syncedPointCount(sessionId);
+    final durs = await repo.sportDurations(sessionId);
     return RecordingSnapshot(
       sessionId: sessionId,
       pointCount: seq,
@@ -241,7 +246,13 @@ class RecordingPipeline {
       startedAtMs: startedAt.millisecondsSinceEpoch,
       lapCount: laps.lapNo,
       trackMode: trackMode,
+      trackSpecM: trackSpecM,
       lapTts: lastLapTts,
+      lastLapTimeS: lastLapTimeS,
+      speedKmh: lastFix?.speedMs == null ? null : lastFix!.speedMs! * 3.6,
+      walkDurationMs: (durs[Sport.walk] ?? Duration.zero).inMilliseconds,
+      runDurationMs: (durs[Sport.run] ?? Duration.zero).inMilliseconds,
+      syncedPoints: synced,
     );
   }
 }

@@ -23,5 +23,8 @@ void main() {
       ),
       '걷기 12m 1.20km / 뛰기 8m 2.10km',
     );
+    expect(formatPace(0.4), '--\'--"');
+    expect(formatPace(10), '6\'00"');
+    expect(formatLapClock(128), '2\'08"');
   });
 }

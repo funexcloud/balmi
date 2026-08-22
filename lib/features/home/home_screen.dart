@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
-import '../../core/format.dart';
+import '../../core/theme.dart';
 import '../../data/stubs/future_features.dart';
 import '../../widgets/trust_header.dart';
-import '../history/history_screen.dart';
 import '../recording/recording_controller.dart';
-import '../recording/recording_screen.dart';
-import '../settings/settings_screen.dart';
 
+/// Idle 기록 tab: real start (permissions + track spec), not mock GPS.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,126 +19,93 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _trackMode = false;
   int? _specM = 400;
 
-  @override
-  Widget build(BuildContext context) {
-    final rec = context.watch<RecordingController>();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(BalmiCopy.appName),
-        actions: [
-          IconButton(
-            tooltip: BalmiCopy.history,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
-              );
-            },
-            icon: const Icon(Icons.history),
-          ),
-          IconButton(
-            tooltip: BalmiCopy.settings,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(BalmiCopy.oneLiner, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text(BalmiCopy.positioning, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          TrustHeader(
-            snapshot: rec.snapshot,
-            waiting: rec.isRecording && (rec.snapshot?.pointCount ?? 0) == 0,
-          ),
-          const SizedBox(height: 12),
-          Text(BalmiCopy.trustAlways, style: Theme.of(context).textTheme.bodyMedium),
-          if (rec.lastError != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              rec.lastError!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ],
-          const SizedBox(height: 24),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(BalmiCopy.trackMode),
-            subtitle: const Text('학교·공원 트랙에서 바퀴를 셉니다'),
-            value: _trackMode,
-            onChanged: rec.isRecording
-                ? null
-                : (v) => setState(() => _trackMode = v),
-          ),
-          if (_trackMode)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: DropdownButtonFormField<int?>(
-                initialValue: _specM,
-                decoration: const InputDecoration(labelText: BalmiCopy.trackSpec),
-                items: const [
-                  DropdownMenuItem(value: 400, child: Text('400m')),
-                  DropdownMenuItem(value: 300, child: Text('300m')),
-                  DropdownMenuItem(value: 200, child: Text('200m')),
-                  DropdownMenuItem(value: null, child: Text(BalmiCopy.specFree)),
-                ],
-                onChanged: rec.isRecording
-                    ? null
-                    : (v) => setState(() => _specM = v),
-              ),
-            ),
-          FilledButton(
-            onPressed: rec.isStarting
-                ? null
-                : rec.isRecording
-                    ? () => _openRecording(context)
-                    : () => _start(context, rec),
-            child: Text(
-              rec.isStarting
-                  ? BalmiCopy.starting
-                  : rec.isRecording
-                      ? '기록 화면'
-                      : BalmiCopy.start,
-            ),
-          ),
-          if (rec.isRecording) ...[
-            const SizedBox(height: 8),
-            Text(
-              '진행 중 · ${formatElapsed(DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(rec.snapshot!.startedAtMs)))}',
-            ),
-          ],
-          const SizedBox(height: 32),
-          if (!FutureFeatures.territoryEnabled && !FutureFeatures.crewEnabled)
-            Text(
-              'Release 1 · F1–F4',
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _start(BuildContext context, RecordingController rec) async {
+  Future<void> _start(RecordingController rec) async {
     final ok = await rec.start(trackMode: _trackMode, trackSpecM: _specM);
-    if (!context.mounted) return;
+    if (!mounted) return;
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(rec.lastError ?? BalmiCopy.startFailed)),
       );
-      return;
     }
-    _openRecording(context);
   }
 
-  void _openRecording(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RecordingScreen()),
+  @override
+  Widget build(BuildContext context) {
+    final rec = context.watch<RecordingController>();
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+            children: [
+              Text(BalmiCopy.oneLiner, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(
+                BalmiCopy.positioning,
+                style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
+              ),
+              const SizedBox(height: 16),
+              TrustHeader(snapshot: rec.snapshot, waiting: false),
+              if (rec.lastError != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  rec.lastError!,
+                  style: BalmiTheme.body(
+                    size: 13,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                activeThumbColor: BalmiColors.paper,
+                activeTrackColor: BalmiColors.plum,
+                title: Text(BalmiCopy.trackMode, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+                subtitle: Text(
+                  '학교·공원 트랙에서 바퀴를 셉니다',
+                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+                ),
+                value: _trackMode,
+                onChanged: rec.isStarting ? null : (v) => setState(() => _trackMode = v),
+              ),
+              if (_trackMode)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: DropdownButtonFormField<int?>(
+                    initialValue: _specM,
+                    decoration: InputDecoration(
+                      labelText: BalmiCopy.trackSpec,
+                      labelStyle: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: BalmiColors.line),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 400, child: Text('400m')),
+                      DropdownMenuItem(value: 300, child: Text('300m')),
+                      DropdownMenuItem(value: 200, child: Text('200m')),
+                      DropdownMenuItem(value: null, child: Text(BalmiCopy.specFree)),
+                    ],
+                    onChanged: rec.isStarting ? null : (v) => setState(() => _specM = v),
+                  ),
+                ),
+              if (!FutureFeatures.territoryEnabled && !FutureFeatures.crewEnabled)
+                Text(
+                  'Release 1 · F1–F4',
+                  style: BalmiTheme.tracked(size: 11, trackingEm: 0.08, color: BalmiColors.sub),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+          child: FilledButton(
+            onPressed: rec.isStarting ? null : () => _start(rec),
+            child: Text(rec.isStarting ? BalmiCopy.starting : BalmiCopy.start),
+          ),
+        ),
+      ],
     );
   }
 }

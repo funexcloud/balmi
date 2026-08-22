@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/copy.dart';
+import '../../core/theme.dart';
 import '../../data/oem/battery_optimization.dart';
+import '../../widgets/balmi_app_bar.dart';
+import '../../widgets/balmi_wordmark.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -9,36 +12,45 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(BalmiCopy.settings)),
+      backgroundColor: BalmiColors.paper,
+      appBar: const BalmiAppBar(title: BalmiCopy.settings),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.about),
-            subtitle: Text('${BalmiCopy.appName} 0.1.1\n${BalmiCopy.oneLiner}'),
-          ),
-          const Divider(),
-          const ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.vasaCredit),
-            subtitle: Text(BalmiCopy.vasaCreditDetail),
-          ),
-          const Divider(),
+          const BalmiWordmark(height: 28),
+          const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text(BalmiCopy.oemSettings),
+            title: Text(BalmiCopy.about, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+            subtitle: Text(
+              '${BalmiCopy.appName} ${BalmiCopy.versionLabel}\n${BalmiCopy.oneLiner}',
+              style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.45),
+            ),
+          ),
+          const Divider(color: BalmiColors.line),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(BalmiCopy.vasaCredit, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+            subtitle: Text(
+              BalmiCopy.vasaCreditDetail,
+              style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+            ),
+          ),
+          const Divider(color: BalmiColors.line),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(BalmiCopy.oemSettings, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
             onTap: () => OemBattery.openOemSettings(),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text(BalmiCopy.ignoreBattery),
+            title: Text(BalmiCopy.ignoreBattery, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
             onTap: () => OemBattery.requestIgnore(),
           ),
           const SizedBox(height: 24),
           Text(
             'HealthKit / Health Connect는 Release 1에 포함되지 않습니다.',
-            style: Theme.of(context).textTheme.bodySmall,
+            style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
           ),
         ],
       ),

@@ -12,7 +12,13 @@ class RecordingSnapshot {
     required this.startedAtMs,
     required this.lapCount,
     required this.trackMode,
+    this.trackSpecM,
     this.lapTts,
+    this.lastLapTimeS,
+    this.speedKmh,
+    this.walkDurationMs = 0,
+    this.runDurationMs = 0,
+    this.syncedPoints = 0,
   });
 
   final String sessionId;
@@ -27,7 +33,16 @@ class RecordingSnapshot {
   final int startedAtMs;
   final int lapCount;
   final bool trackMode;
+  final int? trackSpecM;
   final String? lapTts;
+  final double? lastLapTimeS;
+  final double? speedKmh;
+  final int walkDurationMs;
+  final int runDurationMs;
+  final int syncedPoints;
+
+  int get pendingPoints =>
+      (pointCount - syncedPoints).clamp(0, pointCount);
 
   Map<String, Object?> toJson() => {
         'sessionId': sessionId,
@@ -42,7 +57,13 @@ class RecordingSnapshot {
         'startedAtMs': startedAtMs,
         'lapCount': lapCount,
         'trackMode': trackMode,
+        'trackSpecM': trackSpecM,
         'lapTts': lapTts,
+        'lastLapTimeS': lastLapTimeS,
+        'speedKmh': speedKmh,
+        'walkDurationMs': walkDurationMs,
+        'runDurationMs': runDurationMs,
+        'syncedPoints': syncedPoints,
       };
 
   factory RecordingSnapshot.fromJson(Map<Object?, Object?> json) {
@@ -66,7 +87,13 @@ class RecordingSnapshot {
       startedAtMs: i(json['startedAtMs']),
       lapCount: i(json['lapCount']),
       trackMode: json['trackMode'] == true,
+      trackSpecM: json['trackSpecM'] is num ? (json['trackSpecM'] as num).round() : null,
       lapTts: json['lapTts'] as String?,
+      lastLapTimeS: d(json['lastLapTimeS']),
+      speedKmh: d(json['speedKmh']),
+      walkDurationMs: i(json['walkDurationMs']),
+      runDurationMs: i(json['runDurationMs']),
+      syncedPoints: i(json['syncedPoints']),
     );
   }
 
