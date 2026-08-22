@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 import '../../core/format.dart';
 import '../../domain/config/sport_params.dart';
 import '../../domain/engines/distance.dart';
@@ -33,8 +35,8 @@ class RecordingPipeline {
   final SessionRepository repo;
   final String sessionId;
   final DateTime startedAt;
-  final bool trackMode;
-  final int? trackSpecM;
+  bool trackMode;
+  int? trackSpecM;
   ActivityKind activity;
   final int chunkSize;
 
@@ -55,6 +57,10 @@ class RecordingPipeline {
   double walkDistM = 0;
   double runDistM = 0;
 
+  /// Live map line: only metres the filter accepted (no indoor jitter scribble).
+  final trail = <LatLng>[];
+  LatLng? mapPin;
+
   Future<void> restore() async {
     seq = await repo.maxSeq(sessionId);
     _chunkFrom = await repo.maxQueuedSeqTo(sessionId) + 1;
@@ -64,8 +70,18 @@ class RecordingPipeline {
       runDistM = session.runDistM;
       distance.meters = session.totalDistM;
       activity = ActivityKind.fromWire(session.activity);
+      trackMode = session.trackMode || activity.isTrack;
+      trackSpecM = session.trackSpecM ?? trackSpecM;
       recordingSteps = session.steps;
     }
+    final storedPts = await repo.pointsForSession(sessionId);
+    trail
+      ..clear()
+      ..addAll([
+        for (final p in storedPts)
+          if (p.hAccM == null || p.hAccM! <= 40) LatLng(p.lat, p.lng),
+      ]);
+    if (trail.isNotEmpty) mapPin = trail.last;
     final last = await repo.lastAccuratePoint(sessionId, 30);
     if (last != null) {
       distance.restoreLast(
@@ -85,8 +101,7 @@ class RecordingPipeline {
       final stored = await repo.lapsFor(sessionId);
       if (stored.isNotEmpty) {
         lastLapTimeS = stored.last.lapTimeS;
-        final points = await repo.pointsForSession(sessionId);
-        final firstAccurate = points.where((p) {
+        final firstAccurate = storedPts.where((p) {
           final acc = p.hAccM;
           return acc != null && acc <= 30;
         });
@@ -116,6 +131,16 @@ class RecordingPipeline {
   Future<void> setActivity(ActivityKind next, DateTime now) async {
     if (activity == next) return;
     activity = next;
+    if (next.isTrack) {
+      if (laps.calibrating || laps.startLat == null) {
+        laps.reset();
+      }
+      trackMode = true;
+      trackSpecM ??= 400;
+      await repo.updateTrackSpec(sessionId, trackSpecM);
+    } else {
+      trackMode = false;
+    }
     await repo.updateActivity(sessionId, next);
     if (!next.isAuto) {
       classifier.reset(sport: next.lockedSport);
@@ -125,6 +150,11 @@ class RecordingPipeline {
         at: now,
       );
     }
+  }
+
+  Future<void> setTrackSpec(int? spec) async {
+    trackSpecM = spec;
+    await repo.updateTrackSpec(sessionId, spec);
   }
 
   Future<RecordingSnapshot> sampleNow(DateTime now) async {
@@ -143,6 +173,11 @@ class RecordingPipeline {
       );
       if (decision.filteredSpeedMs != null) {
         _displaySpeedMs = decision.filteredSpeedMs;
+      }
+
+      mapPin = LatLng(fix.lat, fix.lng);
+      if (decision.addDistance) {
+        trail.add(mapPin!);
       }
 
       await repo.insertPoint(

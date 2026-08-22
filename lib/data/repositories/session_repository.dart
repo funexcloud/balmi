@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/engines/sync_backoff.dart';
 import '../../domain/engines/workout_stats.dart';
@@ -49,13 +50,14 @@ class SessionRepository {
     final id = newId();
     final start = startedAt ?? DateTime.now();
     final sport = activity.isAuto ? Sport.walk : activity.lockedSport;
+    final useTrack = trackMode || activity.isTrack;
     await db.into(db.sessions).insert(
           SessionsCompanion.insert(
             id: id,
             startedAt: start,
             status: SessionStatus.recording.wire,
-            trackMode: Value(trackMode),
-            trackSpecM: Value(trackSpecM),
+            trackMode: Value(useTrack),
+            trackSpecM: Value(useTrack ? trackSpecM : null),
             activity: Value(activity.wire),
           ),
         );
@@ -73,7 +75,16 @@ class SessionRepository {
 
   Future<void> updateActivity(String sessionId, ActivityKind activity) {
     return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
-      SessionsCompanion(activity: Value(activity.wire)),
+      SessionsCompanion(
+        activity: Value(activity.wire),
+        trackMode: Value(activity.isTrack),
+      ),
+    );
+  }
+
+  Future<void> updateTrackSpec(String sessionId, int? trackSpecM) {
+    return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
+      SessionsCompanion(trackSpecM: Value(trackSpecM)),
     );
   }
 
@@ -529,6 +540,32 @@ class SessionRepository {
           ),
         );
     return (await (db.select(db.buildings)..where((t) => t.id.equals(id)))
+        .getSingle());
+  }
+
+  Future<List<LivestockRow>> listLivestock() {
+    return (db.select(db.livestock)
+          ..orderBy([(t) => OrderingTerm.asc(t.raisedAt)]))
+        .get();
+  }
+
+  Future<LivestockRow> insertLivestock({
+    required HerdKind kind,
+    required double lat,
+    required double lng,
+  }) async {
+    final id = newId();
+    await db.into(db.livestock).insert(
+          LivestockCompanion.insert(
+            id: id,
+            kind: kind.wire,
+            feedWalkM: kind.feedWalkM,
+            lat: lat,
+            lng: lng,
+            raisedAt: DateTime.now(),
+          ),
+        );
+    return (await (db.select(db.livestock)..where((t) => t.id.equals(id)))
         .getSingle());
   }
 

@@ -73,6 +73,36 @@ void main() {
     expect(formatPace(0.4), '--\'--"');
     expect(formatPace(10), '6\'00"');
     expect(formatLapClock(128), '2\'08"');
+    expect(
+      formatRecordingNotification(
+        elapsed: const Duration(minutes: 18, seconds: 5),
+        distM: 0,
+      ),
+      '기록 18:05 · 0.00km',
+    );
+    expect(
+      formatRecordingNotification(
+        elapsed: const Duration(hours: 1, minutes: 2, seconds: 3),
+        distM: 1540,
+      ),
+      '기록 1:02:03 · 1.54km',
+    );
+  });
+
+  test('recording UI never labels GPS samples as 점', () {
+    for (final file in _dartUnder(Directory('lib'))) {
+      final text = file.readAsStringSync();
+      expect(
+        text,
+        isNot(contains('점 ·')),
+        reason: '${file.path} must not use 점 as a sample-count suffix',
+      );
+      expect(
+        RegExp(r'\$\{[^}]*pointCount[^}]*\}점').hasMatch(text),
+        isFalse,
+        reason: '${file.path} must not suffix pointCount with 점',
+      );
+    }
   });
 }
 

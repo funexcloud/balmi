@@ -98,6 +98,19 @@ class Buildings extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('LivestockRow')
+class Livestock extends Table {
+  TextColumn get id => text()();
+  TextColumn get kind => text()();
+  RealColumn get feedWalkM => real()();
+  RealColumn get lat => real()();
+  RealColumn get lng => real()();
+  DateTimeColumn get raisedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class AppKv extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();

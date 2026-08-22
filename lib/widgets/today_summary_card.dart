@@ -21,7 +21,7 @@ class TodaySummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -33,15 +33,15 @@ class TodaySummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(BalmiCopy.todaySummary, style: BalmiTheme.tracked(color: BalmiColors.plum)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   '${stats.sessions}회 · ${formatKm(stats.distM)}km · ${formatElapsed(stats.duration)}',
                   style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   '${stats.primaryActivity?.label ?? BalmiCopy.activityAuto} · $stepLabel $steps',
-                  style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
                 ),
               ],
             ),
@@ -57,9 +57,12 @@ class StepLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '$label $steps',
-      style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: BalmiTheme.tracked(size: 11, trackingEm: 0.12)),
+        Text('$steps', style: BalmiTheme.num(size: 36)),
+      ],
     );
   }
 }

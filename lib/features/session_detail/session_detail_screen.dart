@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
@@ -10,6 +11,7 @@ import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
+import '../../widgets/osm_trace_map.dart';
 
 class SessionDetailScreen extends StatefulWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -22,6 +24,7 @@ class SessionDetailScreen extends StatefulWidget {
 
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Session? _session;
+  List<LatLng> _line = [];
   List<Segment> _segments = [];
   List<Lap> _laps = [];
   Duration _walk = Duration.zero;
@@ -43,9 +46,15 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final laps = await repo.lapsFor(widget.sessionId);
     final durs = await repo.sportDurations(widget.sessionId);
     final integrity = await repo.integrity(widget.sessionId);
+    final pts = await repo.pointsForSession(widget.sessionId);
+    final line = [
+      for (final p in pts)
+        if (p.hAccM == null || p.hAccM! <= 40) LatLng(p.lat, p.lng),
+    ];
     if (!mounted) return;
     setState(() {
       _session = session;
+      _line = line;
       _segments = segs;
       _laps = laps;
       _walk = durs[Sport.walk] ?? Duration.zero;
@@ -67,8 +76,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const BalmiWordmark(height: 22),
-                const SizedBox(height: 16),
                 Text(
                   ActivityKind.fromWire(s.activity).label,
                   style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
@@ -87,6 +94,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 Text(
                   '${formatKm(s.totalDistM)} km · ${formatDateTime(s.startedAt)}',
                   style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
+                ),
+                const SizedBox(height: 12),
+                SessionTraceMap(
+                  points: _line,
+                  lastPoint: _line.isEmpty ? null : _line.last,
+                  emptyLabel: BalmiCopy.mapEmpty,
                 ),
                 const HeartbeatDivider(),
                 Text(BalmiCopy.integrity, style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),

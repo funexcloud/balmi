@@ -57,6 +57,9 @@ void main() {
     expect(missions[1].current, closeTo(13, 0.01));
     expect(missions[1].done, isFalse);
     expect(missions[2].current, 10);
+    expect(missions[3].id, 'today_feed_800m');
+    expect(missions[3].current, closeTo(5000, 0.1));
+    expect(missions[3].done, isTrue);
   });
 
   test('event progress sums only matching window and activity', () {
@@ -70,5 +73,24 @@ void main() {
       goalValue: 10,
     );
     expect(eventProgress(event, rows), closeTo(2, 0.01));
+  });
+
+  test('track sessions keep 트랙 as the activity label', () {
+    final track = WorkoutRow(
+      id: 't',
+      startedAt: day,
+      endedAt: day.add(const Duration(minutes: 10)),
+      activity: ActivityKind.track,
+      totalDistM: 1600,
+      walkDistM: 0,
+      runDistM: 1600,
+      laps: 4,
+    );
+    final stats = summarizePeriod([track]);
+    expect(stats.byActivity[ActivityKind.track], closeTo(1600, 0.1));
+    expect(stats.primaryActivity, ActivityKind.track);
+    expect(track.matchesFilter(ActivityKind.track), isTrue);
+    expect(track.matchesFilter(ActivityKind.run), isFalse);
+    expect(track.activity.label, '트랙');
   });
 }

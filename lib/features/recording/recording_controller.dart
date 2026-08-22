@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/copy.dart';
+import '../../core/format.dart';
 import '../../data/location/geolocator_location_engine.dart';
 import '../../data/location/location_engine.dart';
 import '../../data/location/recording_permissions.dart';
@@ -37,6 +39,7 @@ class RecordingController extends ChangeNotifier {
   RecordingPipeline? _pipeline;
   RecordingSnapshot? snapshot;
   ActivityKind activity = ActivityKind.auto;
+  int? trackSpecM;
   bool paused = false;
   Duration _pausedTotal = Duration.zero;
   DateTime? _pauseStarted;
@@ -44,6 +47,12 @@ class RecordingController extends ChangeNotifier {
   bool get isRecording => snapshot != null;
   bool get isStarting => _starting;
   String? lastError;
+  List<LatLng> get liveTrail => List<LatLng>.unmodifiable(_pipeline?.trail ?? const []);
+  LatLng? get livePin => _pipeline?.mapPin;
+
+  static const notificationIcon = NotificationIcon(
+    metaDataName: 'im.balmi.app.notification_icon',
+  );
 
   Duration get elapsed {
     if (snapshot == null) return Duration.zero;
@@ -138,7 +147,6 @@ class RecordingController extends ChangeNotifier {
 
   /// Returns false when recording cannot start (permissions / GPS off).
   Future<bool> start({
-    required bool trackMode,
     int? trackSpecM,
     ActivityKind activity = ActivityKind.auto,
   }) async {
@@ -157,25 +165,28 @@ class RecordingController extends ChangeNotifier {
       if (open != null) {
         _resetPauseClock();
         this.activity = ActivityKind.fromWire(open.activity);
+        this.trackSpecM = open.trackSpecM;
         await _begin(
           open.id,
-          trackMode: open.trackMode,
+          trackMode: open.trackMode || this.activity.isTrack,
           trackSpecM: open.trackSpecM,
           activity: this.activity,
         );
         return true;
       }
       this.activity = activity;
+      this.trackSpecM = activity.isTrack ? trackSpecM : null;
+      final trackMode = activity.isTrack;
       final session = await repo.createSession(
         trackMode: trackMode,
-        trackSpecM: trackSpecM,
+        trackSpecM: this.trackSpecM,
         activity: activity,
       );
       _resetPauseClock();
       await _begin(
         session.id,
         trackMode: trackMode,
-        trackSpecM: trackSpecM,
+        trackSpecM: this.trackSpecM,
         activity: activity,
       );
       return true;
@@ -201,9 +212,10 @@ class RecordingController extends ChangeNotifier {
     if (session == null) return false;
     _resetPauseClock();
     activity = ActivityKind.fromWire(session.activity);
+    trackSpecM = session.trackSpecM;
     await _begin(
       sessionId,
-      trackMode: session.trackMode,
+      trackMode: session.trackMode || activity.isTrack,
       trackSpecM: session.trackSpecM,
       activity: activity,
     );
@@ -250,6 +262,7 @@ class RecordingController extends ChangeNotifier {
           serviceTypes: const [ForegroundServiceTypes.location],
           notificationTitle: 'balmi 기록 중',
           notificationText: '통신이 끊겨도 기록은 기기에 전부 저장됩니다',
+          notificationIcon: notificationIcon,
           callback: recordingStartCallback,
         );
       }
@@ -268,9 +281,24 @@ class RecordingController extends ChangeNotifier {
 
   Future<void> setActivity(ActivityKind next) async {
     activity = next;
+    if (next.isTrack) {
+      trackSpecM ??= 400;
+    }
     final pipe = _pipeline;
     if (pipe != null) {
       await pipe.setActivity(next, DateTime.now());
+      activity = pipe.activity;
+      trackSpecM = pipe.trackSpecM;
+      snapshot = await pipe.snapshot(DateTime.now());
+    }
+    notifyListeners();
+  }
+
+  Future<void> setTrackSpec(int? spec) async {
+    trackSpecM = spec;
+    final pipe = _pipeline;
+    if (pipe != null) {
+      await pipe.setTrackSpec(spec);
       snapshot = await pipe.snapshot(DateTime.now());
     }
     notifyListeners();
@@ -295,6 +323,7 @@ class RecordingController extends ChangeNotifier {
     await pipeline.restore();
     _pipeline = pipeline;
     this.activity = pipeline.activity;
+    this.trackSpecM = pipeline.trackSpecM;
     snapshot = await pipeline.snapshot(DateTime.now());
     notifyListeners();
     _localLocation = GeolocatorLocationEngine();
@@ -341,6 +370,7 @@ class RecordingController extends ChangeNotifier {
           FlutterForegroundTask.updateService(
             notificationTitle: 'balmi 일시정지',
             notificationText: '기록이 멈춰 있습니다. 포인트는 기기에 남아 있습니다.',
+            notificationIcon: notificationIcon,
           ),
         );
         return;
@@ -363,7 +393,11 @@ class RecordingController extends ChangeNotifier {
           notificationTitle: 'balmi 기록 중',
           notificationText: snap.pointCount == 0
               ? BalmiCopy.waitingGpsShort
-              : '${snap.pointCount}점 · ${(snap.totalDistM / 1000).toStringAsFixed(2)}km',
+              : formatRecordingNotification(
+                  elapsed: elapsed,
+                  distM: snap.totalDistM,
+                ),
+          notificationIcon: notificationIcon,
         ),
       );
       final tts = snap.lapTts;

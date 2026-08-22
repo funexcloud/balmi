@@ -5,6 +5,7 @@ import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/engines/workout_stats.dart';
+import '../../widgets/session_row.dart';
 import '../session_detail/session_detail_screen.dart';
 
 class WorkoutLogScreen extends StatelessWidget {
@@ -26,30 +27,23 @@ class WorkoutLogScreen extends StatelessWidget {
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
           itemCount: items.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const Divider(height: 1, color: BalmiColors.line),
           itemBuilder: (context, i) {
             final r = items[i];
-            final laps = r.laps > 0 ? ' · ${r.laps}바퀴' : '';
-            return Card(
-              child: ListTile(
-                title: Text(
-                  '${formatDateTime(r.startedAt)} · ${r.activity.label}',
-                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-                ),
-                subtitle: Text(
-                  '${formatKm(r.totalDistM)}km · ${formatElapsed(r.duration)} · ${formatPace(r.paceKmh)}$laps',
-                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => SessionDetailScreen(sessionId: r.id),
-                    ),
-                  );
-                },
-              ),
+            return SessionRow(
+              startedAt: r.startedAt,
+              activityLabel: r.activity.label,
+              distM: r.totalDistM,
+              trailing: formatElapsed(r.duration),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => SessionDetailScreen(sessionId: r.id),
+                  ),
+                );
+              },
             );
           },
         );

@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
 import '../../widgets/balmi_wordmark.dart';
+import '../../widgets/osm_trace_map.dart';
 import '../../widgets/status_chips.dart';
 import '../../widgets/trust_header.dart';
 import '../session_detail/session_detail_screen.dart';
@@ -62,7 +63,6 @@ class _RecordingScreenState extends State<RecordingScreen>
     final rec = context.watch<RecordingController>();
     final snap = rec.snapshot;
     final running = snap?.sport == 'run';
-    final hint = rec.gpsHint;
     final speed = snap?.speedKmh ?? 0;
     final laps = snap?.lapCount ?? 0;
     final spec = snap?.trackSpecM;
@@ -72,7 +72,7 @@ class _RecordingScreenState extends State<RecordingScreen>
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -85,42 +85,45 @@ class _RecordingScreenState extends State<RecordingScreen>
                   value: rec.activity,
                   onChanged: (v) => rec.setActivity(v),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  rec.activity.isAuto ? BalmiCopy.sportHint : BalmiCopy.sportHintManual,
-                  style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
-                ),
-                if (hint != null) ...[
+                if (rec.activity.isTrack) ...[
+                  const SizedBox(height: 8),
+                  TrackSpecPills(
+                    value: rec.trackSpecM,
+                    onChanged: rec.setTrackSpec,
+                  ),
+                ],
+                if (rec.lastError != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    hint,
+                    rec.lastError!,
                     style: BalmiTheme.body(
                       size: 13,
-                      color: (snap?.pointCount ?? 0) == 0
-                          ? BalmiColors.plum
-                          : Theme.of(context).colorScheme.error,
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ],
-                const SizedBox(height: 22),
+                const SizedBox(height: 12),
+                SessionTraceMap(
+                  points: rec.liveTrail,
+                  lastPoint: rec.livePin,
+                  emptyLabel: BalmiCopy.waitingGpsShort,
+                ),
+                const SizedBox(height: 18),
                 Row(
                   children: [
+                    Text(
+                      BalmiCopy.currentPace,
+                      style: BalmiTheme.tracked(size: 11.5, trackingEm: 0.2),
+                    ),
+                    const Spacer(),
                     SportPill(
                       running: rec.activity == ActivityKind.run ||
                           rec.activity == ActivityKind.trail ||
+                          rec.activity == ActivityKind.track ||
                           running,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        BalmiCopy.sportHint,
-                        style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
-                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Text(BalmiCopy.currentPace, style: BalmiTheme.tracked(size: 11.5, trackingEm: 0.2)),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
@@ -148,8 +151,8 @@ class _RecordingScreenState extends State<RecordingScreen>
                     ),
                   ],
                 ),
-                if (snap?.trackMode == true) ...[
-                  const SizedBox(height: 22),
+                if (rec.activity.isTrack || snap?.trackMode == true) ...[
+                  const SizedBox(height: 18),
                   _TrackCard(
                     specLabel: specLabel,
                     laps: laps,
@@ -197,7 +200,7 @@ class _TrackCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final filled = laps <= 0 ? 0 : ((laps - 1) % 8) + 1;
     return Container(
-      padding: const EdgeInsets.fromLTRB(17, 15, 17, 15),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -209,7 +212,7 @@ class _TrackCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${BalmiCopy.trackMode} · $specLabel',
+                '${BalmiCopy.activityTrack} · $specLabel',
                 style: BalmiTheme.tracked(
                   size: 11.5,
                   trackingEm: 0.14,
@@ -224,18 +227,14 @@ class _TrackCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('$laps', style: BalmiTheme.num(size: 42)),
-              Text('바퀴', style: BalmiTheme.num(size: 19, weight: FontWeight.w700)),
-              const SizedBox(width: 14),
-              Text(
-                BalmiCopy.lastLap,
-                style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
-              ),
+              Text('$laps', style: BalmiTheme.num(size: 40)),
+              Text('바퀴', style: BalmiTheme.num(size: 18, weight: FontWeight.w700)),
+              const SizedBox(width: 12),
+              Text(BalmiCopy.lastLap, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
               const SizedBox(width: 6),
               Text(
                 lastLap == null ? '--\'--"' : formatLapClock(lastLap!),
@@ -243,7 +242,7 @@ class _TrackCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: List.generate(8, (i) {
               return Expanded(

@@ -3824,6 +3824,409 @@ class BuildingsCompanion extends UpdateCompanion<BuildingRow> {
   }
 }
 
+class $LivestockTable extends Livestock
+    with TableInfo<$LivestockTable, LivestockRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LivestockTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _feedWalkMMeta = const VerificationMeta(
+    'feedWalkM',
+  );
+  @override
+  late final GeneratedColumn<double> feedWalkM = GeneratedColumn<double>(
+    'feed_walk_m',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lngMeta = const VerificationMeta('lng');
+  @override
+  late final GeneratedColumn<double> lng = GeneratedColumn<double>(
+    'lng',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _raisedAtMeta = const VerificationMeta(
+    'raisedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> raisedAt = GeneratedColumn<DateTime>(
+    'raised_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    kind,
+    feedWalkM,
+    lat,
+    lng,
+    raisedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'livestock';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LivestockRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('feed_walk_m')) {
+      context.handle(
+        _feedWalkMMeta,
+        feedWalkM.isAcceptableOrUnknown(data['feed_walk_m']!, _feedWalkMMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_feedWalkMMeta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lng')) {
+      context.handle(
+        _lngMeta,
+        lng.isAcceptableOrUnknown(data['lng']!, _lngMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lngMeta);
+    }
+    if (data.containsKey('raised_at')) {
+      context.handle(
+        _raisedAtMeta,
+        raisedAt.isAcceptableOrUnknown(data['raised_at']!, _raisedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_raisedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LivestockRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LivestockRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      feedWalkM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}feed_walk_m'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lng'],
+      )!,
+      raisedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}raised_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LivestockTable createAlias(String alias) {
+    return $LivestockTable(attachedDatabase, alias);
+  }
+}
+
+class LivestockRow extends DataClass implements Insertable<LivestockRow> {
+  final String id;
+  final String kind;
+  final double feedWalkM;
+  final double lat;
+  final double lng;
+  final DateTime raisedAt;
+  const LivestockRow({
+    required this.id,
+    required this.kind,
+    required this.feedWalkM,
+    required this.lat,
+    required this.lng,
+    required this.raisedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    map['feed_walk_m'] = Variable<double>(feedWalkM);
+    map['lat'] = Variable<double>(lat);
+    map['lng'] = Variable<double>(lng);
+    map['raised_at'] = Variable<DateTime>(raisedAt);
+    return map;
+  }
+
+  LivestockCompanion toCompanion(bool nullToAbsent) {
+    return LivestockCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      feedWalkM: Value(feedWalkM),
+      lat: Value(lat),
+      lng: Value(lng),
+      raisedAt: Value(raisedAt),
+    );
+  }
+
+  factory LivestockRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LivestockRow(
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      feedWalkM: serializer.fromJson<double>(json['feedWalkM']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lng: serializer.fromJson<double>(json['lng']),
+      raisedAt: serializer.fromJson<DateTime>(json['raisedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'feedWalkM': serializer.toJson<double>(feedWalkM),
+      'lat': serializer.toJson<double>(lat),
+      'lng': serializer.toJson<double>(lng),
+      'raisedAt': serializer.toJson<DateTime>(raisedAt),
+    };
+  }
+
+  LivestockRow copyWith({
+    String? id,
+    String? kind,
+    double? feedWalkM,
+    double? lat,
+    double? lng,
+    DateTime? raisedAt,
+  }) => LivestockRow(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    feedWalkM: feedWalkM ?? this.feedWalkM,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    raisedAt: raisedAt ?? this.raisedAt,
+  );
+  LivestockRow copyWithCompanion(LivestockCompanion data) {
+    return LivestockRow(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      feedWalkM: data.feedWalkM.present ? data.feedWalkM.value : this.feedWalkM,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lng: data.lng.present ? data.lng.value : this.lng,
+      raisedAt: data.raisedAt.present ? data.raisedAt.value : this.raisedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LivestockRow(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('feedWalkM: $feedWalkM, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('raisedAt: $raisedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, kind, feedWalkM, lat, lng, raisedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LivestockRow &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.feedWalkM == this.feedWalkM &&
+          other.lat == this.lat &&
+          other.lng == this.lng &&
+          other.raisedAt == this.raisedAt);
+}
+
+class LivestockCompanion extends UpdateCompanion<LivestockRow> {
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<double> feedWalkM;
+  final Value<double> lat;
+  final Value<double> lng;
+  final Value<DateTime> raisedAt;
+  final Value<int> rowid;
+  const LivestockCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.feedWalkM = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lng = const Value.absent(),
+    this.raisedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LivestockCompanion.insert({
+    required String id,
+    required String kind,
+    required double feedWalkM,
+    required double lat,
+    required double lng,
+    required DateTime raisedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       kind = Value(kind),
+       feedWalkM = Value(feedWalkM),
+       lat = Value(lat),
+       lng = Value(lng),
+       raisedAt = Value(raisedAt);
+  static Insertable<LivestockRow> custom({
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<double>? feedWalkM,
+    Expression<double>? lat,
+    Expression<double>? lng,
+    Expression<DateTime>? raisedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (feedWalkM != null) 'feed_walk_m': feedWalkM,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (raisedAt != null) 'raised_at': raisedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LivestockCompanion copyWith({
+    Value<String>? id,
+    Value<String>? kind,
+    Value<double>? feedWalkM,
+    Value<double>? lat,
+    Value<double>? lng,
+    Value<DateTime>? raisedAt,
+    Value<int>? rowid,
+  }) {
+    return LivestockCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      feedWalkM: feedWalkM ?? this.feedWalkM,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      raisedAt: raisedAt ?? this.raisedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (feedWalkM.present) {
+      map['feed_walk_m'] = Variable<double>(feedWalkM.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lng.present) {
+      map['lng'] = Variable<double>(lng.value);
+    }
+    if (raisedAt.present) {
+      map['raised_at'] = Variable<DateTime>(raisedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LivestockCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('feedWalkM: $feedWalkM, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('raisedAt: $raisedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3835,6 +4238,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AppKvTable appKv = $AppKvTable(this);
   late final $EventsTable events = $EventsTable(this);
   late final $BuildingsTable buildings = $BuildingsTable(this);
+  late final $LivestockTable livestock = $LivestockTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3848,6 +4252,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     appKv,
     events,
     buildings,
+    livestock,
   ];
 }
 
@@ -6631,6 +7036,223 @@ typedef $$BuildingsTableProcessedTableManager =
       BuildingRow,
       PrefetchHooks Function()
     >;
+typedef $$LivestockTableCreateCompanionBuilder = LivestockCompanion Function({
+  required String id,
+  required String kind,
+  required double feedWalkM,
+  required double lat,
+  required double lng,
+  required DateTime raisedAt,
+  Value<int> rowid,
+});
+typedef $$LivestockTableUpdateCompanionBuilder = LivestockCompanion Function({
+  Value<String> id,
+  Value<String> kind,
+  Value<double> feedWalkM,
+  Value<double> lat,
+  Value<double> lng,
+  Value<DateTime> raisedAt,
+  Value<int> rowid,
+});
+
+class $$LivestockTableFilterComposer
+    extends Composer<_$AppDatabase, $LivestockTable> {
+  $$LivestockTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get feedWalkM => $composableBuilder(
+    column: $table.feedWalkM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get raisedAt => $composableBuilder(
+    column: $table.raisedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LivestockTableOrderingComposer
+    extends Composer<_$AppDatabase, $LivestockTable> {
+  $$LivestockTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get feedWalkM => $composableBuilder(
+    column: $table.feedWalkM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get raisedAt => $composableBuilder(
+    column: $table.raisedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LivestockTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LivestockTable> {
+  $$LivestockTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get feedWalkM =>
+      $composableBuilder(column: $table.feedWalkM, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lng =>
+      $composableBuilder(column: $table.lng, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get raisedAt =>
+      $composableBuilder(column: $table.raisedAt, builder: (column) => column);
+}
+
+class $$LivestockTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LivestockTable,
+          LivestockRow,
+          $$LivestockTableFilterComposer,
+          $$LivestockTableOrderingComposer,
+          $$LivestockTableAnnotationComposer,
+          $$LivestockTableCreateCompanionBuilder,
+          $$LivestockTableUpdateCompanionBuilder,
+          (
+            LivestockRow,
+            BaseReferences<_$AppDatabase, $LivestockTable, LivestockRow>,
+          ),
+          LivestockRow,
+          PrefetchHooks Function()
+        > {
+  $$LivestockTableTableManager(_$AppDatabase db, $LivestockTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LivestockTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LivestockTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LivestockTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double> feedWalkM = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lng = const Value.absent(),
+                Value<DateTime> raisedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LivestockCompanion(
+                id: id,
+                kind: kind,
+                feedWalkM: feedWalkM,
+                lat: lat,
+                lng: lng,
+                raisedAt: raisedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String kind,
+                required double feedWalkM,
+                required double lat,
+                required double lng,
+                required DateTime raisedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => LivestockCompanion.insert(
+                id: id,
+                kind: kind,
+                feedWalkM: feedWalkM,
+                lat: lat,
+                lng: lng,
+                raisedAt: raisedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LivestockTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LivestockTable,
+      LivestockRow,
+      $$LivestockTableFilterComposer,
+      $$LivestockTableOrderingComposer,
+      $$LivestockTableAnnotationComposer,
+      $$LivestockTableCreateCompanionBuilder,
+      $$LivestockTableUpdateCompanionBuilder,
+      (
+        LivestockRow,
+        BaseReferences<_$AppDatabase, $LivestockTable, LivestockRow>,
+      ),
+      LivestockRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6650,4 +7272,6 @@ class $AppDatabaseManager {
       $$EventsTableTableManager(_db, _db.events);
   $$BuildingsTableTableManager get buildings =>
       $$BuildingsTableTableManager(_db, _db.buildings);
+  $$LivestockTableTableManager get livestock =>
+      $$LivestockTableTableManager(_db, _db.livestock);
 }

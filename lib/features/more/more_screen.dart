@@ -13,10 +13,10 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-      children: [
-        _row(context, BalmiCopy.myActivity, () {
+    final rows = <(String, VoidCallback)>[
+      (
+        BalmiCopy.myActivity,
+        () {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => const Scaffold(
@@ -25,37 +25,52 @@ class MoreScreen extends StatelessWidget {
               ),
             ),
           );
-        }),
-        _row(context, BalmiCopy.missions, () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MissionsScreen()));
-        }),
-        _row(context, BalmiCopy.events, () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EventsScreen()));
-        }),
-        _row(context, BalmiCopy.landTab, () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const Scaffold(
-                backgroundColor: BalmiColors.paper,
-                body: SafeArea(child: LandPreviewScreen()),
-              ),
-            ),
-          );
-        }),
-        _row(context, BalmiCopy.settings, () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-        }),
-      ],
-    );
-  }
-
-  Widget _row(BuildContext context, String label, VoidCallback onTap) {
-    return Card(
-      child: ListTile(
-        title: Text(label, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
-        trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
-        onTap: onTap,
+        },
       ),
+      (
+        BalmiCopy.missions,
+        () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MissionsScreen()));
+        },
+      ),
+      (
+        BalmiCopy.events,
+        () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EventsScreen()));
+        },
+      ),
+      (BalmiCopy.landTab, () => openLandPreview(context)),
+      (
+        BalmiCopy.settings,
+        () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+        },
+      ),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: BalmiColors.line),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const Divider(height: 1, color: BalmiColors.line),
+                ListTile(
+                  title: Text(rows[i].$1, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+                  trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
+                  onTap: rows[i].$2,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -10,7 +10,17 @@ import 'tables.dart';
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Sessions, Points, Segments, Laps, SyncQueue, AppKv, Events, Buildings],
+  tables: [
+    Sessions,
+    Points,
+    Segments,
+    Laps,
+    SyncQueue,
+    AppKv,
+    Events,
+    Buildings,
+    Livestock,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -23,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileName = 'balmi.sqlite';
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,6 +46,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.createTable(buildings);
+          }
+          if (from < 4) {
+            await m.createTable(livestock);
           }
         },
       );

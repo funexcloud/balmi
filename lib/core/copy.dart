@@ -40,6 +40,7 @@ abstract final class BalmiCopy {
   static const activityRun = '달리기';
   static const activityHike = '등산';
   static const activityTrail = '트레일 러닝';
+  static const activityTrack = '트랙';
   static const activityLabel = '활동';
   static const sportHint = '속도·케이던스 자동 판정 · 구간별 태깅';
   static const sportHintManual = '선택한 활동으로 기록합니다';
@@ -103,6 +104,7 @@ abstract final class BalmiCopy {
   static const registryEyebrow = '발미 등기부';
   static const landTitle = '걸어서 등기한 내 땅';
   static const landSteppedTitle = '내가 밟은 땅';
+  static const landGuide = '등기 안내';
   static const landPreview = '2차 기능 미리보기 — 지금은 실제 등기되지 않습니다';
   static const landEmptyArea = '아직 닫힌 루프가 없어요';
   static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
@@ -122,7 +124,20 @@ abstract final class BalmiCopy {
   static const landThresholds =
       '짓기·가꾸기: 울타리 목장 1,000㎡ · 헛간 5,000㎡ · 농가 20,000㎡ · 마을 창고 50,000㎡';
   static const buildAction = '짓기';
+  static const raiseAction = '기르기';
   static const myBuildings = '내 목장';
+  static const myHerds = '내 가축·작물';
+  static const todayFeed = '오늘 먹이';
+  static const herdsFed = '오늘 걸어서 먹이를 줬어요';
+  static const herdsHungry = '오늘 조금 걸어 주시면 먹이가 생깁니다';
+  static const farmHomeEmpty = '걸어서 땅을 모으면 목장을 가꿀 수 있어요';
+  static const farmHomeReady = '울타리가 생겼어요. 오늘 걸어 양떼를 길러 보세요';
+  static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
+  static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
+  static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';
+  static const raisePlaceHint = '기르기를 고른 뒤 지도에서 자리를 누르거나, 기르기를 누르면 건물 옆에 놓입니다.';
+  static const herdUnlockHint =
+      '기르기: 양떼 400m · 닭 250m · 텃밭 600m · 한우 1.2km (오늘 기록). 면적은 쓰지 않아요.';
   static const noBudget = '남은 면적이 모자라요. 더 걸어서 땅을 넓히세요.';
   static const remainingArea = '남은 면적';
   static const recentDeed = '최근 등기';
@@ -137,7 +152,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.5';
+  static const versionLabel = '0.1.6';
 
   static String gpsStrength(String code) {
     switch (code) {

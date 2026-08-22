@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
-import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../../widgets/balmi_app_bar.dart';
+import '../../widgets/session_row.dart';
 import '../session_detail/session_detail_screen.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -32,31 +33,24 @@ class HistoryScreen extends StatelessWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const Divider(height: 1, color: BalmiColors.line),
             itemBuilder: (context, i) {
               final s = items[i];
               final recovered = s.status == SessionStatus.recovered.wire;
-              return Card(
-                child: ListTile(
-                  title: Text(
-                    formatDateTime(s.startedAt),
-                    style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-                  ),
-                  subtitle: Text(
-                    '${formatKm(s.totalDistM)} km · ${BalmiCopy.walk} ${formatKm(s.walkDistM)} · ${BalmiCopy.run} ${formatKm(s.runDistM)}'
-                    '${recovered ? ' · 복구 종료' : ''}',
-                    style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => SessionDetailScreen(sessionId: s.id),
-                      ),
-                    );
-                  },
-                ),
+              return SessionRow(
+                startedAt: s.startedAt,
+                activityLabel: ActivityKind.fromWire(s.activity).label,
+                distM: s.totalDistM,
+                trailing: recovered ? '복구 종료' : null,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SessionDetailScreen(sessionId: s.id),
+                    ),
+                  );
+                },
               );
             },
           );

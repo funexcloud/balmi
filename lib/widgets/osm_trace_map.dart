@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../core/theme.dart';
 import '../data/map/device_traces.dart';
+import '../domain/engines/farm_life.dart';
 import '../domain/engines/land_city.dart';
 
 class FarmMark {
@@ -11,6 +12,13 @@ class FarmMark {
 
   final LatLng point;
   final FarmKind kind;
+}
+
+class HerdMark {
+  const HerdMark({required this.point, required this.kind});
+
+  final LatLng point;
+  final HerdKind kind;
 }
 
 IconData farmIcon(FarmKind kind) => switch (kind) {
@@ -27,6 +35,51 @@ Color farmTint(FarmKind kind) => switch (kind) {
       FarmKind.villageStore => BalmiColors.ink,
     };
 
+IconData herdIcon(HerdKind kind) => switch (kind) {
+      HerdKind.sheep => Icons.pets,
+      HerdKind.chicken => Icons.emoji_nature,
+      HerdKind.garden => Icons.yard,
+      HerdKind.cattle => Icons.spa,
+    };
+
+Color herdTint(HerdKind kind) => farmTint(kind.requires);
+
+class SessionTraceMap extends StatelessWidget {
+  const SessionTraceMap({
+    super.key,
+    required this.points,
+    this.lastPoint,
+    this.emptyLabel,
+    this.height = 220,
+  });
+
+  final List<LatLng> points;
+  final LatLng? lastPoint;
+  final String? emptyLabel;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final pin = lastPoint ?? (points.isEmpty ? null : points.last);
+    return SizedBox(
+      height: height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: OsmTraceMap(
+          traces: DeviceTraces(
+            lines: points.length >= 2 ? [points] : const [],
+            loops: const [],
+            loopAreaM2: 0,
+            lastPoint: pin,
+          ),
+          highlight: points.length >= 2 ? points : null,
+          emptyLabel: pin == null ? emptyLabel : null,
+        ),
+      ),
+    );
+  }
+}
+
 class OsmTraceMap extends StatefulWidget {
   const OsmTraceMap({
     super.key,
@@ -34,6 +87,7 @@ class OsmTraceMap extends StatefulWidget {
     this.highlight,
     this.emptyLabel,
     this.buildings = const [],
+    this.herds = const [],
     this.onTap,
   });
 
@@ -41,6 +95,7 @@ class OsmTraceMap extends StatefulWidget {
   final List<LatLng>? highlight;
   final String? emptyLabel;
   final List<FarmMark> buildings;
+  final List<HerdMark> herds;
   final ValueChanged<LatLng>? onTap;
 
   @override
@@ -65,6 +120,7 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
         for (final line in widget.traces.lines)
           if (line.length >= 2) ...line,
       for (final b in widget.buildings) b.point,
+      for (final h in widget.herds) h.point,
     ];
     if (pts.length < 2) {
       _map.move(widget.traces.center, widget.traces.hasLine ? 15 : 11);
@@ -129,6 +185,19 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
             ),
             MarkerLayer(
               markers: [
+                if (widget.traces.lastPoint != null)
+                  Marker(
+                    point: widget.traces.lastPoint!,
+                    width: 18,
+                    height: 18,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: BalmiColors.plum,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: BalmiColors.paper, width: 2),
+                      ),
+                    ),
+                  ),
                 for (final b in widget.buildings)
                   Marker(
                     point: b.point,
@@ -136,6 +205,14 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
                     height: 44,
                     alignment: Alignment.bottomCenter,
                     child: _FarmSprite(kind: b.kind),
+                  ),
+                for (final h in widget.herds)
+                  Marker(
+                    point: h.point,
+                    width: 40,
+                    height: 44,
+                    alignment: Alignment.bottomCenter,
+                    child: _HerdSprite(kind: h.kind),
                   ),
               ],
             ),
@@ -167,6 +244,43 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+class _HerdSprite extends StatelessWidget {
+  const _HerdSprite({required this.kind});
+
+  final HerdKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: BalmiColors.paper,
+            shape: BoxShape.circle,
+            border: Border.all(color: herdTint(kind), width: 2),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(herdIcon(kind), size: 18, color: herdTint(kind)),
+          ),
+        ),
+        Text(
+          kind.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+            color: BalmiColors.ink,
+            height: 1.1,
+          ),
+        ),
       ],
     );
   }

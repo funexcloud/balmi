@@ -196,6 +196,13 @@ List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
       target: 10,
       unit: '바퀴',
     ),
+    MissionSnapshot(
+      id: 'today_feed_800m',
+      title: '오늘 800m — 목장 먹이',
+      current: today.distM,
+      target: 800,
+      unit: 'm',
+    ),
   ];
 }
 

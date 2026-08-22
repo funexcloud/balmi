@@ -48,6 +48,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="im.balmi.app.notification_icon"
+            android:resource="@drawable/ic_stat_balmi" />
     </application>
     <queries>
         <intent>

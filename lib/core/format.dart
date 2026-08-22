@@ -35,6 +35,14 @@ String formatElapsed(Duration d) {
   return '$m:$s';
 }
 
+/// Foreground notification body. Never uses 점 (reads as a score).
+String formatRecordingNotification({
+  required Duration elapsed,
+  required double distM,
+}) {
+  return '기록 ${formatElapsed(elapsed)} · ${formatKm(distM)}km';
+}
+
 /// Current pace from km/h, mockup form `m'ss"`. Slow/unknown → `--'--"`.
 String formatPace(double speedKmh) {
   if (speedKmh <= 0.5) return '--\'--"';

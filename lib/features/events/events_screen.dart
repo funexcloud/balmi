@@ -118,10 +118,10 @@ class _EventsScreenState extends State<EventsScreen> {
         label: const Text(BalmiCopy.createEvent),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 88),
         children: [
           Text(BalmiCopy.crewLater, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           if (_events.isEmpty)
             Text('만든 대회가 없습니다', style: BalmiTheme.body(size: 14, color: BalmiColors.sub)),
           for (final e in _events)
@@ -145,9 +145,9 @@ class _EventsScreenState extends State<EventsScreen> {
     final open = spec.isOpen(now);
     final ratio = spec.goalValue <= 0 ? 0.0 : (current / spec.goalValue).clamp(0.0, 1.0);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),

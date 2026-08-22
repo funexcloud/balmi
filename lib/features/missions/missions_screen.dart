@@ -21,7 +21,7 @@ class MissionsScreen extends StatelessWidget {
         builder: (context, snap) {
           final missions = missionPresets(snap.data ?? [], DateTime.now());
           return ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
               for (final m in missions) _MissionTile(mission: m),
             ],
@@ -40,9 +40,9 @@ class _MissionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),

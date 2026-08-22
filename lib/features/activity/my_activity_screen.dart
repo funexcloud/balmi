@@ -9,6 +9,7 @@ import '../../data/sensors/step_service.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
+import '../../widgets/session_row.dart';
 import '../../widgets/today_summary_card.dart';
 import '../session_detail/session_detail_screen.dart';
 
@@ -48,74 +49,107 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
     final month = summarizePeriod(inLocalMonth(filtered, now));
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      padding: const EdgeInsets.fromLTRB(12, 4, 20, 24),
       children: [
-        StepLine(label: steps.label, steps: steps.displaySteps),
-        const SizedBox(height: 10),
-        TodaySummaryCard(
-          stats: today,
-          stepLabel: steps.label,
-          steps: today.steps > 0 ? today.steps : steps.displaySteps,
-        ),
-        const SizedBox(height: 16),
-        Text(BalmiCopy.activityLabel, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        ActivityPills(
-          value: _filter ?? ActivityKind.auto,
-          onChanged: (v) => setState(() => _filter = v == ActivityKind.auto ? null : v),
-        ),
-        const SizedBox(height: 18),
-        _period('오늘', today),
-        _period('이번 주', week),
-        _period('이번 달', month),
-        const SizedBox(height: 12),
-        Text(BalmiCopy.workoutLogTab, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        ...filtered.map((r) {
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              '${formatDateTime(r.startedAt)} · ${r.activity.label}',
-              style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.arrow_back, color: BalmiColors.ink),
             ),
-            subtitle: Text(
-              '${formatKm(r.totalDistM)}km · ${formatElapsed(r.duration)}',
-              style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+            Expanded(
+              child: Text(BalmiCopy.myActivity, style: BalmiTheme.body(size: 20, weight: FontWeight.w800)),
             ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: r.id)),
-              );
-            },
-          );
-        }),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              StepLine(label: steps.label, steps: steps.displaySteps),
+              const SizedBox(height: 10),
+              TodaySummaryCard(
+                stats: today,
+                stepLabel: steps.label,
+                steps: today.steps > 0 ? today.steps : steps.displaySteps,
+              ),
+              const SizedBox(height: 14),
+              Text(BalmiCopy.activityLabel, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              ActivityPills(
+                value: _filter ?? ActivityKind.auto,
+                onChanged: (v) => setState(() => _filter = v == ActivityKind.auto ? null : v),
+              ),
+              const SizedBox(height: 16),
+              _periodCard([
+                ('오늘', today),
+                ('이번 주', week),
+                ('이번 달', month),
+              ]),
+              const SizedBox(height: 16),
+              Text(BalmiCopy.workoutLogTab, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              for (final r in filtered)
+                SessionRow(
+                  startedAt: r.startedAt,
+                  activityLabel: r.activity.label,
+                  distM: r.totalDistM,
+                  trailing: formatElapsed(r.duration),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: r.id)),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _period(String title, PeriodStats s) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+  Widget _periodCard(List<(String, PeriodStats)> rows) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: BalmiColors.line),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
-          Text(
-            s.isEmpty
-                ? BalmiCopy.todayEmpty
-                : '${s.sessions}회 · ${formatKm(s.distM)}km · ${formatElapsed(s.duration)}',
-            style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
-          ),
-          if (!s.isEmpty)
-            Text(
-              ActivityKind.selectable
-                  .where((a) => !a.isAuto && (s.byActivity[a] ?? 0) > 0)
-                  .map((a) => '${a.label} ${formatKm(s.byActivity[a] ?? 0)}km')
-                  .join(' · '),
-              style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-            ),
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const Divider(height: 16, color: BalmiColors.line),
+            _periodLine(rows[i].$1, rows[i].$2),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _periodLine(String title, PeriodStats s) {
+    final breakdown = ActivityKind.selectable
+        .where((a) => !a.isAuto && (s.byActivity[a] ?? 0) > 0)
+        .map((a) => '${a.label} ${formatKm(s.byActivity[a] ?? 0)}km')
+        .join(' · ');
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 56,
+          child: Text(title, style: BalmiTheme.body(size: 14, weight: FontWeight.w800)),
+        ),
+        Expanded(
+          child: Text(
+            s.isEmpty
+                ? BalmiCopy.todayEmpty
+                : '${s.sessions}회 · ${formatKm(s.distM)}km · ${formatElapsed(s.duration)}'
+                    '${breakdown.isEmpty ? '' : '\n$breakdown'}',
+            style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+          ),
+        ),
+      ],
     );
   }
 }

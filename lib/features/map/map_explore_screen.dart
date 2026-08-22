@@ -3,13 +3,13 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
-import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/osm_trace_map.dart';
+import '../../widgets/session_row.dart';
 import '../land/land_preview_screen.dart';
 import '../session_detail/session_detail_screen.dart';
 
@@ -77,46 +77,35 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                 ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              BalmiCopy.landOnMapHint,
-              style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const Scaffold(
-                  backgroundColor: BalmiColors.paper,
-                  body: SafeArea(child: LandPreviewScreen()),
+          padding: const EdgeInsets.fromLTRB(20, 4, 12, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  BalmiCopy.mapExplore,
+                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
                 ),
               ),
-            );
-          },
-          child: const Text(BalmiCopy.landTab),
+              TextButton(
+                onPressed: () => openLandPreview(context),
+                child: const Text(BalmiCopy.landTab),
+              ),
+            ],
+          ),
         ),
         Expanded(
           flex: 2,
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             itemCount: _sessions.length,
+            separatorBuilder: (_, _) => const Divider(height: 1, color: BalmiColors.line),
             itemBuilder: (context, i) {
               final s = _sessions[i];
-              final active = s.id == _selected;
-              return ListTile(
-                selected: active,
-                title: Text(
-                  '${formatDateTime(s.startedAt)} · ${ActivityKind.fromWire(s.activity).label}',
-                  style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
-                ),
-                subtitle: Text(
-                  '${formatKm(s.totalDistM)}km',
-                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-                ),
+              return SessionRow(
+                startedAt: s.startedAt,
+                activityLabel: ActivityKind.fromWire(s.activity).label,
+                distM: s.totalDistM,
+                selected: s.id == _selected,
                 onTap: () => _select(s.id),
                 onLongPress: () {
                   Navigator.of(context).push(

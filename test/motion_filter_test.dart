@@ -118,7 +118,168 @@ void main() {
     }
     expect(pipe.activity, ActivityKind.hike);
     expect(pipe.classifier.current, Sport.walk);
+    expect(pipe.trail.length, greaterThan(5));
+    expect(pipe.mapPin, isNotNull);
     final segs = await repo.segmentsFor(session.id);
     expect(segs.every((s) => s.sport != Sport.run.wire), isTrue);
+  });
+
+  test('manual track does not RUN→WALK on slow GPS', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 22, 5);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.track,
+      trackSpecM: 400,
+    );
+    expect(session.trackMode, isTrue);
+    expect(session.activity, 'track');
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: true,
+      trackSpecM: 400,
+      activity: ActivityKind.track,
+    );
+    await pipe.restore();
+    var lat = 37.2;
+    for (var i = 0; i < 20; i++) {
+      lat += 0.8 / 111000;
+      pipe
+        ..onCadence(90)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: lat,
+            lng: 127.2,
+            speedMs: 0.8,
+            speedAccuracyMs: 0.4,
+            hAccM: 8,
+          ),
+        );
+      await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(pipe.activity, ActivityKind.track);
+    expect(pipe.trackMode, isTrue);
+    expect(pipe.classifier.current, Sport.run);
+    final segs = await repo.segmentsFor(session.id);
+    expect(segs.every((s) => s.sport == Sport.run.wire), isTrue);
+  });
+
+  test('mid-session switch to track arms laps; leaving disables them', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 22, 6);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.walk,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.walk,
+    );
+    await pipe.restore();
+    expect(pipe.trackMode, isFalse);
+
+    pipe.onFix(
+      LocationFix(
+        ts: start,
+        lat: 37.3,
+        lng: 127.3,
+        speedMs: 2,
+        hAccM: 6,
+      ),
+    );
+    await pipe.sampleNow(start);
+    expect(pipe.laps.startLat, isNull);
+
+    await pipe.setActivity(ActivityKind.track, start.add(const Duration(seconds: 1)));
+    expect(pipe.trackMode, isTrue);
+    expect(pipe.activity, ActivityKind.track);
+    expect(pipe.trackSpecM, 400);
+    var stored = await repo.sessionById(session.id);
+    expect(stored!.activity, 'track');
+    expect(stored.trackMode, isTrue);
+    expect(stored.trackSpecM, 400);
+
+    pipe.onFix(
+      LocationFix(
+        ts: start.add(const Duration(seconds: 2)),
+        lat: 37.3,
+        lng: 127.3,
+        speedMs: 2,
+        hAccM: 6,
+      ),
+    );
+    await pipe.sampleNow(start.add(const Duration(seconds: 2)));
+    expect(pipe.laps.startLat, isNotNull);
+
+    await pipe.setActivity(ActivityKind.walk, start.add(const Duration(seconds: 3)));
+    expect(pipe.trackMode, isFalse);
+    expect(pipe.activity, ActivityKind.walk);
+    stored = await repo.sessionById(session.id);
+    expect(stored!.activity, 'walk');
+    expect(stored.trackMode, isFalse);
+
+    final finishLat = pipe.laps.startLat;
+    pipe.onFix(
+      LocationFix(
+        ts: start.add(const Duration(seconds: 4)),
+        lat: 37.4,
+        lng: 127.4,
+        speedMs: 2,
+        hAccM: 6,
+      ),
+    );
+    await pipe.sampleNow(start.add(const Duration(seconds: 4)));
+    expect(pipe.laps.startLat, finishLat);
+    expect(pipe.laps.lapNo, 0);
+  });
+
+  test('indoor still pin does not invent a path', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 22, 7);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.walk,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.walk,
+      filter: GpsMotionFilter(),
+    );
+    await pipe.restore();
+    const lat = 37.5665;
+    const lon = 126.9780;
+    for (var i = 0; i < 8; i++) {
+      pipe.onFix(
+        LocationFix(
+          ts: start.add(Duration(seconds: i)),
+          lat: lat + (i.isEven ? 0.00001 : -0.00001),
+          lng: lon,
+          speedMs: 8,
+          speedAccuracyMs: 6,
+          hAccM: 12,
+        ),
+      );
+      await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(pipe.mapPin, isNotNull);
+    expect(pipe.trail, isEmpty);
   });
 }
