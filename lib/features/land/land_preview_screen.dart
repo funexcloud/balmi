@@ -91,10 +91,10 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
       });
       return;
     }
-    if (result.unlocked != null) {
+    if (result.raised != null) {
+      _toast('들판에 ${result.raised!.giftLabel}');
+    } else if (result.unlocked != null) {
       _toast('${result.unlocked!.label} · ${BalmiCopy.waterDone}');
-    } else if (result.raised != null) {
-      _toast('${result.raised!.label} · ${BalmiCopy.waterDone}');
     } else {
       _toast(BalmiCopy.waterDone);
     }

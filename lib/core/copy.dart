@@ -125,7 +125,7 @@ abstract final class BalmiCopy {
   static const watersCount = '물 준 횟수';
   static const nextMilestone = '다음 목장';
   static const farmSpendHint = '하루 한 번, 걸은 날만 물을 줍니다. 면적으로 짓지 않습니다.';
-  static const farmPlaceHint = '물을 주면 들이 조금 더 살아납니다.';
+  static const farmPlaceHint = '물을 주면 들판에 가축이 찾아옵니다.';
   static const farmNeedFix = '먼저 걸어서 경로를 남겨 주세요';
   static const farmUnlocked = '열림';
   static const farmLocked = '아직';
@@ -141,13 +141,13 @@ abstract final class BalmiCopy {
   static const herdsFed = '오늘 물을 줬어요';
   static const herdsHungry = '오늘 걸어서 물을 주세요';
   static const farmHomeEmpty = '오늘 걸으면 목초에 물을 한 번 줄 수 있어요';
-  static const farmHomeReady = '울타리가 생겼어요. 다음에 물을 주면 양이 와요';
+  static const farmHomeReady = '울타리가 생겼어요. 내일 물을 주면 양이 와요';
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';
   static const raisePlaceHint = '물 한 번에 가축·작물은 하나만 자랍니다.';
   static const herdUnlockHint =
-      '물주기 3회 울타리 · 10회 헛간 · 25회 농가 · 60회 창고. 건물이 있으면 그다음 물에 가축·작물 하나.';
+      '울타리는 3회째. 그다음 물마다 양·닭·텃밭·한우가 하나씩 자랍니다. 건물 이정표는 10·25·60회.';
   static const noBudget = '면적으로는 지을 수 없어요. 걸어서 물을 주세요.';
   static const remainingArea = '남은 면적';
   static const recentDeed = '최근 등기';

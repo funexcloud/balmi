@@ -15,11 +15,15 @@ class WaterLedger {
     required this.watersTotal,
     required this.wateredToday,
     required this.hasQualifyingWalkToday,
+    this.buildings = const [],
+    this.herds = const [],
   });
 
   final int watersTotal;
   final bool wateredToday;
   final bool hasQualifyingWalkToday;
+  final List<FarmKind> buildings;
+  final List<HerdKind> herds;
 
   /// At most one unused token — never a stack from leftover sessions.
   int get unusedTokens => canWater ? 1 : 0;
@@ -45,11 +49,24 @@ class WaterLedger {
     return next.watersNeeded - watersTotal;
   }
 
-  /// Tiny status: 물 N회 · 다음 울타리까지 M회
+  /// Tiny status: 울타리까지 N회, or 다음 물 주면 양 한 마리.
   String get progressLine {
+    final nextTotal = watersTotal + 1;
+    final unlock = buildingUnlockedByWaters(
+      watersAfter: nextTotal,
+      already: buildings,
+    );
+    final herd = herdRaisedByWater(
+      buildings: buildings,
+      existing: herds,
+      watersAfter: nextTotal,
+    );
+    if (unlock == null && herd != null) {
+      return '물 $watersTotal회 · 다음 물 주면 ${herd.giftLabel}';
+    }
     final next = nextBuilding;
     if (next == null) return '물 $watersTotal회';
-    return '물 $watersTotal회 · 다음 ${next.shortLabel}까지 $watersUntilNext회';
+    return '물 $watersTotal회 · ${next.shortLabel}까지 $watersUntilNext회';
   }
 }
 
@@ -67,11 +84,15 @@ WaterLedger evaluateWater({
   required int watersTotal,
   required bool wateredToday,
   required int qualifyingSessionsToday,
+  List<FarmKind> buildings = const [],
+  List<HerdKind> herds = const [],
 }) {
   return WaterLedger(
     watersTotal: watersTotal < 0 ? 0 : watersTotal,
     wateredToday: wateredToday,
     hasQualifyingWalkToday: qualifyingSessionsToday > 0,
+    buildings: buildings,
+    herds: herds,
   );
 }
 
@@ -79,11 +100,15 @@ WaterLedger ledgerFromWalks({
   required Iterable<ClosedWalk> walks,
   required Iterable<DateTime> wateredAt,
   required DateTime now,
+  Iterable<FarmKind> buildings = const [],
+  Iterable<HerdKind> herds = const [],
 }) {
   return WaterLedger(
     watersTotal: wateredAt.length,
     wateredToday: wateredOnDay(wateredAt, now),
     hasQualifyingWalkToday: earnedWaterToday(walks, now),
+    buildings: buildings.toList(),
+    herds: herds.toList(),
   );
 }
 
@@ -106,7 +131,6 @@ FarmKind? buildingUnlockedByWaters({
   return null;
 }
 
-/// One herd per water, lowest tier with a home and room. Milestone waters skip raise.
 class WaterApplyResult {
   const WaterApplyResult({
     required this.ledger,
@@ -121,17 +145,20 @@ class WaterApplyResult {
   final bool applied;
 }
 
+/// One animal per non-milestone water. Rotate among kinds that have a home and room.
 HerdKind? herdRaisedByWater({
   required Iterable<FarmKind> buildings,
   required Iterable<HerdKind> existing,
   FarmKind? justUnlocked,
+  int watersAfter = 0,
 }) {
   if (justUnlocked != null) return null;
-  for (final kind in HerdKind.tiers) {
-    if (raiseBlock(kind: kind, buildings: buildings, existing: existing) ==
-        RaiseBlock.ok) {
-      return kind;
-    }
-  }
-  return null;
+  final open = <HerdKind>[
+    for (final kind in HerdKind.tiers)
+      if (raiseBlock(kind: kind, buildings: buildings, existing: existing) ==
+          RaiseBlock.ok)
+        kind,
+  ];
+  if (open.isEmpty) return null;
+  return open[watersAfter % open.length];
 }

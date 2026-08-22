@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   PeriodStats _today = summarizePeriod(const []);
   var _buildingCount = 0;
   var _wateredToday = false;
-  var _progressLine = '물 0회 · 다음 울타리까지 3회';
+  var _progressLine = '물 0회 · 울타리까지 3회';
 
   @override
   void initState() {

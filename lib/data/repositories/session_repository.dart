@@ -605,10 +605,14 @@ class SessionRepository {
       for (final s in sessions)
         ClosedWalk(endedAt: s.endedAt ?? s.startedAt, distM: s.totalDistM),
     ];
+    final buildings = await listBuildings();
+    final herds = await listLivestock();
     return ledgerFromWalks(
       walks: walks,
       wateredAt: events.map((e) => e.wateredAt),
       now: at,
+      buildings: buildings.map((b) => FarmKind.fromWire(b.type)),
+      herds: herds.map((h) => HerdKind.fromWire(h.kind)),
     );
   }
 
@@ -636,6 +640,7 @@ class SessionRepository {
       buildings: homes,
       existing: existing,
       justUnlocked: unlocked,
+      watersAfter: nextTotal,
     );
     if (unlocked != null) {
       await insertBuilding(kind: unlocked, lat: lat, lng: lng);
@@ -667,6 +672,8 @@ class SessionRepository {
         watersTotal: nextTotal,
         wateredToday: true,
         hasQualifyingWalkToday: true,
+        buildings: homes,
+        herds: [...existing, ?raised],
       ),
       unlocked: unlocked,
       raised: raised,

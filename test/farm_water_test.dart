@@ -4,22 +4,41 @@ import 'package:balmi/domain/engines/land_city.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('progress line is waters and next milestone, not leftover ㎡', () {
+  test('progress line names the next building or the next animal', () {
     expect(
       evaluateWater(
         watersTotal: 0,
         wateredToday: false,
         qualifyingSessionsToday: 0,
       ).progressLine,
-      '물 0회 · 다음 울타리까지 3회',
+      '물 0회 · 울타리까지 3회',
+    );
+    expect(
+      evaluateWater(
+        watersTotal: 2,
+        wateredToday: true,
+        qualifyingSessionsToday: 1,
+      ).progressLine,
+      '물 2회 · 울타리까지 1회',
     );
     expect(
       evaluateWater(
         watersTotal: 3,
         wateredToday: true,
         qualifyingSessionsToday: 1,
+        buildings: const [FarmKind.pastureFence],
       ).progressLine,
-      '물 3회 · 다음 헛간까지 7회',
+      '물 3회 · 다음 물 주면 양 한 마리',
+    );
+    expect(
+      evaluateWater(
+        watersTotal: 4,
+        wateredToday: true,
+        qualifyingSessionsToday: 1,
+        buildings: const [FarmKind.pastureFence],
+        herds: const [HerdKind.sheep],
+      ).progressLine,
+      '물 4회 · 다음 물 주면 양 한 마리',
     );
   });
 
@@ -150,11 +169,52 @@ void main() {
     );
   });
 
-  test('one water raises at most one herd even with many buildings', () {
+  test('one water raises at most one herd and rotates as buildings exist', () {
     expect(
       herdRaisedByWater(
         buildings: FarmKind.tiers,
         existing: const [],
+        watersAfter: 4,
+      ),
+      HerdKind.sheep,
+    );
+    expect(
+      herdRaisedByWater(
+        buildings: const [FarmKind.pastureFence, FarmKind.barn],
+        existing: const [HerdKind.sheep],
+        watersAfter: 11,
+      ),
+      HerdKind.chicken,
+    );
+    expect(
+      herdRaisedByWater(
+        buildings: const [FarmKind.pastureFence, FarmKind.barn],
+        existing: const [HerdKind.sheep],
+        watersAfter: 12,
+      ),
+      HerdKind.sheep,
+    );
+  });
+
+  test('first sheep appears on the water after the fence', () {
+    expect(
+      buildingUnlockedByWaters(watersAfter: 3, already: const []),
+      FarmKind.pastureFence,
+    );
+    expect(
+      herdRaisedByWater(
+        buildings: const [FarmKind.pastureFence],
+        existing: const [],
+        justUnlocked: FarmKind.pastureFence,
+        watersAfter: 3,
+      ),
+      isNull,
+    );
+    expect(
+      herdRaisedByWater(
+        buildings: const [FarmKind.pastureFence],
+        existing: const [],
+        watersAfter: 4,
       ),
       HerdKind.sheep,
     );

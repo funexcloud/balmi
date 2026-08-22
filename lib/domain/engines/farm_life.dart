@@ -21,6 +21,20 @@ enum HerdKind {
         cattle => '한우',
       };
 
+  String get shortLabel => switch (this) {
+        sheep => '양',
+        chicken => '닭',
+        garden => '텃밭',
+        cattle => '한우',
+      };
+
+  String get giftLabel => switch (this) {
+        sheep => '양 한 마리',
+        chicken => '닭 한 마리',
+        garden => '텃밭 한 줄',
+        cattle => '한우 한 마리',
+      };
+
   FarmKind get requires => switch (this) {
         sheep => FarmKind.pastureFence,
         chicken => FarmKind.barn,
