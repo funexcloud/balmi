@@ -102,9 +102,29 @@ abstract final class BalmiCopy {
   static const registryKicker = 'BALMI REGISTRY';
   static const registryEyebrow = '발미 등기부';
   static const landTitle = '걸어서 등기한 내 땅';
+  static const landSteppedTitle = '내가 밟은 땅';
   static const landPreview = '2차 기능 미리보기 — 지금은 실제 등기되지 않습니다';
   static const landEmptyArea = '아직 닫힌 루프가 없어요';
   static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
+  static const landNoPath = '아직 등기할 경로가 없습니다';
+  static const landTracesHint = '경로가 쌓이면 지도에 표시됩니다';
+  static const landLoopAreaHint = '닫힌 경로에서 계산한 면적';
+  static const farmOwner = '나는 농장주예요';
+  static const farmBudget = '면적 예산';
+  static const farmTend = '가꾸기';
+  static const farmSpendHint = '닫힌 길·걸은 띠로 등기한 면적만 씁니다. 돈은 없어요.';
+  static const farmPlaceHint = '지도에서 자리를 눌러 가꾸거나, 짓기를 누르면 최근 길에 놓입니다.';
+  static const farmNeedFix = '먼저 걸어서 경로를 남겨 주세요';
+  static const farmUnlocked = '열림';
+  static const farmLocked = '아직';
+  static const landBudgetHint =
+      '면적 = 닫힌 루프와 경로 띠(폭 4m) 중 큰 값. 가꾼 목장은 그 면적을 씁니다.';
+  static const landThresholds =
+      '짓기·가꾸기: 울타리 목장 1,000㎡ · 헛간 5,000㎡ · 농가 20,000㎡ · 마을 창고 50,000㎡';
+  static const buildAction = '짓기';
+  static const myBuildings = '내 목장';
+  static const noBudget = '남은 면적이 모자라요. 더 걸어서 땅을 넓히세요.';
+  static const remainingArea = '남은 면적';
   static const recentDeed = '최근 등기';
   static const todayLoop = '오늘 루프';
   static const landFoot =
@@ -117,7 +137,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.4';
+  static const versionLabel = '0.1.5';
 
   static String gpsStrength(String code) {
     switch (code) {

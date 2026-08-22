@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/engines/land_city.dart';
 import '../../domain/engines/sync_backoff.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
@@ -497,6 +498,37 @@ class SessionRepository {
           ),
         );
     return (await (db.select(db.events)..where((t) => t.id.equals(id)))
+        .getSingle());
+  }
+
+  Future<List<BuildingRow>> listBuildings() {
+    return (db.select(db.buildings)
+          ..orderBy([(t) => OrderingTerm.asc(t.builtAt)]))
+        .get();
+  }
+
+  Future<double> spentBuildingM2() async {
+    final rows = await listBuildings();
+    return spentFromCosts(rows.map((b) => b.costM2));
+  }
+
+  Future<BuildingRow> insertBuilding({
+    required FarmKind kind,
+    required double lat,
+    required double lng,
+  }) async {
+    final id = newId();
+    await db.into(db.buildings).insert(
+          BuildingsCompanion.insert(
+            id: id,
+            type: kind.wire,
+            costM2: kind.costM2,
+            lat: lat,
+            lng: lng,
+            builtAt: DateTime.now(),
+          ),
+        );
+    return (await (db.select(db.buildings)..where((t) => t.id.equals(id)))
         .getSingle());
   }
 

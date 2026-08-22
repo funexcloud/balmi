@@ -85,6 +85,19 @@ class SyncQueue extends Table {
   Set<Column<Object>> get primaryKey => {chunkId};
 }
 
+@DataClassName('BuildingRow')
+class Buildings extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  RealColumn get costM2 => real()();
+  RealColumn get lat => real()();
+  RealColumn get lng => real()();
+  DateTimeColumn get builtAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class AppKv extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();

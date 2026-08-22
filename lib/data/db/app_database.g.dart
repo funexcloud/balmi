@@ -3430,6 +3430,400 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
   }
 }
 
+class $BuildingsTable extends Buildings
+    with TableInfo<$BuildingsTable, BuildingRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BuildingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _costM2Meta = const VerificationMeta('costM2');
+  @override
+  late final GeneratedColumn<double> costM2 = GeneratedColumn<double>(
+    'cost_m2',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lngMeta = const VerificationMeta('lng');
+  @override
+  late final GeneratedColumn<double> lng = GeneratedColumn<double>(
+    'lng',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _builtAtMeta = const VerificationMeta(
+    'builtAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> builtAt = GeneratedColumn<DateTime>(
+    'built_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, type, costM2, lat, lng, builtAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'buildings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BuildingRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('cost_m2')) {
+      context.handle(
+        _costM2Meta,
+        costM2.isAcceptableOrUnknown(data['cost_m2']!, _costM2Meta),
+      );
+    } else if (isInserting) {
+      context.missing(_costM2Meta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lng')) {
+      context.handle(
+        _lngMeta,
+        lng.isAcceptableOrUnknown(data['lng']!, _lngMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lngMeta);
+    }
+    if (data.containsKey('built_at')) {
+      context.handle(
+        _builtAtMeta,
+        builtAt.isAcceptableOrUnknown(data['built_at']!, _builtAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_builtAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BuildingRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BuildingRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      costM2: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cost_m2'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lng'],
+      )!,
+      builtAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}built_at'],
+      )!,
+    );
+  }
+
+  @override
+  $BuildingsTable createAlias(String alias) {
+    return $BuildingsTable(attachedDatabase, alias);
+  }
+}
+
+class BuildingRow extends DataClass implements Insertable<BuildingRow> {
+  final String id;
+  final String type;
+  final double costM2;
+  final double lat;
+  final double lng;
+  final DateTime builtAt;
+  const BuildingRow({
+    required this.id,
+    required this.type,
+    required this.costM2,
+    required this.lat,
+    required this.lng,
+    required this.builtAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['cost_m2'] = Variable<double>(costM2);
+    map['lat'] = Variable<double>(lat);
+    map['lng'] = Variable<double>(lng);
+    map['built_at'] = Variable<DateTime>(builtAt);
+    return map;
+  }
+
+  BuildingsCompanion toCompanion(bool nullToAbsent) {
+    return BuildingsCompanion(
+      id: Value(id),
+      type: Value(type),
+      costM2: Value(costM2),
+      lat: Value(lat),
+      lng: Value(lng),
+      builtAt: Value(builtAt),
+    );
+  }
+
+  factory BuildingRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BuildingRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      costM2: serializer.fromJson<double>(json['costM2']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lng: serializer.fromJson<double>(json['lng']),
+      builtAt: serializer.fromJson<DateTime>(json['builtAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'costM2': serializer.toJson<double>(costM2),
+      'lat': serializer.toJson<double>(lat),
+      'lng': serializer.toJson<double>(lng),
+      'builtAt': serializer.toJson<DateTime>(builtAt),
+    };
+  }
+
+  BuildingRow copyWith({
+    String? id,
+    String? type,
+    double? costM2,
+    double? lat,
+    double? lng,
+    DateTime? builtAt,
+  }) => BuildingRow(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    costM2: costM2 ?? this.costM2,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    builtAt: builtAt ?? this.builtAt,
+  );
+  BuildingRow copyWithCompanion(BuildingsCompanion data) {
+    return BuildingRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      costM2: data.costM2.present ? data.costM2.value : this.costM2,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lng: data.lng.present ? data.lng.value : this.lng,
+      builtAt: data.builtAt.present ? data.builtAt.value : this.builtAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BuildingRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('costM2: $costM2, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('builtAt: $builtAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, costM2, lat, lng, builtAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BuildingRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.costM2 == this.costM2 &&
+          other.lat == this.lat &&
+          other.lng == this.lng &&
+          other.builtAt == this.builtAt);
+}
+
+class BuildingsCompanion extends UpdateCompanion<BuildingRow> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<double> costM2;
+  final Value<double> lat;
+  final Value<double> lng;
+  final Value<DateTime> builtAt;
+  final Value<int> rowid;
+  const BuildingsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.costM2 = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lng = const Value.absent(),
+    this.builtAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BuildingsCompanion.insert({
+    required String id,
+    required String type,
+    required double costM2,
+    required double lat,
+    required double lng,
+    required DateTime builtAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       costM2 = Value(costM2),
+       lat = Value(lat),
+       lng = Value(lng),
+       builtAt = Value(builtAt);
+  static Insertable<BuildingRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<double>? costM2,
+    Expression<double>? lat,
+    Expression<double>? lng,
+    Expression<DateTime>? builtAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (costM2 != null) 'cost_m2': costM2,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (builtAt != null) 'built_at': builtAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BuildingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? type,
+    Value<double>? costM2,
+    Value<double>? lat,
+    Value<double>? lng,
+    Value<DateTime>? builtAt,
+    Value<int>? rowid,
+  }) {
+    return BuildingsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      costM2: costM2 ?? this.costM2,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      builtAt: builtAt ?? this.builtAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (costM2.present) {
+      map['cost_m2'] = Variable<double>(costM2.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lng.present) {
+      map['lng'] = Variable<double>(lng.value);
+    }
+    if (builtAt.present) {
+      map['built_at'] = Variable<DateTime>(builtAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BuildingsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('costM2: $costM2, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('builtAt: $builtAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3440,6 +3834,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final $AppKvTable appKv = $AppKvTable(this);
   late final $EventsTable events = $EventsTable(this);
+  late final $BuildingsTable buildings = $BuildingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3452,6 +3847,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncQueue,
     appKv,
     events,
+    buildings,
   ];
 }
 
@@ -6018,6 +6414,223 @@ typedef $$EventsTableProcessedTableManager =
       EventRow,
       PrefetchHooks Function()
     >;
+typedef $$BuildingsTableCreateCompanionBuilder = BuildingsCompanion Function({
+  required String id,
+  required String type,
+  required double costM2,
+  required double lat,
+  required double lng,
+  required DateTime builtAt,
+  Value<int> rowid,
+});
+typedef $$BuildingsTableUpdateCompanionBuilder = BuildingsCompanion Function({
+  Value<String> id,
+  Value<String> type,
+  Value<double> costM2,
+  Value<double> lat,
+  Value<double> lng,
+  Value<DateTime> builtAt,
+  Value<int> rowid,
+});
+
+class $$BuildingsTableFilterComposer
+    extends Composer<_$AppDatabase, $BuildingsTable> {
+  $$BuildingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get costM2 => $composableBuilder(
+    column: $table.costM2,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get builtAt => $composableBuilder(
+    column: $table.builtAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BuildingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BuildingsTable> {
+  $$BuildingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get costM2 => $composableBuilder(
+    column: $table.costM2,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get builtAt => $composableBuilder(
+    column: $table.builtAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BuildingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BuildingsTable> {
+  $$BuildingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get costM2 =>
+      $composableBuilder(column: $table.costM2, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lng =>
+      $composableBuilder(column: $table.lng, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get builtAt =>
+      $composableBuilder(column: $table.builtAt, builder: (column) => column);
+}
+
+class $$BuildingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BuildingsTable,
+          BuildingRow,
+          $$BuildingsTableFilterComposer,
+          $$BuildingsTableOrderingComposer,
+          $$BuildingsTableAnnotationComposer,
+          $$BuildingsTableCreateCompanionBuilder,
+          $$BuildingsTableUpdateCompanionBuilder,
+          (
+            BuildingRow,
+            BaseReferences<_$AppDatabase, $BuildingsTable, BuildingRow>,
+          ),
+          BuildingRow,
+          PrefetchHooks Function()
+        > {
+  $$BuildingsTableTableManager(_$AppDatabase db, $BuildingsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BuildingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BuildingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BuildingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<double> costM2 = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lng = const Value.absent(),
+                Value<DateTime> builtAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BuildingsCompanion(
+                id: id,
+                type: type,
+                costM2: costM2,
+                lat: lat,
+                lng: lng,
+                builtAt: builtAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String type,
+                required double costM2,
+                required double lat,
+                required double lng,
+                required DateTime builtAt,
+                Value<int> rowid = const Value.absent(),
+              }) => BuildingsCompanion.insert(
+                id: id,
+                type: type,
+                costM2: costM2,
+                lat: lat,
+                lng: lng,
+                builtAt: builtAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BuildingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BuildingsTable,
+      BuildingRow,
+      $$BuildingsTableFilterComposer,
+      $$BuildingsTableOrderingComposer,
+      $$BuildingsTableAnnotationComposer,
+      $$BuildingsTableCreateCompanionBuilder,
+      $$BuildingsTableUpdateCompanionBuilder,
+      (
+        BuildingRow,
+        BaseReferences<_$AppDatabase, $BuildingsTable, BuildingRow>,
+      ),
+      BuildingRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6035,4 +6648,6 @@ class $AppDatabaseManager {
       $$AppKvTableTableManager(_db, _db.appKv);
   $$EventsTableTableManager get events =>
       $$EventsTableTableManager(_db, _db.events);
+  $$BuildingsTableTableManager get buildings =>
+      $$BuildingsTableTableManager(_db, _db.buildings);
 }

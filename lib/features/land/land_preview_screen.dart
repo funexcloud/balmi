@@ -1,160 +1,319 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
 import '../../core/theme.dart';
+import '../../data/db/app_database.dart';
+import '../../data/map/device_traces.dart';
+import '../../data/repositories/session_repository.dart';
 import '../../data/stubs/future_features.dart';
+import '../../domain/engines/land_city.dart';
+import '../../widgets/osm_trace_map.dart';
 
-/// F5 territory preview. Visual language from 목업 v2 — not live H3 deeds.
-class LandPreviewScreen extends StatelessWidget {
+/// 내가 밟은 땅 — OSM traces + farm 가꾸기 from earned ㎡.
+class LandPreviewScreen extends StatefulWidget {
   const LandPreviewScreen({super.key});
 
   @override
+  State<LandPreviewScreen> createState() => _LandPreviewScreenState();
+}
+
+class _LandPreviewScreenState extends State<LandPreviewScreen> {
+  DeviceTraces _traces = const DeviceTraces(lines: [], loops: [], loopAreaM2: 0);
+  List<BuildingRow> _buildings = [];
+  FarmKind? _selected;
+  var _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final repo = context.read<SessionRepository>();
+    final traces = await loadDeviceTraces(repo);
+    final buildings = await repo.listBuildings();
+    if (!mounted) return;
+    setState(() {
+      _traces = traces;
+      _buildings = buildings;
+      _loaded = true;
+    });
+  }
+
+  LandBudget get _budget {
+    final spent = spentFromCosts(_buildings.map((b) => b.costM2));
+    return _traces.budget(spent);
+  }
+
+  Future<void> _build(FarmKind kind, {LatLng? at}) async {
+    if (!_traces.hasLine && at == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(BalmiCopy.farmNeedFix)),
+      );
+      return;
+    }
+    if (!_budget.canBuild(kind)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(BalmiCopy.noBudget)),
+      );
+      return;
+    }
+    final point = at ?? _placePoint(_buildings.length);
+    await context.read<SessionRepository>().insertBuilding(
+          kind: kind,
+          lat: point.latitude,
+          lng: point.longitude,
+        );
+    await _load();
+  }
+
+  LatLng _placePoint(int index) {
+    final c = _traces.center;
+    final ang = index * 0.95;
+    final d = 0.00014 * (1 + index ~/ 4);
+    return LatLng(
+      c.latitude + d * math.cos(ang),
+      c.longitude + d * math.sin(ang),
+    );
+  }
+
+  void _onMapTap(LatLng at) {
+    final kind = _selected;
+    if (kind == null) return;
+    _build(kind, at: at);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
-      children: [
-        Text(
-          BalmiCopy.registryKicker,
-          style: BalmiTheme.tracked(
-            size: 11,
-            trackingEm: 0.28,
-            color: BalmiColors.plum,
-            weight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(BalmiCopy.landTitle, style: BalmiTheme.body(size: 24, weight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text('0', style: BalmiTheme.num(size: 44)),
-            Text('㎡', style: BalmiTheme.num(size: 17)),
-            const SizedBox(width: 10),
-            Text(
-              BalmiCopy.landEmptyArea,
-              style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
+    final budget = _budget;
+    final earned = budget.earnedM2.round();
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  BalmiCopy.registryKicker,
+                  style: BalmiTheme.tracked(
+                    size: 11,
+                    trackingEm: 0.28,
+                    color: BalmiColors.plum,
+                    weight: FontWeight.w800,
+                  ),
+                ),
+                Text(BalmiCopy.farmOwner, style: BalmiTheme.body(size: 13, color: BalmiColors.sage)),
+                Text(BalmiCopy.landSteppedTitle, style: BalmiTheme.body(size: 22, weight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text('$earned', style: BalmiTheme.num(size: 36)),
+                    Text('㎡', style: BalmiTheme.num(size: 16)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        earned > 0 ? BalmiCopy.farmBudget : BalmiCopy.landEmptyArea,
+                        style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '${BalmiCopy.remainingArea} ${budget.remainingM2.round()}㎡',
+                  style: BalmiTheme.body(size: 13, color: BalmiColors.plum),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  earned > 0 ? BalmiCopy.landBudgetHint : BalmiCopy.landEmptyArea,
+                  style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+                ),
+                Text(BalmiCopy.farmSpendHint, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          BalmiCopy.landPreview,
-          style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
-        ),
-        const SizedBox(height: 10),
-        const AspectRatio(
-          aspectRatio: 380 / 290,
-          child: CustomPaint(painter: _CadastralPainter()),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          BalmiCopy.recentDeed,
-          style: BalmiTheme.tracked(
-            size: 11.5,
-            trackingEm: 0.14,
-            color: BalmiColors.sub,
-            weight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          BalmiCopy.landEmptyRecent,
-          style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 280,
+            child: !_loaded
+                ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
+                : OsmTraceMap(
+                    traces: _traces,
+                    emptyLabel: BalmiCopy.landNoPath,
+                    onTap: _onMapTap,
+                    buildings: [
+                      for (final b in _buildings)
+                        FarmMark(
+                          point: LatLng(b.lat, b.lng),
+                          kind: FarmKind.fromWire(b.type),
+                        ),
+                    ],
+                  ),
+          ),
         ),
-        const SizedBox(height: 12),
-        Text(BalmiCopy.landFoot, style: BalmiTheme.body(size: 11, color: BalmiColors.sub, height: 1.6)),
-        const SizedBox(height: 10),
-        Text(BalmiCopy.e01, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
-        Text(BalmiCopy.e02, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
-        Text(BalmiCopy.e03, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
-        Text(BalmiCopy.e04, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
-        if (!FutureFeatures.territoryEnabled) const SizedBox(height: 8),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(BalmiCopy.farmTend, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+                Text(BalmiCopy.farmPlaceHint, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
+                const SizedBox(height: 8),
+                _FarmGrid(
+                  budget: budget,
+                  selected: _selected,
+                  onSelect: (k) => setState(() => _selected = k),
+                  onBuild: _build,
+                ),
+                const SizedBox(height: 12),
+                Text(BalmiCopy.myBuildings, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+                if (_buildings.isEmpty)
+                  Text(BalmiCopy.landEmptyRecent, style: BalmiTheme.body(size: 13, color: BalmiColors.sub)),
+                for (final b in _buildings)
+                  Text(
+                    '${FarmKind.fromWire(b.type).label} · ${b.costM2.round()}㎡',
+                    style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  _traces.hasLine ? BalmiCopy.landTracesHint : BalmiCopy.landNoPath,
+                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+                ),
+                Text(BalmiCopy.landPreview, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+                Text(BalmiCopy.landFoot, style: BalmiTheme.body(size: 11, color: BalmiColors.sub, height: 1.5)),
+                Text(BalmiCopy.e01, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+                Text(BalmiCopy.e02, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+                Text(BalmiCopy.e03, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+                Text(BalmiCopy.e04, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+                if (!FutureFeatures.territoryEnabled) const SizedBox(height: 2),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _CadastralPainter extends CustomPainter {
-  const _CadastralPainter();
+class _FarmGrid extends StatelessWidget {
+  const _FarmGrid({
+    required this.budget,
+    required this.selected,
+    required this.onSelect,
+    required this.onBuild,
+  });
+
+  final LandBudget budget;
+  final FarmKind? selected;
+  final ValueChanged<FarmKind> onSelect;
+  final Future<void> Function(FarmKind kind) onBuild;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final sx = size.width / 380;
-    final sy = size.height / 290;
-    Offset p(double x, double y) => Offset(x * sx, y * sy);
-
-    canvas.drawRect(Offset.zero & size, Paint()..color = BalmiColors.paper);
-
-    final grid = Paint()
-      ..color = BalmiColors.line
-      ..strokeWidth = 0.7;
-    for (var i = 0; i < 12; i++) {
-      canvas.drawLine(p(i * 34.0, 0), p(i * 34.0, 290), grid);
-    }
-    for (var i = 0; i < 9; i++) {
-      canvas.drawLine(p(0, i * 33.0), p(380, i * 33.0), grid);
-    }
-
-    Path poly(List<double> xy) {
-      final path = Path()..moveTo(xy[0] * sx, xy[1] * sy);
-      for (var i = 2; i < xy.length; i += 2) {
-        path.lineTo(xy[i] * sx, xy[i + 1] * sy);
-      }
-      path.close();
-      return path;
-    }
-
-    final other = Paint()
-      ..color = BalmiColors.plumLt
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    canvas.drawPath(
-      poly([30, 40, 130, 28, 150, 95, 60, 110]),
-      other..strokeJoin = StrokeJoin.round,
-    );
-    canvas.drawPath(poly([250, 175, 350, 165, 356, 245, 262, 255]), other);
-
-    // Preview parcels only — faded, not claimed area.
-    final fill = Paint()..color = BalmiColors.plum.withValues(alpha: 0.10);
-    final stroke = Paint()
-      ..color = BalmiColors.plum.withValues(alpha: 0.45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawPath(poly([160, 58, 300, 46, 320, 138, 180, 152]), fill);
-    canvas.drawPath(poly([160, 58, 300, 46, 320, 138, 180, 152]), stroke);
-    canvas.drawPath(poly([55, 148, 175, 162, 160, 250, 45, 236]), fill);
-    canvas.drawPath(poly([55, 148, 175, 162, 160, 250, 45, 236]), stroke);
-
-    final loop = Paint()
-      ..color = BalmiColors.ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(poly([200, 185, 290, 195, 275, 262, 195, 255]), loop);
-
-    final tp = TextPainter(textDirection: TextDirection.ltr);
-    void label(String t, double x, double y, {double size = 12, FontWeight w = FontWeight.w800}) {
-      tp
-        ..text = TextSpan(
-          text: t,
-          style: TextStyle(
-            fontFamily: BalmiFonts.wordmark,
-            fontSize: size,
-            fontWeight: w,
-            color: BalmiColors.ink,
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 1.35,
+      children: [
+        for (final k in FarmKind.tiers)
+          _FarmTile(
+            kind: k,
+            budget: budget,
+            selected: selected == k,
+            onSelect: () => onSelect(k),
+            onBuild: () => onBuild(k),
           ),
-        )
-        ..layout();
-      tp.paint(canvas, p(x, y));
-    }
-
-    label(BalmiCopy.todayLoop, 220, 220, size: 11, w: FontWeight.w700);
-    label('미리보기', 212, 112);
-    label('미리보기', 82, 204);
+      ],
+    );
   }
+}
+
+class _FarmTile extends StatelessWidget {
+  const _FarmTile({
+    required this.kind,
+    required this.budget,
+    required this.selected,
+    required this.onSelect,
+    required this.onBuild,
+  });
+
+  final FarmKind kind;
+  final LandBudget budget;
+  final bool selected;
+  final VoidCallback onSelect;
+  final VoidCallback onBuild;
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    final open = budget.unlocked(kind);
+    final ready = budget.canBuild(kind);
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: selected ? BalmiColors.plum : BalmiColors.line,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onSelect,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(farmIcon(kind), size: 20, color: farmTint(kind)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      kind.label,
+                      style: BalmiTheme.body(size: 13, weight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                '${kind.costM2.round()}㎡ · ${open ? BalmiCopy.farmUnlocked : BalmiCopy.farmLocked}',
+                style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+              ),
+              const Spacer(),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: ready ? onBuild : null,
+                  child: Text(
+                    BalmiCopy.buildAction,
+                    style: BalmiTheme.body(
+                      size: 13,
+                      weight: FontWeight.w800,
+                      color: ready ? BalmiColors.plum : BalmiColors.sub,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -7,8 +6,10 @@ import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
+import '../../data/map/device_traces.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/models/activity.dart';
+import '../../widgets/osm_trace_map.dart';
 import '../land/land_preview_screen.dart';
 import '../session_detail/session_detail_screen.dart';
 
@@ -20,10 +21,11 @@ class MapExploreScreen extends StatefulWidget {
 }
 
 class _MapExploreScreenState extends State<MapExploreScreen> {
-  final _map = MapController();
+  DeviceTraces _traces = const DeviceTraces(lines: [], loops: [], loopAreaM2: 0);
   List<Session> _sessions = [];
-  List<LatLng> _line = [];
+  List<LatLng>? _highlight;
   String? _selected;
+  var _loaded = false;
 
   @override
   void initState() {
@@ -34,8 +36,13 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
   Future<void> _load() async {
     final repo = context.read<SessionRepository>();
     final sessions = await repo.closedSessions();
+    final traces = await loadDeviceTraces(repo);
     if (!mounted) return;
-    setState(() => _sessions = sessions);
+    setState(() {
+      _sessions = sessions;
+      _traces = traces;
+      _loaded = true;
+    });
     if (sessions.isNotEmpty) {
       await _select(sessions.first.id);
     }
@@ -51,12 +58,8 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
     if (!mounted) return;
     setState(() {
       _selected = id;
-      _line = line;
+      _highlight = line.length >= 2 ? line : null;
     });
-    if (line.length >= 2) {
-      final bounds = LatLngBounds.fromPoints(line);
-      _map.fitCamera(CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(36)));
-    }
   }
 
   @override
@@ -65,31 +68,12 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
       children: [
         Expanded(
           flex: 3,
-          child: _line.isEmpty
-              ? Center(
-                  child: Text(BalmiCopy.mapEmpty, style: BalmiTheme.body(size: 14, color: BalmiColors.sub)),
-                )
-              : FlutterMap(
-                  mapController: _map,
-                  options: MapOptions(
-                    initialCenter: _line.first,
-                    initialZoom: 15,
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'im.balmi.app',
-                    ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: _line,
-                          color: BalmiColors.plum,
-                          strokeWidth: 4,
-                        ),
-                      ],
-                    ),
-                  ],
+          child: !_loaded
+              ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
+              : OsmTraceMap(
+                  traces: _traces,
+                  highlight: _highlight,
+                  emptyLabel: BalmiCopy.mapEmpty,
                 ),
         ),
         Padding(
@@ -105,7 +89,12 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const Scaffold(body: LandPreviewScreen())),
+              MaterialPageRoute(
+                builder: (_) => const Scaffold(
+                  backgroundColor: BalmiColors.paper,
+                  body: SafeArea(child: LandPreviewScreen()),
+                ),
+              ),
             );
           },
           child: const Text(BalmiCopy.landTab),
