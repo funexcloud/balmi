@@ -2,7 +2,7 @@
 abstract final class BalmiCopy {
   static const appName = 'balmi';
   static const oneLiner = '통신이 끊겨도, 앱이 죽어도, 단 한 걸음도 잃어버리지 않는 걷기·달리기 기록 앱.';
-  static const positioning = '재미는 KYRO, 신뢰는 balmi.';
+  static const positioning = '잃어버리지 않는 기록';
   static const trustAlways = '통신이 끊겨도 기록은 기기에 전부 저장됩니다';
 
   static const resumeRecording = '이어서 기록';
@@ -35,7 +35,31 @@ abstract final class BalmiCopy {
   static const specFree = '자유';
   static const walk = '걷기';
   static const run = '뛰기';
+  static const activityAuto = '자동';
+  static const activityWalk = '걷기';
+  static const activityRun = '달리기';
+  static const activityHike = '등산';
+  static const activityTrail = '트레일 러닝';
+  static const activityLabel = '활동';
   static const sportHint = '속도·케이던스 자동 판정 · 구간별 태깅';
+  static const sportHintManual = '선택한 활동으로 기록합니다';
+  static const workoutLogTab = '운동기록';
+  static const mapTab = '지도';
+  static const moreTab = '더보기';
+  static const myActivity = '나의 활동';
+  static const mapExplore = '지도탐색';
+  static const missions = '미션';
+  static const events = '대회';
+  static const todaySummary = '오늘의 운동 요약';
+  static const todayEmpty = '오늘 아직 기록이 없습니다';
+  static const todaySteps = '오늘 걸음';
+  static const recordingSteps = '기록 중 걸음';
+  static const crewLater = '크루 랭킹은 나중에';
+  static const landOnMapHint = '등기(내 땅)는 2차 기능입니다';
+  static const mapEmpty = '아직 기기에 저장된 경로가 없어요';
+  static const createEvent = '대회 만들기';
+  static const eventOpen = '진행 중';
+  static const eventClosed = '종료';
   static const currentPace = '현재 페이스';
   static const statDistance = '거리';
   static const statTime = '시간';
@@ -93,7 +117,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.3';
+  static const versionLabel = '0.1.4';
 
   static String gpsStrength(String code) {
     switch (code) {

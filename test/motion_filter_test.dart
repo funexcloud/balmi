@@ -1,0 +1,124 @@
+import 'package:balmi/data/db/app_database.dart';
+import 'package:balmi/data/location/location_engine.dart';
+import 'package:balmi/data/recording/recording_pipeline.dart';
+import 'package:balmi/data/repositories/session_repository.dart';
+import 'package:balmi/domain/engines/distance.dart';
+import 'package:balmi/domain/engines/motion_filter.dart';
+import 'package:balmi/domain/models/activity.dart';
+import 'package:balmi/domain/models/sport.dart';
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('standing jitter stays still', () {
+    final filter = GpsMotionFilter();
+    final t0 = DateTime.utc(2026, 8, 22, 2);
+    var lat = 37.5665;
+    var lon = 126.9780;
+    filter.evaluate(
+      now: t0,
+      lat: lat,
+      lon: lon,
+      hAccM: 12,
+      rawSpeedMs: 8,
+      speedAccuracyMs: 5,
+      cadenceSpm: null,
+    );
+    var lastSpeed = 0.0;
+    var added = 0.0;
+    for (var i = 1; i <= 30; i++) {
+      final jitterM = 8.0 + (i % 8);
+      lat = 37.5665 + (jitterM / 111000) * ((i.isEven) ? 1 : -1);
+      lon = 126.9780 + (jitterM / 88000) * ((i % 3 == 0) ? 1 : -1);
+      final d = filter.evaluate(
+        now: t0.add(Duration(seconds: i)),
+        lat: lat,
+        lon: lon,
+        hAccM: 10.0 + (i % 10),
+        rawSpeedMs: 12,
+        speedAccuracyMs: 6,
+        cadenceSpm: 20,
+      );
+      if (d.addDistance) added += d.distanceM;
+      lastSpeed = d.filteredSpeedMs ?? lastSpeed;
+    }
+    expect(added, lessThan(3));
+    expect(lastSpeed, closeTo(0, 0.2));
+  });
+
+  test('real walk still accumulates distance', () {
+    final filter = GpsMotionFilter();
+    final t0 = DateTime.utc(2026, 8, 22, 3);
+    var lat = 37.0;
+    const lon = 127.0;
+    filter.evaluate(
+      now: t0,
+      lat: lat,
+      lon: lon,
+      hAccM: 8,
+      rawSpeedMs: 1.4,
+      speedAccuracyMs: 0.5,
+      cadenceSpm: 110,
+    );
+    var added = 0.0;
+    for (var i = 1; i <= 40; i++) {
+      lat += 1.4 / 111000;
+      final d = filter.evaluate(
+        now: t0.add(Duration(seconds: i)),
+        lat: lat,
+        lon: lon,
+        hAccM: 8,
+        rawSpeedMs: 1.4,
+        speedAccuracyMs: 0.4,
+        cadenceSpm: 110,
+      );
+      if (d.addDistance) added += d.distanceM;
+    }
+    expect(added, greaterThan(20));
+    expect(
+      haversineMeters(lat1: 37.0, lon1: lon, lat2: lat, lon2: lon),
+      closeTo(56, 8),
+    );
+  });
+
+  test('manual hike does not WALK→RUN on 10 km/h GPS', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 22, 4);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.hike,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.hike,
+    );
+    await pipe.restore();
+    var lat = 37.1;
+    for (var i = 0; i < 20; i++) {
+      lat += 2.8 / 111000;
+      pipe
+        ..onCadence(160)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: lat,
+            lng: 127.1,
+            speedMs: 2.78,
+            speedAccuracyMs: 4,
+            hAccM: 8,
+          ),
+        );
+      await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(pipe.activity, ActivityKind.hike);
+    expect(pipe.classifier.current, Sport.walk);
+    final segs = await repo.segmentsFor(session.id);
+    expect(segs.every((s) => s.sport != Sport.run.wire), isTrue);
+  });
+}

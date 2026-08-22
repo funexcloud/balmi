@@ -5,12 +5,12 @@ import '../../core/copy.dart';
 import '../../core/insets.dart';
 import '../../core/theme.dart';
 import '../../widgets/balmi_wordmark.dart';
-import '../history/history_screen.dart';
 import '../home/home_screen.dart';
-import '../land/land_preview_screen.dart';
+import '../map/map_explore_screen.dart';
+import '../more/more_screen.dart';
 import '../recording/recording_controller.dart';
 import '../recording/recording_screen.dart';
-import '../settings/settings_screen.dart';
+import '../workouts/workout_log_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -25,11 +25,12 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
-    final headerRight = _tab == 1
-        ? BalmiCopy.registryEyebrow
-        : rec.isRecording
-            ? BalmiCopy.recordingLive
-            : BalmiCopy.readyToRecord;
+    final titles = [
+      rec.isRecording ? BalmiCopy.recordingLive : BalmiCopy.readyToRecord,
+      BalmiCopy.workoutLogTab,
+      BalmiCopy.mapExplore,
+      BalmiCopy.moreTab,
+    ];
 
     return Scaffold(
       backgroundColor: BalmiColors.paper,
@@ -43,50 +44,14 @@ class _AppShellState extends State<AppShell> {
                 children: [
                   const BalmiWordmark(height: 26),
                   const Spacer(),
-                  if (_tab == 0 && !rec.isRecording) ...[
-                    IconButton(
-                      tooltip: BalmiCopy.history,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const HistoryScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.history, color: BalmiColors.ink),
-                    ),
-                    IconButton(
-                      tooltip: BalmiCopy.settings,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.settings_outlined,
-                        color: BalmiColors.ink,
-                      ),
-                    ),
-                  ] else
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Text(
-                        headerRight,
-                        style: BalmiTheme.tracked(),
-                      ),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(titles[_tab], style: BalmiTheme.tracked()),
+                  ),
                 ],
               ),
             ),
-            Expanded(
-              child: _tab == 0
-                  ? rec.isRecording
-                      ? const RecordingScreen()
-                      : const HomeScreen()
-                  : const LandPreviewScreen(),
-            ),
+            Expanded(child: _body(rec)),
             _BottomNav(
               index: _tab,
               onChanged: (i) => setState(() => _tab = i),
@@ -95,6 +60,15 @@ class _AppShellState extends State<AppShell> {
         ),
       ),
     );
+  }
+
+  Widget _body(RecordingController rec) {
+    return switch (_tab) {
+      1 => const WorkoutLogScreen(),
+      2 => const MapExploreScreen(),
+      3 => const MoreScreen(),
+      _ => rec.isRecording ? const RecordingScreen() : const HomeScreen(),
+    };
   }
 }
 
@@ -116,7 +90,9 @@ class _BottomNav extends StatelessWidget {
       child: Row(
         children: [
           _item(context, 0, BalmiCopy.recordTab),
-          _item(context, 1, BalmiCopy.landTab),
+          _item(context, 1, BalmiCopy.workoutLogTab),
+          _item(context, 2, BalmiCopy.mapTab),
+          _item(context, 3, BalmiCopy.moreTab),
         ],
       ),
     );
@@ -142,7 +118,7 @@ class _BottomNav extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: BalmiTheme.body(
-              size: 15,
+              size: 13,
               weight: FontWeight.w800,
               color: active ? BalmiColors.plum : BalmiColors.sub,
             ),

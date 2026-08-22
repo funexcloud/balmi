@@ -14,6 +14,7 @@ import '../../data/recording/recording_snapshot.dart';
 import '../../data/recording/recording_task.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../data/sensors/cadence_engine.dart';
+import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 
 class RecordingController extends ChangeNotifier {
@@ -33,7 +34,9 @@ class RecordingController extends ChangeNotifier {
   bool _starting = false;
   bool _ticking = false;
 
+  RecordingPipeline? _pipeline;
   RecordingSnapshot? snapshot;
+  ActivityKind activity = ActivityKind.auto;
   bool paused = false;
   Duration _pausedTotal = Duration.zero;
   DateTime? _pauseStarted;
@@ -134,7 +137,11 @@ class RecordingController extends ChangeNotifier {
   }
 
   /// Returns false when recording cannot start (permissions / GPS off).
-  Future<bool> start({required bool trackMode, int? trackSpecM}) async {
+  Future<bool> start({
+    required bool trackMode,
+    int? trackSpecM,
+    ActivityKind activity = ActivityKind.auto,
+  }) async {
     if (_starting) return false;
     _starting = true;
     lastError = null;
@@ -149,19 +156,28 @@ class RecordingController extends ChangeNotifier {
       final open = await repo.findRecording();
       if (open != null) {
         _resetPauseClock();
+        this.activity = ActivityKind.fromWire(open.activity);
         await _begin(
           open.id,
           trackMode: open.trackMode,
           trackSpecM: open.trackSpecM,
+          activity: this.activity,
         );
         return true;
       }
+      this.activity = activity;
       final session = await repo.createSession(
         trackMode: trackMode,
         trackSpecM: trackSpecM,
+        activity: activity,
       );
       _resetPauseClock();
-      await _begin(session.id, trackMode: trackMode, trackSpecM: trackSpecM);
+      await _begin(
+        session.id,
+        trackMode: trackMode,
+        trackSpecM: trackSpecM,
+        activity: activity,
+      );
       return true;
     } catch (error) {
       lastError = error.toString();
@@ -184,10 +200,12 @@ class RecordingController extends ChangeNotifier {
     final session = await repo.sessionById(sessionId);
     if (session == null) return false;
     _resetPauseClock();
+    activity = ActivityKind.fromWire(session.activity);
     await _begin(
       sessionId,
       trackMode: session.trackMode,
       trackSpecM: session.trackSpecM,
+      activity: activity,
     );
     return true;
   }
@@ -196,6 +214,7 @@ class RecordingController extends ChangeNotifier {
     String sessionId, {
     required bool trackMode,
     int? trackSpecM,
+    ActivityKind activity = ActivityKind.auto,
   }) async {
     // Geolocator in the FGS Dart isolate often never emits (helper service
     // bind race, no Activity). Keep the FGS as a process keep-alive and
@@ -243,13 +262,25 @@ class RecordingController extends ChangeNotifier {
       sessionId,
       trackMode: trackMode,
       trackSpecM: trackSpecM,
+      activity: activity,
     );
+  }
+
+  Future<void> setActivity(ActivityKind next) async {
+    activity = next;
+    final pipe = _pipeline;
+    if (pipe != null) {
+      await pipe.setActivity(next, DateTime.now());
+      snapshot = await pipe.snapshot(DateTime.now());
+    }
+    notifyListeners();
   }
 
   Future<void> _startLocalPipeline(
     String sessionId, {
     required bool trackMode,
     int? trackSpecM,
+    ActivityKind activity = ActivityKind.auto,
   }) async {
     await _stopLocal();
     final session = await repo.sessionById(sessionId);
@@ -259,8 +290,11 @@ class RecordingController extends ChangeNotifier {
       startedAt: session?.startedAt ?? DateTime.now(),
       trackMode: trackMode,
       trackSpecM: trackSpecM,
+      activity: activity,
     );
     await pipeline.restore();
+    _pipeline = pipeline;
+    this.activity = pipeline.activity;
     snapshot = await pipeline.snapshot(DateTime.now());
     notifyListeners();
     _localLocation = GeolocatorLocationEngine();
@@ -312,6 +346,7 @@ class RecordingController extends ChangeNotifier {
         return;
       }
       pipeline.onCadence(_localCadence?.spm);
+      pipeline.recordingSteps = _localCadence?.totalSteps ?? pipeline.recordingSteps;
       final engineError = _localLocation?.lastError;
       if (engineError != null) {
         lastError = engineError;
@@ -344,7 +379,10 @@ class RecordingController extends ChangeNotifier {
     FlutterForegroundTask.sendDataToTask('stop');
     await _stopLocal();
     final id = snapshot?.sessionId;
+    final steps = _pipeline?.recordingSteps ?? _localCadence?.totalSteps ?? 0;
+    _pipeline = null;
     if (id != null) {
+      await repo.updateSteps(id, steps);
       await repo.closeSession(id, status: SessionStatus.closed);
     }
     if (await FlutterForegroundTask.isRunningService) {
@@ -373,5 +411,6 @@ class RecordingController extends ChangeNotifier {
     await _localCadence?.stop();
     _localLocation = null;
     _localCadence = null;
+    if (!isRecording) _pipeline = null;
   }
 }

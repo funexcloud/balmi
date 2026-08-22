@@ -109,8 +109,6 @@ class RecordingStatusChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = snapshot;
     final points = s?.pointCount ?? 0;
-    final pendingPts = s?.pendingPoints ?? 0;
-    final synced = pendingPts == 0 && points > 0;
     final strength = s?.gpsStrength ?? 'none';
     final gpsLabel = waiting && points == 0
         ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
@@ -129,33 +127,6 @@ class RecordingStatusChips extends StatelessWidget {
               Text(gpsLabel),
             ],
           ),
-        ),
-        StatusChip(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(BalmiCopy.deviceSaved),
-              Text(
-                ' ${points.toString()}pt',
-                style: BalmiTheme.num(size: 12, weight: FontWeight.w800),
-              ),
-            ],
-          ),
-        ),
-        StatusChip(
-          on: synced,
-          child: synced
-              ? const Text(BalmiCopy.syncComplete)
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(BalmiCopy.syncWaiting),
-                    Text(
-                      ' ${pendingPts}pt',
-                      style: BalmiTheme.num(size: 12, weight: FontWeight.w800),
-                    ),
-                  ],
-                ),
         ),
       ],
     );

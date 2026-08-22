@@ -6,6 +6,7 @@ class LocationFix {
     required this.lng,
     this.alt,
     this.speedMs,
+    this.speedAccuracyMs,
     this.hAccM,
     this.headingDeg,
     this.satCount,
@@ -16,6 +17,7 @@ class LocationFix {
   final double lng;
   final double? alt;
   final double? speedMs;
+  final double? speedAccuracyMs;
   final double? hAccM;
   final double? headingDeg;
 

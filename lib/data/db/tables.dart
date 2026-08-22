@@ -11,6 +11,23 @@ class Sessions extends Table {
   RealColumn get totalDistM => real().withDefault(const Constant(0.0))();
   RealColumn get walkDistM => real().withDefault(const Constant(0.0))();
   RealColumn get runDistM => real().withDefault(const Constant(0.0))();
+  TextColumn get activity => text().withDefault(const Constant('auto'))();
+  IntColumn get steps => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('EventRow')
+class Events extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  DateTimeColumn get startsAt => dateTime()();
+  DateTimeColumn get endsAt => dateTime()();
+  TextColumn get activityFilter => text().withDefault(const Constant('all'))();
+  TextColumn get goalType => text()();
+  RealColumn get goalValue => real()();
+  DateTimeColumn get createdAt => dateTime()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

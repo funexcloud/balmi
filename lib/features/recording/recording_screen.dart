@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
+import '../../domain/models/activity.dart';
+import '../../widgets/activity_pills.dart';
 import '../../widgets/balmi_wordmark.dart';
 import '../../widgets/status_chips.dart';
 import '../../widgets/trust_header.dart';
@@ -78,6 +80,16 @@ class _RecordingScreenState extends State<RecordingScreen>
                   snapshot: snap,
                   waiting: (snap?.pointCount ?? 0) == 0,
                 ),
+                const SizedBox(height: 12),
+                ActivityPills(
+                  value: rec.activity,
+                  onChanged: (v) => rec.setActivity(v),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  rec.activity.isAuto ? BalmiCopy.sportHint : BalmiCopy.sportHintManual,
+                  style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+                ),
                 if (hint != null) ...[
                   const SizedBox(height: 8),
                   Text(
@@ -93,7 +105,11 @@ class _RecordingScreenState extends State<RecordingScreen>
                 const SizedBox(height: 22),
                 Row(
                   children: [
-                    SportPill(running: running),
+                    SportPill(
+                      running: rec.activity == ActivityKind.run ||
+                          rec.activity == ActivityKind.trail ||
+                          running,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(

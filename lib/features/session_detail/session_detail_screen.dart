@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
@@ -68,6 +69,11 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               children: [
                 const BalmiWordmark(height: 22),
                 const SizedBox(height: 16),
+                Text(
+                  ActivityKind.fromWire(s.activity).label,
+                  style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
                 Text(
                   walkRunResultLine(
                     walkDuration: _walk,

@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/engines/sync_backoff.dart';
+import '../../domain/engines/workout_stats.dart';
+import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../db/app_database.dart';
 
@@ -41,9 +43,11 @@ class SessionRepository {
     required bool trackMode,
     int? trackSpecM,
     DateTime? startedAt,
+    ActivityKind activity = ActivityKind.auto,
   }) async {
     final id = newId();
     final start = startedAt ?? DateTime.now();
+    final sport = activity.isAuto ? Sport.walk : activity.lockedSport;
     await db.into(db.sessions).insert(
           SessionsCompanion.insert(
             id: id,
@@ -51,18 +55,31 @@ class SessionRepository {
             status: SessionStatus.recording.wire,
             trackMode: Value(trackMode),
             trackSpecM: Value(trackSpecM),
+            activity: Value(activity.wire),
           ),
         );
     await db.into(db.segments).insert(
           SegmentsCompanion.insert(
             sessionId: id,
             seq: 0,
-            sport: Sport.walk.wire,
-            judgedSport: Sport.walk.wire,
+            sport: sport.wire,
+            judgedSport: sport.wire,
             startedAt: start,
           ),
         );
     return (await sessionById(id))!;
+  }
+
+  Future<void> updateActivity(String sessionId, ActivityKind activity) {
+    return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
+      SessionsCompanion(activity: Value(activity.wire)),
+    );
+  }
+
+  Future<void> updateSteps(String sessionId, int steps) {
+    return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
+      SessionsCompanion(steps: Value(steps)),
+    );
   }
 
   Future<Session?> sessionById(String id) {
@@ -416,6 +433,71 @@ class SessionRepository {
       excludedLowQuality: excluded,
       lastSyncedAt: last,
     );
+  }
+
+  Future<List<Session>> closedSessions() {
+    return (db.select(db.sessions)
+          ..where(
+            (t) => t.status.isIn([
+              SessionStatus.closed.wire,
+              SessionStatus.recovered.wire,
+            ]),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
+  Future<List<WorkoutRow>> closedWorkouts() async {
+    final sessions = await closedSessions();
+    final rows = <WorkoutRow>[];
+    for (final s in sessions) {
+      final laps = await lapsFor(s.id);
+      rows.add(
+        WorkoutRow(
+          id: s.id,
+          startedAt: s.startedAt,
+          endedAt: s.endedAt ?? s.startedAt,
+          activity: ActivityKind.fromWire(s.activity),
+          totalDistM: s.totalDistM,
+          walkDistM: s.walkDistM,
+          runDistM: s.runDistM,
+          laps: laps.length,
+          steps: s.steps,
+        ),
+      );
+    }
+    return rows;
+  }
+
+  Future<List<EventRow>> listEvents() {
+    return (db.select(db.events)
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+  }
+
+  Future<EventRow> createEvent({
+    required String name,
+    required DateTime startsAt,
+    required DateTime endsAt,
+    required String goalType,
+    required double goalValue,
+    ActivityKind? activityFilter,
+  }) async {
+    final id = newId();
+    await db.into(db.events).insert(
+          EventsCompanion.insert(
+            id: id,
+            name: name,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            activityFilter: Value(activityFilter?.wire ?? 'all'),
+            goalType: goalType,
+            goalValue: goalValue,
+            createdAt: DateTime.now(),
+          ),
+        );
+    return (await (db.select(db.events)..where((t) => t.id.equals(id)))
+        .getSingle());
   }
 
   Future<Map<Sport, Duration>> sportDurations(String sessionId) async {

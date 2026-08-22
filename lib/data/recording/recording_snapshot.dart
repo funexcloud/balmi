@@ -6,6 +6,7 @@ class RecordingSnapshot {
     required this.hAccM,
     required this.gpsStrength,
     required this.sport,
+    this.activity = 'auto',
     required this.totalDistM,
     required this.walkDistM,
     required this.runDistM,
@@ -27,6 +28,7 @@ class RecordingSnapshot {
   final double? hAccM;
   final String gpsStrength;
   final String sport;
+  final String activity;
   final double totalDistM;
   final double walkDistM;
   final double runDistM;
@@ -51,6 +53,7 @@ class RecordingSnapshot {
         'hAccM': hAccM,
         'gpsStrength': gpsStrength,
         'sport': sport,
+        'activity': activity,
         'totalDistM': totalDistM,
         'walkDistM': walkDistM,
         'runDistM': runDistM,
@@ -81,6 +84,7 @@ class RecordingSnapshot {
       hAccM: d(json['hAccM']),
       gpsStrength: '${json['gpsStrength'] ?? 'none'}',
       sport: '${json['sport'] ?? 'walk'}',
+      activity: '${json['activity'] ?? 'auto'}',
       totalDistM: d(json['totalDistM']) ?? 0,
       walkDistM: d(json['walkDistM']) ?? 0,
       runDistM: d(json['runDistM']) ?? 0,

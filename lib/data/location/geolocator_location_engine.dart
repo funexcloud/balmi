@@ -164,6 +164,7 @@ class GeolocatorLocationEngine implements LocationEngine {
         lng: pos.longitude,
         alt: pos.altitude,
         speedMs: pos.speed >= 0 ? pos.speed : null,
+        speedAccuracyMs: pos.speedAccuracy >= 0 ? pos.speedAccuracy : null,
         hAccM: pos.accuracy,
         headingDeg: pos.heading,
       ),

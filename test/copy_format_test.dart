@@ -1,15 +1,62 @@
+import 'dart:io';
+
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/core/format.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+const _forbidden = [
+  'kyro',
+  '트랭글',
+  'tranggle',
+  'nrc',
+  'nike run',
+  'run an empire',
+  'stepn',
+  '캐시워크',
+  '런플롯',
+  'runplot',
+  'funex',
+];
+
 void main() {
   test('user-facing copy never uses forbidden terms', () {
     const blob = '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
-        '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryBody} ${BalmiCopy.vasaCreditDetail} '
-        '${BalmiCopy.waitingGps} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied}';
-    expect(blob.toLowerCase(), isNot(contains('funex')));
+        '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryTitle} ${BalmiCopy.recoveryBody} '
+        '${BalmiCopy.vasaCredit} ${BalmiCopy.vasaCreditDetail} ${BalmiCopy.waitingGps} '
+        '${BalmiCopy.waitingGpsShort} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied} '
+        '${BalmiCopy.locationDeniedForever} ${BalmiCopy.onboardingWelcome} '
+        '${BalmiCopy.onboardingTrustTitle} ${BalmiCopy.onboardingPermsTitle} '
+        '${BalmiCopy.onboardingBatteryTitle} ${BalmiCopy.onboardingBatteryBody} '
+        '${BalmiCopy.landTitle} ${BalmiCopy.landPreview} ${BalmiCopy.landFoot} '
+        '${BalmiCopy.about} ${BalmiCopy.versionLabel}';
+    final lower = blob.toLowerCase();
+    for (final term in _forbidden) {
+      expect(lower, isNot(contains(term)), reason: 'copy must not contain "$term"');
+    }
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));
+    expect(BalmiCopy.positioning, '잃어버리지 않는 기록');
+    expect(BalmiCopy.trustAlways, '통신이 끊겨도 기록은 기기에 전부 저장됩니다');
+  });
+
+  test('lib / Android / iOS UI sources do not name competitors', () {
+    final files = <File>[
+      ..._dartUnder(Directory('lib')),
+      ..._xmlUnder(Directory('android/app/src')),
+      File('ios/Runner/Info.plist'),
+    ].where((f) => f.existsSync());
+
+    for (final file in files) {
+      final text = file.readAsStringSync();
+      final lower = text.toLowerCase();
+      for (final term in _forbidden) {
+        expect(
+          lower,
+          isNot(contains(term)),
+          reason: '${file.path} must not contain "$term"',
+        );
+      }
+    }
   });
 
   test('lap TTS and result line format', () {
@@ -26,5 +73,21 @@ void main() {
     expect(formatPace(0.4), '--\'--"');
     expect(formatPace(10), '6\'00"');
     expect(formatLapClock(128), '2\'08"');
+  });
+}
+
+Iterable<File> _dartUnder(Directory dir) {
+  if (!dir.existsSync()) return const [];
+  return dir
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((f) => f.path.endsWith('.dart') && !f.path.endsWith('.g.dart'));
+}
+
+Iterable<File> _xmlUnder(Directory dir) {
+  if (!dir.existsSync()) return const [];
+  return dir.listSync(recursive: true).whereType<File>().where((f) {
+    final p = f.path.replaceAll('\\', '/');
+    return p.endsWith('.xml') && p.contains('/res/');
   });
 }

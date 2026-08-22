@@ -6,6 +6,7 @@ import 'core/copy.dart';
 import 'core/theme.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/session_repository.dart';
+import 'data/sensors/step_service.dart';
 import 'data/sync/sync_worker.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/recording/recording_controller.dart';
@@ -30,6 +31,7 @@ class BalmiApp extends StatefulWidget {
 class _BalmiAppState extends State<BalmiApp> {
   late final SessionRepository _repo;
   late final RecordingController _recording;
+  late final StepService _steps;
   late final SyncWorker _sync;
   bool? _onboarded;
   bool _recoveryChecked = false;
@@ -40,6 +42,7 @@ class _BalmiAppState extends State<BalmiApp> {
     _repo = SessionRepository(widget.db);
     _recording = RecordingController(repo: _repo, dbPath: widget.dbPath);
     _recording.attachTaskListener();
+    _steps = StepService()..start();
     _sync = SyncWorker(_repo)..start();
     _load();
   }
@@ -55,6 +58,7 @@ class _BalmiAppState extends State<BalmiApp> {
   void dispose() {
     _sync.stop();
     _recording.dispose();
+    _steps.dispose();
     super.dispose();
   }
 
@@ -65,6 +69,7 @@ class _BalmiAppState extends State<BalmiApp> {
         Provider<AppDatabase>.value(value: widget.db),
         Provider<SessionRepository>.value(value: _repo),
         ChangeNotifierProvider<RecordingController>.value(value: _recording),
+        ChangeNotifierProvider<StepService>.value(value: _steps),
       ],
       child: WithForegroundTask(
         child: MaterialApp(

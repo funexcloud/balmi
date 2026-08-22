@@ -22,6 +22,7 @@ class CadenceEngine {
   bool _armed = true;
 
   double? spm;
+  int totalSteps = 0;
 
   Future<void> start() async {
     await stop();
@@ -35,6 +36,7 @@ class CadenceEngine {
         if (_lastStep == null || now.difference(_lastStep!) >= minStepGap) {
           _steps.add(now);
           _lastStep = now;
+          totalSteps += 1;
         }
         _armed = false;
       }
@@ -58,6 +60,7 @@ class CadenceEngine {
     await _sub?.cancel();
     _sub = null;
     _steps.clear();
+    totalSteps = 0;
     spm = null;
     _lastStep = null;
     _lastMag = null;
