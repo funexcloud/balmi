@@ -1,4 +1,4 @@
-/// Rural farm unlocks. Costs are ㎡ spent from the land budget — never cash.
+/// Rural farm unlocks. Buildings appear after cumulative 물주기 — never leftover ㎡.
 enum FarmKind {
   pastureFence,
   barn,
@@ -19,12 +19,27 @@ enum FarmKind {
         villageStore => '마을 창고',
       };
 
-  /// Area that must be earned and is spent on 짓기 / 가꾸기.
+  String get shortLabel => switch (this) {
+        pastureFence => '울타리',
+        barn => '헛간',
+        farmhouse => '농가',
+        villageStore => '창고',
+      };
+
+  /// Honest deed size stored on the row — not a shop price.
   double get costM2 => switch (this) {
         pastureFence => 1000,
         barn => 5000,
         farmhouse => 20000,
         villageStore => 50000,
+      };
+
+  /// Cumulative 물주기 needed before this building appears.
+  int get watersNeeded => switch (this) {
+        pastureFence => 3,
+        barn => 10,
+        farmhouse => 25,
+        villageStore => 60,
       };
 
   static FarmKind fromWire(String value) {
@@ -58,14 +73,16 @@ class LandBudget {
   final double pathBandM2;
   final double spentM2;
 
-  /// Prefer enclosed loops; otherwise the 4 m path strip so 2–3 km walks unlock.
+  /// Prefer enclosed loops; otherwise the 4 m path strip. Display only — not cash.
   double get earnedM2 => loopM2 > pathBandM2 ? loopM2 : pathBandM2;
 
   double get remainingM2 => (earnedM2 - spentM2).clamp(0, double.infinity);
 
-  bool unlocked(FarmKind kind) => earnedM2 + 1e-6 >= kind.costM2;
+  /// Area never unlocks or buys a building.
+  bool unlocked(FarmKind kind) => false;
 
-  bool canBuild(FarmKind kind) => remainingM2 + 1e-6 >= kind.costM2;
+  /// Leftover ㎡ cannot be spent. Buildings come from 물주기 milestones.
+  bool canBuild(FarmKind kind) => false;
 
   static double pathBandFromDistanceM(double distM) => distM * pathBandWidthM;
 }

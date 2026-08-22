@@ -111,6 +111,18 @@ class Livestock extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('WaterEvent')
+class WaterEvents extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get wateredAt => dateTime()();
+  IntColumn get watersTotalAfter => integer()();
+  TextColumn get unlockedType => text().nullable()();
+  TextColumn get raisedKind => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class AppKv extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();

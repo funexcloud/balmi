@@ -4227,6 +4227,383 @@ class LivestockCompanion extends UpdateCompanion<LivestockRow> {
   }
 }
 
+class $WaterEventsTable extends WaterEvents
+    with TableInfo<$WaterEventsTable, WaterEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WaterEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _wateredAtMeta = const VerificationMeta(
+    'wateredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> wateredAt = GeneratedColumn<DateTime>(
+    'watered_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _watersTotalAfterMeta = const VerificationMeta(
+    'watersTotalAfter',
+  );
+  @override
+  late final GeneratedColumn<int> watersTotalAfter = GeneratedColumn<int>(
+    'waters_total_after',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unlockedTypeMeta = const VerificationMeta(
+    'unlockedType',
+  );
+  @override
+  late final GeneratedColumn<String> unlockedType = GeneratedColumn<String>(
+    'unlocked_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _raisedKindMeta = const VerificationMeta(
+    'raisedKind',
+  );
+  @override
+  late final GeneratedColumn<String> raisedKind = GeneratedColumn<String>(
+    'raised_kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    wateredAt,
+    watersTotalAfter,
+    unlockedType,
+    raisedKind,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'water_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WaterEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('watered_at')) {
+      context.handle(
+        _wateredAtMeta,
+        wateredAt.isAcceptableOrUnknown(data['watered_at']!, _wateredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wateredAtMeta);
+    }
+    if (data.containsKey('waters_total_after')) {
+      context.handle(
+        _watersTotalAfterMeta,
+        watersTotalAfter.isAcceptableOrUnknown(
+          data['waters_total_after']!,
+          _watersTotalAfterMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_watersTotalAfterMeta);
+    }
+    if (data.containsKey('unlocked_type')) {
+      context.handle(
+        _unlockedTypeMeta,
+        unlockedType.isAcceptableOrUnknown(
+          data['unlocked_type']!,
+          _unlockedTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('raised_kind')) {
+      context.handle(
+        _raisedKindMeta,
+        raisedKind.isAcceptableOrUnknown(data['raised_kind']!, _raisedKindMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WaterEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WaterEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      wateredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}watered_at'],
+      )!,
+      watersTotalAfter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}waters_total_after'],
+      )!,
+      unlockedType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unlocked_type'],
+      ),
+      raisedKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}raised_kind'],
+      ),
+    );
+  }
+
+  @override
+  $WaterEventsTable createAlias(String alias) {
+    return $WaterEventsTable(attachedDatabase, alias);
+  }
+}
+
+class WaterEvent extends DataClass implements Insertable<WaterEvent> {
+  final String id;
+  final DateTime wateredAt;
+  final int watersTotalAfter;
+  final String? unlockedType;
+  final String? raisedKind;
+  const WaterEvent({
+    required this.id,
+    required this.wateredAt,
+    required this.watersTotalAfter,
+    this.unlockedType,
+    this.raisedKind,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['watered_at'] = Variable<DateTime>(wateredAt);
+    map['waters_total_after'] = Variable<int>(watersTotalAfter);
+    if (!nullToAbsent || unlockedType != null) {
+      map['unlocked_type'] = Variable<String>(unlockedType);
+    }
+    if (!nullToAbsent || raisedKind != null) {
+      map['raised_kind'] = Variable<String>(raisedKind);
+    }
+    return map;
+  }
+
+  WaterEventsCompanion toCompanion(bool nullToAbsent) {
+    return WaterEventsCompanion(
+      id: Value(id),
+      wateredAt: Value(wateredAt),
+      watersTotalAfter: Value(watersTotalAfter),
+      unlockedType: unlockedType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unlockedType),
+      raisedKind: raisedKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(raisedKind),
+    );
+  }
+
+  factory WaterEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WaterEvent(
+      id: serializer.fromJson<String>(json['id']),
+      wateredAt: serializer.fromJson<DateTime>(json['wateredAt']),
+      watersTotalAfter: serializer.fromJson<int>(json['watersTotalAfter']),
+      unlockedType: serializer.fromJson<String?>(json['unlockedType']),
+      raisedKind: serializer.fromJson<String?>(json['raisedKind']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'wateredAt': serializer.toJson<DateTime>(wateredAt),
+      'watersTotalAfter': serializer.toJson<int>(watersTotalAfter),
+      'unlockedType': serializer.toJson<String?>(unlockedType),
+      'raisedKind': serializer.toJson<String?>(raisedKind),
+    };
+  }
+
+  WaterEvent copyWith({
+    String? id,
+    DateTime? wateredAt,
+    int? watersTotalAfter,
+    Value<String?> unlockedType = const Value.absent(),
+    Value<String?> raisedKind = const Value.absent(),
+  }) => WaterEvent(
+    id: id ?? this.id,
+    wateredAt: wateredAt ?? this.wateredAt,
+    watersTotalAfter: watersTotalAfter ?? this.watersTotalAfter,
+    unlockedType: unlockedType.present ? unlockedType.value : this.unlockedType,
+    raisedKind: raisedKind.present ? raisedKind.value : this.raisedKind,
+  );
+  WaterEvent copyWithCompanion(WaterEventsCompanion data) {
+    return WaterEvent(
+      id: data.id.present ? data.id.value : this.id,
+      wateredAt: data.wateredAt.present ? data.wateredAt.value : this.wateredAt,
+      watersTotalAfter: data.watersTotalAfter.present
+          ? data.watersTotalAfter.value
+          : this.watersTotalAfter,
+      unlockedType: data.unlockedType.present
+          ? data.unlockedType.value
+          : this.unlockedType,
+      raisedKind: data.raisedKind.present
+          ? data.raisedKind.value
+          : this.raisedKind,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WaterEvent(')
+          ..write('id: $id, ')
+          ..write('wateredAt: $wateredAt, ')
+          ..write('watersTotalAfter: $watersTotalAfter, ')
+          ..write('unlockedType: $unlockedType, ')
+          ..write('raisedKind: $raisedKind')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, wateredAt, watersTotalAfter, unlockedType, raisedKind);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WaterEvent &&
+          other.id == this.id &&
+          other.wateredAt == this.wateredAt &&
+          other.watersTotalAfter == this.watersTotalAfter &&
+          other.unlockedType == this.unlockedType &&
+          other.raisedKind == this.raisedKind);
+}
+
+class WaterEventsCompanion extends UpdateCompanion<WaterEvent> {
+  final Value<String> id;
+  final Value<DateTime> wateredAt;
+  final Value<int> watersTotalAfter;
+  final Value<String?> unlockedType;
+  final Value<String?> raisedKind;
+  final Value<int> rowid;
+  const WaterEventsCompanion({
+    this.id = const Value.absent(),
+    this.wateredAt = const Value.absent(),
+    this.watersTotalAfter = const Value.absent(),
+    this.unlockedType = const Value.absent(),
+    this.raisedKind = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WaterEventsCompanion.insert({
+    required String id,
+    required DateTime wateredAt,
+    required int watersTotalAfter,
+    this.unlockedType = const Value.absent(),
+    this.raisedKind = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       wateredAt = Value(wateredAt),
+       watersTotalAfter = Value(watersTotalAfter);
+  static Insertable<WaterEvent> custom({
+    Expression<String>? id,
+    Expression<DateTime>? wateredAt,
+    Expression<int>? watersTotalAfter,
+    Expression<String>? unlockedType,
+    Expression<String>? raisedKind,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (wateredAt != null) 'watered_at': wateredAt,
+      if (watersTotalAfter != null) 'waters_total_after': watersTotalAfter,
+      if (unlockedType != null) 'unlocked_type': unlockedType,
+      if (raisedKind != null) 'raised_kind': raisedKind,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WaterEventsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? wateredAt,
+    Value<int>? watersTotalAfter,
+    Value<String?>? unlockedType,
+    Value<String?>? raisedKind,
+    Value<int>? rowid,
+  }) {
+    return WaterEventsCompanion(
+      id: id ?? this.id,
+      wateredAt: wateredAt ?? this.wateredAt,
+      watersTotalAfter: watersTotalAfter ?? this.watersTotalAfter,
+      unlockedType: unlockedType ?? this.unlockedType,
+      raisedKind: raisedKind ?? this.raisedKind,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (wateredAt.present) {
+      map['watered_at'] = Variable<DateTime>(wateredAt.value);
+    }
+    if (watersTotalAfter.present) {
+      map['waters_total_after'] = Variable<int>(watersTotalAfter.value);
+    }
+    if (unlockedType.present) {
+      map['unlocked_type'] = Variable<String>(unlockedType.value);
+    }
+    if (raisedKind.present) {
+      map['raised_kind'] = Variable<String>(raisedKind.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WaterEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('wateredAt: $wateredAt, ')
+          ..write('watersTotalAfter: $watersTotalAfter, ')
+          ..write('unlockedType: $unlockedType, ')
+          ..write('raisedKind: $raisedKind, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4239,6 +4616,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EventsTable events = $EventsTable(this);
   late final $BuildingsTable buildings = $BuildingsTable(this);
   late final $LivestockTable livestock = $LivestockTable(this);
+  late final $WaterEventsTable waterEvents = $WaterEventsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4253,6 +4631,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     events,
     buildings,
     livestock,
+    waterEvents,
   ];
 }
 
@@ -7253,6 +7632,212 @@ typedef $$LivestockTableProcessedTableManager =
       LivestockRow,
       PrefetchHooks Function()
     >;
+typedef $$WaterEventsTableCreateCompanionBuilder =
+    WaterEventsCompanion Function({
+      required String id,
+      required DateTime wateredAt,
+      required int watersTotalAfter,
+      Value<String?> unlockedType,
+      Value<String?> raisedKind,
+      Value<int> rowid,
+    });
+typedef $$WaterEventsTableUpdateCompanionBuilder =
+    WaterEventsCompanion Function({
+      Value<String> id,
+      Value<DateTime> wateredAt,
+      Value<int> watersTotalAfter,
+      Value<String?> unlockedType,
+      Value<String?> raisedKind,
+      Value<int> rowid,
+    });
+
+class $$WaterEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $WaterEventsTable> {
+  $$WaterEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get wateredAt => $composableBuilder(
+    column: $table.wateredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get watersTotalAfter => $composableBuilder(
+    column: $table.watersTotalAfter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unlockedType => $composableBuilder(
+    column: $table.unlockedType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get raisedKind => $composableBuilder(
+    column: $table.raisedKind,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WaterEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WaterEventsTable> {
+  $$WaterEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get wateredAt => $composableBuilder(
+    column: $table.wateredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get watersTotalAfter => $composableBuilder(
+    column: $table.watersTotalAfter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unlockedType => $composableBuilder(
+    column: $table.unlockedType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get raisedKind => $composableBuilder(
+    column: $table.raisedKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WaterEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WaterEventsTable> {
+  $$WaterEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get wateredAt =>
+      $composableBuilder(column: $table.wateredAt, builder: (column) => column);
+
+  GeneratedColumn<int> get watersTotalAfter => $composableBuilder(
+    column: $table.watersTotalAfter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unlockedType => $composableBuilder(
+    column: $table.unlockedType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get raisedKind => $composableBuilder(
+    column: $table.raisedKind,
+    builder: (column) => column,
+  );
+}
+
+class $$WaterEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WaterEventsTable,
+          WaterEvent,
+          $$WaterEventsTableFilterComposer,
+          $$WaterEventsTableOrderingComposer,
+          $$WaterEventsTableAnnotationComposer,
+          $$WaterEventsTableCreateCompanionBuilder,
+          $$WaterEventsTableUpdateCompanionBuilder,
+          (
+            WaterEvent,
+            BaseReferences<_$AppDatabase, $WaterEventsTable, WaterEvent>,
+          ),
+          WaterEvent,
+          PrefetchHooks Function()
+        > {
+  $$WaterEventsTableTableManager(_$AppDatabase db, $WaterEventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WaterEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WaterEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WaterEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> wateredAt = const Value.absent(),
+                Value<int> watersTotalAfter = const Value.absent(),
+                Value<String?> unlockedType = const Value.absent(),
+                Value<String?> raisedKind = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WaterEventsCompanion(
+                id: id,
+                wateredAt: wateredAt,
+                watersTotalAfter: watersTotalAfter,
+                unlockedType: unlockedType,
+                raisedKind: raisedKind,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime wateredAt,
+                required int watersTotalAfter,
+                Value<String?> unlockedType = const Value.absent(),
+                Value<String?> raisedKind = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WaterEventsCompanion.insert(
+                id: id,
+                wateredAt: wateredAt,
+                watersTotalAfter: watersTotalAfter,
+                unlockedType: unlockedType,
+                raisedKind: raisedKind,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WaterEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WaterEventsTable,
+      WaterEvent,
+      $$WaterEventsTableFilterComposer,
+      $$WaterEventsTableOrderingComposer,
+      $$WaterEventsTableAnnotationComposer,
+      $$WaterEventsTableCreateCompanionBuilder,
+      $$WaterEventsTableUpdateCompanionBuilder,
+      (
+        WaterEvent,
+        BaseReferences<_$AppDatabase, $WaterEventsTable, WaterEvent>,
+      ),
+      WaterEvent,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7274,4 +7859,6 @@ class $AppDatabaseManager {
       $$BuildingsTableTableManager(_db, _db.buildings);
   $$LivestockTableTableManager get livestock =>
       $$LivestockTableTableManager(_db, _db.livestock);
+  $$WaterEventsTableTableManager get waterEvents =>
+      $$WaterEventsTableTableManager(_db, _db.waterEvents);
 }

@@ -20,6 +20,7 @@ part 'app_database.g.dart';
     Events,
     Buildings,
     Livestock,
+    WaterEvents,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -33,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileName = 'balmi.sqlite';
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -49,6 +50,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(livestock);
+          }
+          if (from < 5) {
+            await m.createTable(waterEvents);
           }
         },
       );

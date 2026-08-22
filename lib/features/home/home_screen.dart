@@ -5,7 +5,6 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../data/sensors/step_service.dart';
-import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
@@ -26,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ActivityKind _activity = ActivityKind.auto;
   PeriodStats _today = summarizePeriod(const []);
   var _buildingCount = 0;
-  var _herdCount = 0;
+  var _wateredToday = false;
+  var _progressLine = '물 0회 · 다음 울타리까지 3회';
 
   @override
   void initState() {
@@ -40,13 +40,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final rows = await repo.closedWorkouts();
     final today = summarizePeriod(inLocalDay(rows, DateTime.now()));
     final buildings = await repo.listBuildings();
-    final herds = await repo.listLivestock();
+    final water = await repo.loadWaterLedger();
     steps.setRecordedToday(today.steps);
     if (!mounted) return;
     setState(() {
       _today = today;
       _buildingCount = buildings.length;
-      _herdCount = herds.length;
+      _wateredToday = water.wateredToday;
+      _progressLine = water.progressLine;
     });
   }
 
@@ -90,9 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               FarmStatusCard(
                 buildingCount: _buildingCount,
-                herdCount: _herdCount,
-                todayWalkM: _today.distM,
-                caredToday: FeedBudget(todayWalkM: _today.distM, spentFeedM: 0).caredToday,
+                progressLine: _progressLine,
+                caredToday: _wateredToday,
                 onOpen: () => openLandPreview(context),
               ),
               if (rec.lastError != null) ...[

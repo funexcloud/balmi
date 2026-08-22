@@ -109,38 +109,46 @@ abstract final class BalmiCopy {
   static const landEmptyArea = '아직 닫힌 루프가 없어요';
   static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
   static const landNoPath = '아직 등기할 경로가 없습니다';
+  static const landEmptyField = '아직 빈 들판이에요';
   static const landWalkedPath = '내가 걸은 길';
-  static const landWalkHint = '걸어서 땅을 등기하면 목장이 생깁니다';
+  static const landWalkHint = '오늘 걸으면 물을 한 번 줄 수 있어요';
   static const landTracesHint = '경로가 쌓이면 지도에 표시됩니다';
   static const landLoopAreaHint = '닫힌 경로에서 계산한 면적';
   static const farmOwner = '나는 농장주예요';
-  static const farmBudget = '면적 예산';
+  static const farmBudget = '등기 면적';
   static const farmTend = '가꾸기';
-  static const farmSpendHint = '닫힌 길·걸은 띠로 등기한 면적만 씁니다. 돈은 없어요.';
-  static const farmPlaceHint = '짓기를 누르면 장면에 생깁니다. 자리를 고르려면 아래 길에서 누르세요.';
+  static const waterAction = '물주기';
+  static const wateredToday = '오늘은 이미 물을 줬어요';
+  static const waterNeedWalk = '오늘 50m 이상 걸으면 물을 한 번 줄 수 있어요';
+  static const waterDone = '목초에 물을 줬어요';
+  static const areaNotCash = '면적은 등기된 땅이지 화폐가 아닙니다';
+  static const watersCount = '물 준 횟수';
+  static const nextMilestone = '다음 목장';
+  static const farmSpendHint = '하루 한 번, 걸은 날만 물을 줍니다. 면적으로 짓지 않습니다.';
+  static const farmPlaceHint = '물을 주면 들이 조금 더 살아납니다.';
   static const farmNeedFix = '먼저 걸어서 경로를 남겨 주세요';
   static const farmUnlocked = '열림';
   static const farmLocked = '아직';
   static const landBudgetHint =
-      '면적 = 닫힌 루프와 경로 띠(폭 4m) 중 큰 값. 가꾼 목장은 그 면적을 씁니다.';
+      '면적은 내가 걸은 길을 보여 줄 뿐, 목장을 사는 돈이 아닙니다.';
   static const landThresholds =
-      '짓기·가꾸기: 울타리 목장 1,000㎡ · 헛간 5,000㎡ · 농가 20,000㎡ · 마을 창고 50,000㎡';
+      '물주기: 3회 울타리 목장 · 10회 헛간 · 25회 농가 · 60회 마을 창고';
   static const buildAction = '짓기';
   static const raiseAction = '기르기';
   static const myBuildings = '내 목장';
   static const myHerds = '내 가축·작물';
-  static const todayFeed = '오늘 먹이';
-  static const herdsFed = '오늘 걸어서 먹이를 줬어요';
-  static const herdsHungry = '오늘 조금 걸어 주시면 먹이가 생깁니다';
-  static const farmHomeEmpty = '걸어서 땅을 모으면 목장을 가꿀 수 있어요';
-  static const farmHomeReady = '울타리가 생겼어요. 오늘 걸어 양떼를 길러 보세요';
+  static const todayFeed = '오늘 걸음';
+  static const herdsFed = '오늘 물을 줬어요';
+  static const herdsHungry = '오늘 걸어서 물을 주세요';
+  static const farmHomeEmpty = '오늘 걸으면 목초에 물을 한 번 줄 수 있어요';
+  static const farmHomeReady = '울타리가 생겼어요. 다음에 물을 주면 양이 와요';
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';
-  static const raisePlaceHint = '기르기를 누르면 장면에 나타납니다. 자리를 고르려면 아래 길에서 누르세요.';
+  static const raisePlaceHint = '물 한 번에 가축·작물은 하나만 자랍니다.';
   static const herdUnlockHint =
-      '기르기: 양떼 400m · 닭 250m · 텃밭 600m · 한우 1.2km (오늘 기록). 면적은 쓰지 않아요.';
-  static const noBudget = '남은 면적이 모자라요. 더 걸어서 땅을 넓히세요.';
+      '물주기 3회 울타리 · 10회 헛간 · 25회 농가 · 60회 창고. 건물이 있으면 그다음 물에 가축·작물 하나.';
+  static const noBudget = '면적으로는 지을 수 없어요. 걸어서 물을 주세요.';
   static const remainingArea = '남은 면적';
   static const recentDeed = '최근 등기';
   static const todayLoop = '오늘 루프';
@@ -154,7 +162,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.7';
+  static const versionLabel = '0.1.8';
 
   static String gpsStrength(String code) {
     switch (code) {

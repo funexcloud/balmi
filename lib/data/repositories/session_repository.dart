@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/engines/farm_life.dart';
+import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/engines/sync_backoff.dart';
 import '../../domain/engines/workout_stats.dart';
@@ -567,6 +568,110 @@ class SessionRepository {
         );
     return (await (db.select(db.livestock)..where((t) => t.id.equals(id)))
         .getSingle());
+  }
+
+  Future<List<WaterEvent>> listWaterEvents() {
+    return (db.select(db.waterEvents)
+          ..orderBy([(t) => OrderingTerm.asc(t.wateredAt)]))
+        .get();
+  }
+
+  Future<void> seedWaterEventsFromBuildings() async {
+    final existing = await listWaterEvents();
+    if (existing.isNotEmpty) return;
+    final buildings = await listBuildings();
+    final n = seedWatersFromBuildings(
+      buildings.map((b) => FarmKind.fromWire(b.type)),
+    );
+    if (n <= 0) return;
+    final past = DateTime.now().toLocal().subtract(const Duration(days: 400));
+    for (var i = 1; i <= n; i++) {
+      await db.into(db.waterEvents).insert(
+            WaterEventsCompanion.insert(
+              id: newId(),
+              wateredAt: past.add(Duration(minutes: i)),
+              watersTotalAfter: i,
+            ),
+          );
+    }
+  }
+
+  Future<WaterLedger> loadWaterLedger({DateTime? now}) async {
+    await seedWaterEventsFromBuildings();
+    final at = now ?? DateTime.now();
+    final events = await listWaterEvents();
+    final sessions = await closedSessions();
+    final walks = [
+      for (final s in sessions)
+        ClosedWalk(endedAt: s.endedAt ?? s.startedAt, distM: s.totalDistM),
+    ];
+    return ledgerFromWalks(
+      walks: walks,
+      wateredAt: events.map((e) => e.wateredAt),
+      now: at,
+    );
+  }
+
+  Future<WaterApplyResult> applyWater({
+    required double lat,
+    required double lng,
+    DateTime? now,
+  }) async {
+    final at = now ?? DateTime.now();
+    final before = await loadWaterLedger(now: at);
+    if (!before.canWater) {
+      return WaterApplyResult(ledger: before);
+    }
+    final buildings = await listBuildings();
+    final herds = await listLivestock();
+    final built = buildings.map((b) => FarmKind.fromWire(b.type)).toList();
+    final existing = herds.map((h) => HerdKind.fromWire(h.kind)).toList();
+    final nextTotal = before.watersTotal + 1;
+    final unlocked = buildingUnlockedByWaters(
+      watersAfter: nextTotal,
+      already: built,
+    );
+    final homes = [...built, ?unlocked];
+    final raised = herdRaisedByWater(
+      buildings: homes,
+      existing: existing,
+      justUnlocked: unlocked,
+    );
+    if (unlocked != null) {
+      await insertBuilding(kind: unlocked, lat: lat, lng: lng);
+    }
+    if (raised != null) {
+      await insertLivestock(
+        kind: raised,
+        lat: lat + 0.00008,
+        lng: lng + 0.00006,
+      );
+    }
+    await db.into(db.waterEvents).insert(
+          WaterEventsCompanion.insert(
+            id: newId(),
+            wateredAt: at,
+            watersTotalAfter: nextTotal,
+            unlockedType: Value(unlocked?.wire),
+            raisedKind: Value(raised?.wire),
+          ),
+        );
+    await putKv('waters_total', '$nextTotal');
+    final local = at.toLocal();
+    final ymd =
+        '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
+    await putKv('last_water_local_day', ymd);
+    await putKv('unused_tokens', '0');
+    return WaterApplyResult(
+      ledger: WaterLedger(
+        watersTotal: nextTotal,
+        wateredToday: true,
+        hasQualifyingWalkToday: true,
+      ),
+      unlocked: unlocked,
+      raised: raised,
+      applied: true,
+    );
   }
 
   Future<Map<Sport, Duration>> sportDurations(String sessionId) async {

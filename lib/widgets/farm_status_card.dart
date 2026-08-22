@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
 
 import '../core/copy.dart';
-import '../core/format.dart';
 import '../core/theme.dart';
 
 class FarmStatusCard extends StatelessWidget {
   const FarmStatusCard({
     super.key,
-    required this.buildingCount,
-    required this.herdCount,
-    required this.todayWalkM,
+    required this.progressLine,
     required this.caredToday,
     required this.onOpen,
+    this.buildingCount = 0,
   });
 
-  final int buildingCount;
-  final int herdCount;
-  final double todayWalkM;
+  final String progressLine;
   final bool caredToday;
   final VoidCallback onOpen;
+  final int buildingCount;
 
   String get _line {
+    if (caredToday) return BalmiCopy.herdsFed;
     if (buildingCount == 0) return BalmiCopy.farmHomeEmpty;
-    if (herdCount == 0) return BalmiCopy.farmHomeReady;
-    return caredToday ? BalmiCopy.herdsFed : BalmiCopy.herdsHungry;
+    return BalmiCopy.herdsHungry;
   }
 
   @override
@@ -53,8 +50,7 @@ class FarmStatusCard extends StatelessWidget {
                     Text(_line, style: BalmiTheme.body(size: 14, weight: FontWeight.w800)),
                     const SizedBox(height: 2),
                     Text(
-                      '${BalmiCopy.todayFeed} ${formatKm(todayWalkM)}km · '
-                      '${BalmiCopy.myBuildings} $buildingCount · ${BalmiCopy.myHerds} $herdCount',
+                      progressLine,
                       style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
                     ),
                   ],

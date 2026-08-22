@@ -10,12 +10,13 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: FarmScene(buildings: [], herds: [], hasLand: false),
+          body: FarmScene(buildings: [], herds: []),
         ),
       ),
     );
-    expect(find.text(BalmiCopy.landNoPath), findsOneWidget);
+    expect(find.text(BalmiCopy.landEmptyField), findsOneWidget);
     expect(find.text(BalmiCopy.landWalkHint), findsOneWidget);
+    expect(find.text(BalmiCopy.landNoPath), findsNothing);
     expect(find.byType(CustomPaint), findsWidgets);
   });
 
@@ -27,11 +28,11 @@ void main() {
             buildings: [FarmKind.pastureFence],
             herds: [HerdKind.sheep, HerdKind.sheep],
             caredToday: true,
-            hasLand: true,
           ),
         ),
       ),
     );
+    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
     expect(find.text(BalmiCopy.landNoPath), findsNothing);
     expect(find.bySemanticsLabel('울타리 목장, 양떼 2'), findsOneWidget);
   });

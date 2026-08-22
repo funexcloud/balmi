@@ -1,6 +1,6 @@
 import 'land_city.dart';
 
-/// Walk-fed livestock. 짓기 spends ㎡; 기르기 spends today's closed-session metres.
+/// Walk-fed livestock. One 물주기 may raise one herd if the required building exists.
 enum HerdKind {
   sheep,
   chicken,
@@ -101,19 +101,17 @@ double spentFeedToday(Iterable<HerdFeed> rows, DateTime now) {
       .fold<double>(0, (s, r) => s + r.feedWalkM);
 }
 
-enum RaiseBlock { ok, needBuilding, atCapacity, needFeed }
+enum RaiseBlock { ok, needBuilding, atCapacity }
 
 RaiseBlock raiseBlock({
   required HerdKind kind,
   required Iterable<FarmKind> buildings,
   required Iterable<HerdKind> existing,
-  required double remainingFeedM,
 }) {
   final homes = buildings.where((b) => b == kind.requires).length;
   if (homes == 0) return RaiseBlock.needBuilding;
   final cap = homes * kind.maxPerBuilding;
   final have = existing.where((h) => h == kind).length;
   if (have >= cap) return RaiseBlock.atCapacity;
-  if (remainingFeedM + 1e-6 < kind.feedWalkM) return RaiseBlock.needFeed;
   return RaiseBlock.ok;
 }
