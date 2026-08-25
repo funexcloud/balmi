@@ -13,7 +13,9 @@ import '../../widgets/live_stats_sheet.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../../widgets/path_spark.dart';
 import '../../widgets/recording_alerts_sheet.dart';
-import '../../widgets/trust_header.dart';
+import '../../domain/engines/meal_walk.dart';
+import '../meal_walk/meal_walk_cards.dart';
+import '../meal_walk/meal_walk_controller.dart';
 import '../session_detail/session_detail_screen.dart';
 import 'recording_controller.dart';
 
@@ -50,6 +52,7 @@ class _RecordingScreenState extends State<RecordingScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       context.read<RecordingController>().nudgeGps();
+      context.read<MealWalkController>().catchUp();
     }
   }
 
@@ -57,7 +60,13 @@ class _RecordingScreenState extends State<RecordingScreen>
     final dist = rec.snapshot?.totalDistM ?? 0;
     final ok = await EndRecordingDialog.confirm(context, distM: dist);
     if (!ok || !mounted) return;
+    final meal = context.read<MealWalkController>();
+    if (meal.open?.status == MealWalkStatus.walking) {
+      await meal.abortWalk();
+    }
+    if (!mounted) return;
     final nav = Navigator.of(context);
+    if (!rec.isRecording) return;
     final id = await rec.stop();
     if (id == null) return;
     await nav.push(
@@ -102,6 +111,7 @@ class _RecordingScreenState extends State<RecordingScreen>
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
+    final meal = context.watch<MealWalkController>();
     final snap = rec.snapshot;
     final speed = snap?.speedKmh ?? 0;
     final trail = rec.liveTrail;
@@ -201,6 +211,16 @@ class _RecordingScreenState extends State<RecordingScreen>
                         size: 12,
                         color: Theme.of(context).colorScheme.error,
                       ),
+                    ),
+                  ),
+                if (meal.open?.status == MealWalkStatus.walking)
+                  Positioned(
+                    left: 10,
+                    right: 64,
+                    bottom: 10,
+                    child: MealWalkCountdownBanner(
+                      remaining: meal.walkRemaining(rec.elapsed),
+                      elapsed: rec.elapsed,
                     ),
                   ),
               ],

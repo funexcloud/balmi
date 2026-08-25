@@ -705,4 +705,62 @@ class SessionRepository {
     }
     return out;
   }
+
+  /// Extra 물주기 for a completed post-meal walk. Bypasses the daily cap.
+  Future<WaterApplyResult> applyMealWalkReward({
+    required double lat,
+    required double lng,
+    DateTime? now,
+  }) async {
+    final at = now ?? DateTime.now();
+    final before = await loadWaterLedger(now: at);
+    final buildings = await listBuildings();
+    final herds = await listLivestock();
+    final built = buildings.map((b) => FarmKind.fromWire(b.type)).toList();
+    final existing = herds.map((h) => HerdKind.fromWire(h.kind)).toList();
+    final nextTotal = before.watersTotal + 1;
+    final unlocked = buildingUnlockedByWaters(
+      watersAfter: nextTotal,
+      already: built,
+    );
+    final homes = <FarmKind>[...built, if (unlocked != null) unlocked];
+    final raised = herdRaisedByWater(
+      buildings: homes,
+      existing: existing,
+      justUnlocked: unlocked,
+      watersAfter: nextTotal,
+    );
+    if (unlocked != null) {
+      await insertBuilding(kind: unlocked, lat: lat, lng: lng);
+    }
+    if (raised != null) {
+      await insertLivestock(
+        kind: raised,
+        lat: lat + 0.00008,
+        lng: lng + 0.00006,
+      );
+    }
+    await db.into(db.waterEvents).insert(
+          WaterEventsCompanion.insert(
+            id: newId(),
+            wateredAt: at,
+            watersTotalAfter: nextTotal,
+            unlockedType: Value(unlocked?.wire),
+            raisedKind: Value(raised?.wire),
+          ),
+        );
+    await putKv('waters_total', '$nextTotal');
+    return WaterApplyResult(
+      ledger: WaterLedger(
+        watersTotal: nextTotal,
+        wateredToday: true,
+        hasQualifyingWalkToday: true,
+        buildings: homes,
+        herds: [...existing, if (raised != null) raised],
+      ),
+      unlocked: unlocked,
+      raised: raised,
+      applied: true,
+    );
+  }
 }

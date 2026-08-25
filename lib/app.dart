@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import 'core/copy.dart';
 import 'core/theme.dart';
 import 'data/db/app_database.dart';
+import 'data/notifications/meal_walk_alarms.dart';
+import 'data/repositories/meal_walk_store.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sensors/step_service.dart';
 import 'data/sync/sync_worker.dart';
+import 'features/meal_walk/meal_walk_controller.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/recording/recording_controller.dart';
 import 'features/recovery/recovery_dialog.dart';
@@ -31,6 +34,7 @@ class BalmiApp extends StatefulWidget {
 class _BalmiAppState extends State<BalmiApp> {
   late final SessionRepository _repo;
   late final RecordingController _recording;
+  late final MealWalkController _mealWalk;
   late final StepService _steps;
   late final SyncWorker _sync;
   bool? _onboarded;
@@ -42,6 +46,12 @@ class _BalmiAppState extends State<BalmiApp> {
     _repo = SessionRepository(widget.db);
     _recording = RecordingController(repo: _repo, dbPath: widget.dbPath);
     _recording.attachTaskListener();
+    _mealWalk = MealWalkController(
+      store: MealWalkStore(widget.db, newId: _repo.newId),
+      repo: _repo,
+      recording: _recording,
+      alarms: MealWalkAlarms(),
+    );
     _steps = StepService()..start();
     _sync = SyncWorker(_repo)..start();
     _load();
@@ -49,6 +59,7 @@ class _BalmiAppState extends State<BalmiApp> {
 
   Future<void> _load() async {
     await _recording.initForeground();
+    await _mealWalk.bootstrap();
     final done = await isOnboardingDone(_repo);
     if (!mounted) return;
     setState(() => _onboarded = done);
@@ -57,6 +68,7 @@ class _BalmiAppState extends State<BalmiApp> {
   @override
   void dispose() {
     _sync.stop();
+    _mealWalk.dispose();
     _recording.dispose();
     _steps.dispose();
     super.dispose();
@@ -69,6 +81,7 @@ class _BalmiAppState extends State<BalmiApp> {
         Provider<AppDatabase>.value(value: widget.db),
         Provider<SessionRepository>.value(value: _repo),
         ChangeNotifierProvider<RecordingController>.value(value: _recording),
+        ChangeNotifierProvider<MealWalkController>.value(value: _mealWalk),
         ChangeNotifierProvider<StepService>.value(value: _steps),
       ],
       child: WithForegroundTask(

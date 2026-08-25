@@ -29,7 +29,10 @@ void main() {
         '${BalmiCopy.onboardingTrustTitle} ${BalmiCopy.onboardingPermsTitle} '
         '${BalmiCopy.onboardingBatteryTitle} ${BalmiCopy.onboardingBatteryBody} '
         '${BalmiCopy.landTitle} ${BalmiCopy.landPreview} ${BalmiCopy.landFoot} '
-        '${BalmiCopy.about} ${BalmiCopy.versionLabel}';
+        '${BalmiCopy.about} ${BalmiCopy.versionLabel} '
+        '${BalmiCopy.mealWalkDiscover} ${BalmiCopy.mealWalkIntro} '
+        '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
+        '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge}';
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
       expect(

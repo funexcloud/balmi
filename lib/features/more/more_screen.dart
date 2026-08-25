@@ -44,6 +44,13 @@ class MoreScreen extends StatelessWidget {
       ),
       (Icons.landscape_outlined, BalmiCopy.landTab, () => openLandPreview(context)),
       (
+        Icons.favorite_outline,
+        BalmiCopy.mealWalkHealthSection,
+        () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+        },
+      ),
+      (
         Icons.settings_outlined,
         BalmiCopy.settings,
         () {

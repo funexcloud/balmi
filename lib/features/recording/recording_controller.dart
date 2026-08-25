@@ -38,6 +38,7 @@ class RecordingController extends ChangeNotifier {
 
   RecordingPipeline? _pipeline;
   RecordingSnapshot? snapshot;
+  String? mealWalkSessionId;
   ActivityKind activity = ActivityKind.auto;
   int? trackSpecM;
   bool paused = false;
@@ -437,6 +438,7 @@ class RecordingController extends ChangeNotifier {
     }
     snapshot = null;
     lastError = null;
+    mealWalkSessionId = null;
     _resetPauseClock();
     notifyListeners();
     return id;

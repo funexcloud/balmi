@@ -7,6 +7,7 @@ import '../../data/repositories/session_repository.dart';
 import '../../data/sensors/step_service.dart';
 import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/land_city.dart';
+import '../../domain/engines/meal_walk.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
@@ -14,6 +15,9 @@ import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
 import '../../widgets/today_summary_card.dart';
 import '../land/land_preview_screen.dart';
+import '../meal_walk/meal_walk_cards.dart';
+import '../meal_walk/meal_walk_controller.dart';
+import '../meal_walk/meal_walk_onboarding.dart';
 import '../recording/recording_controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -72,6 +76,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
     final steps = context.watch<StepService>();
+    final meal = context.watch<MealWalkController>();
+    final due = meal.mealDueNow();
+    final showDiscover = !meal.enabled && !meal.discoverHidden;
+    final showStart = meal.enabled &&
+        due != null &&
+        !meal.mealsToday.contains(due) &&
+        meal.open == null;
+    final showGo = meal.enabled && meal.open?.status == MealWalkStatus.prompted;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      if (meal.lastFeedback != null) snackMealWalk(context, meal);
+    });
     return Column(
       children: [
         Expanded(
@@ -90,6 +106,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 caredToday: _wateredToday,
                 onOpen: () => openLandPreview(context),
               ),
+              if (showDiscover) ...[
+                const SizedBox(height: 12),
+                MealWalkDiscoverCard(
+                  onStart: () => openMealWalkOnboarding(context, meal),
+                  onDismiss: meal.hideDiscover,
+                ),
+              ],
+              if (showStart) ...[
+                const SizedBox(height: 12),
+                MealWalkStartCard(
+                  meal: due,
+                  onStart: () => meal.confirmMealStart(due),
+                ),
+              ],
+              if (showGo) ...[
+                const SizedBox(height: 12),
+                MealWalkGoCard(
+                  onGo: () => meal.beginWalk(meal.open!.id),
+                ),
+              ],
               if (rec.lastError != null) ...[
                 const SizedBox(height: 12),
                 Text(

@@ -178,6 +178,39 @@ abstract final class BalmiCopy {
   static const about = '이 앱 정보';
   static const versionLabel = '0.1.10';
 
+  static const mealWalkDiscover = '식사 후 15분 걷기, 시작해볼까요?';
+  static const mealWalkHealthSection = '건강 습관';
+  static const mealWalkTitle = '혈당 워킹 알림';
+  static const mealWalkWhatIs = '혈당 워킹 알림이란?';
+  static const mealWalkIntro = '식사 후 30분 뒤, 15분만 걸어보세요';
+  static const mealWalkIntroBody = '식후 산책을 떠올리도록 알려 드려요. 원할 때만 켜 두면 됩니다.';
+  static const mealWalkDisclaimer =
+      '이 기능은 일반적으로 알려진 생활습관 권장사항에 기반한 습관 형성 도구이며,\n'
+      '의학적 진단이나 처방을 대체하지 않습니다. 혈당 관리가 필요하신 경우 담당\n'
+      '의료진과 상담해주세요.';
+  static const mealWalkAck = '확인했어요';
+  static const mealWalkMealTimes = '식사 시간대';
+  static const mealWalkMealTimesHint = '대략적인 시각이면 충분해요. 나중에 설정에서 바꿀 수 있어요.';
+  static const mealWalkNotifNeed = '제때 알려드리려면 알림이 필요해요';
+  static const mealWalkReady = '준비 됐어요! 다음 식사 시간에 알려드릴게요';
+  static const mealWalkStartPrompt = '식사 시작하셨으면 눌러주세요';
+  static const mealWalkStartBtn = '식사 시작';
+  static const mealWalkGo = '지금 나가서 15분 걸어보세요!';
+  static const mealWalkGoShort = '지금 나가서 15분 걸어요!';
+  static const mealWalkSkip = '괜찮아요, 다음 끼니에 다시 해봐요';
+  static const mealWalkDone = '식후 걷기를 마쳤어요';
+  static const mealWalkBadge = '혈당지킴이';
+  static const mealWalkBadgeHint = '식후 걷기를 마치면 받는 배지예요';
+  static const mealWalkAdherence = '식후 워크 참여도';
+  static const mealWalkReaction = '평균 반응 시간';
+  static const mealWalkOn = '켜짐';
+  static const mealWalkOff = '꺼짐';
+  static const mealWalkDismiss = '닫기';
+  static const mealWalkWalkGoal = '15분 걷기';
+  static const breakfast = '아침';
+  static const lunch = '점심';
+  static const dinner = '저녁';
+
   static String gpsStrength(String code) {
     switch (code) {
       case 'strong':
