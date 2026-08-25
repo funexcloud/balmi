@@ -13,6 +13,7 @@ import '../../widgets/live_stats_sheet.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../../widgets/path_spark.dart';
 import '../../widgets/recording_alerts_sheet.dart';
+import '../../widgets/trust_header.dart';
 import '../../domain/engines/meal_walk.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
