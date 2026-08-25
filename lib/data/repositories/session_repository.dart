@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/engines/farm_life.dart';
+import '../../domain/engines/farm_resource.dart';
 import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/engines/session_farm_grant.dart';
