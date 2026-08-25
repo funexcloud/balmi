@@ -16,14 +16,15 @@ void main() {
         ),
       ),
     );
-    expect(find.text('자동'), findsOneWidget);
-    expect(find.text('걷기'), findsOneWidget);
-    expect(find.text('달리기'), findsOneWidget);
-    expect(find.text('등산'), findsOneWidget);
-    expect(find.text('트레일 러닝'), findsOneWidget);
-    expect(find.text('트랙'), findsOneWidget);
+    expect(find.bySemanticsLabel('자동'), findsOneWidget);
+    expect(find.bySemanticsLabel('걷기'), findsOneWidget);
+    expect(find.bySemanticsLabel('달리기'), findsOneWidget);
+    expect(find.bySemanticsLabel('등산'), findsOneWidget);
+    expect(find.bySemanticsLabel('트레일 러닝'), findsOneWidget);
+    expect(find.bySemanticsLabel('트랙'), findsOneWidget);
+    expect(find.text('트랙'), findsNothing);
 
-    await tester.tap(find.text('트랙'));
+    await tester.tap(find.bySemanticsLabel('트랙'));
     expect(selected, ActivityKind.track);
   });
 

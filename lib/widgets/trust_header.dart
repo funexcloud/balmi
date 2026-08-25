@@ -10,7 +10,7 @@ class TrustHeader extends StatelessWidget {
     super.key,
     required this.snapshot,
     this.waiting = false,
-    this.showTrustLine = true,
+    this.showTrustLine = false,
   });
 
   final RecordingSnapshot? snapshot;

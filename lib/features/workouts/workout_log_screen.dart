@@ -19,7 +19,7 @@ class WorkoutLogScreen extends StatelessWidget {
       builder: (context, snap) {
         final items = snap.data ?? [];
         if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator(color: BalmiColors.plum));
+          return const Center(child: CircularProgressIndicator());
         }
         if (items.isEmpty) {
           return Center(

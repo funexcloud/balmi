@@ -6,9 +6,11 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
+import '../../data/map/session_trace_line.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/models/activity.dart';
+import '../../widgets/circle_action.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../../widgets/session_row.dart';
 import '../land/land_preview_screen.dart';
@@ -64,10 +66,7 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
     }
     final repo = context.read<SessionRepository>();
     final pts = await repo.pointsForSession(id);
-    final line = [
-      for (final p in pts)
-        if (p.hAccM == null || p.hAccM! <= 40) LatLng(p.lat, p.lng),
-    ];
+    final line = traceLineFromPoints(pts);
     if (!mounted) return;
     setState(() {
       _selected = id;
@@ -75,61 +74,84 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          flex: 3,
-          child: !_loaded
-              ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
-              : OsmTraceMap(
-                  traces: _traces,
-                  highlight: _highlight,
-                  emptyLabel: BalmiCopy.mapEmpty,
-                ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 12, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  BalmiCopy.mapExplore,
-                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-                ),
-              ),
-              TextButton(
-                onPressed: () => openLandPreview(context),
-                child: const Text(BalmiCopy.landTab),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            itemCount: _sessions.length,
-            separatorBuilder: (_, _) => const Divider(height: 1, color: BalmiColors.line),
-            itemBuilder: (context, i) {
-              final s = _sessions[i];
-              return SessionRow(
+  Future<void> _openList() async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        if (_sessions.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            child: Text(BalmiCopy.mapEmpty, style: BalmiTheme.body(size: 14, color: BalmiColors.sub)),
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          children: [
+            for (final s in _sessions)
+              SessionRow(
                 startedAt: s.startedAt,
                 activityLabel: ActivityKind.fromWire(s.activity).label,
                 distM: s.totalDistM,
                 selected: s.id == _selected,
-                onTap: () => _select(s.id),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _select(s.id);
+                },
                 onLongPress: () {
+                  Navigator.pop(ctx);
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: s.id)),
                   );
                 },
-              );
-            },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+              child: !_loaded
+                  ? const ColoredBox(
+                      color: BalmiColors.mist,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : OsmTraceMap(
+                      traces: _traces,
+                      highlight: _highlight,
+                      emptyLabel: BalmiCopy.mapEmpty,
+                    ),
+            ),
           ),
-        ),
-      ],
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: Column(
+              children: [
+                CircleAction(
+                  icon: Icons.landscape_outlined,
+                  label: BalmiCopy.landTab,
+                  onTap: () => openLandPreview(context),
+                ),
+                const SizedBox(height: 10),
+                CircleAction(
+                  icon: Icons.timeline,
+                  label: BalmiCopy.workoutLogTab,
+                  onTap: _openList,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

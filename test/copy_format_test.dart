@@ -20,7 +20,8 @@ const _forbidden = [
 
 void main() {
   test('user-facing copy never uses forbidden terms', () {
-    const blob = '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
+    const blob =
+        '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
         '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryTitle} ${BalmiCopy.recoveryBody} '
         '${BalmiCopy.vasaCredit} ${BalmiCopy.vasaCreditDetail} ${BalmiCopy.waitingGps} '
         '${BalmiCopy.waitingGpsShort} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied} '
@@ -31,7 +32,11 @@ void main() {
         '${BalmiCopy.about} ${BalmiCopy.versionLabel}';
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
-      expect(lower, isNot(contains(term)), reason: 'copy must not contain "$term"');
+      expect(
+        lower,
+        isNot(contains(term)),
+        reason: 'copy must not contain "$term"',
+      );
     }
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));
@@ -56,6 +61,26 @@ void main() {
           reason: '${file.path} must not contain "$term"',
         );
       }
+    }
+  });
+
+  test('settings copy does not expose implementation notes', () {
+    final settingsCopy =
+        '${BalmiCopy.vasaCreditDetail} '
+        '${File('lib/features/settings/settings_screen.dart').readAsStringSync()}';
+
+    for (final term in [
+      '건강 점수',
+      '의료 평가',
+      'HealthKit',
+      'Health Connect',
+      'Release 1',
+    ]) {
+      expect(
+        settingsCopy,
+        isNot(contains(term)),
+        reason: 'settings must not expose "$term" as implementation copy',
+      );
     }
   });
 

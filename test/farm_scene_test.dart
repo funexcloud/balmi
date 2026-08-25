@@ -36,4 +36,44 @@ void main() {
     expect(find.text(BalmiCopy.landNoPath), findsNothing);
     expect(find.bySemanticsLabel('울타리 목장, 양떼 2'), findsOneWidget);
   });
+
+  testWidgets('watering animation notifies when the pour finishes', (tester) async {
+    var done = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: FarmScene(
+          buildings: const [FarmKind.pastureFence],
+          herds: const [HerdKind.sheep],
+          watering: true,
+          onWateringComplete: () => done += 1,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(done, 0);
+    await tester.pump(farmWaterDuration + const Duration(milliseconds: 50));
+    expect(done, 1);
+  });
+
+  testWidgets('reduced motion skips the watering pour', (tester) async {
+    var done = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          );
+        },
+        home: FarmScene(
+          buildings: const [],
+          herds: const [],
+          watering: true,
+          onWateringComplete: () => done += 1,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(done, 1);
+  });
 }

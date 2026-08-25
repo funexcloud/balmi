@@ -3,6 +3,19 @@ import 'dart:math' as math;
 
 import 'package:sensors_plus/sensors_plus.dart';
 
+/// Cadence from a 10s peak window. Sparse peaks (2–6 steps) look like
+/// "standing" to the motion filter; treat those as unknown instead.
+double? trustedCadenceSpm({
+  required int stepCount,
+  required Duration window,
+  double minTrustedSpm = 40,
+}) {
+  if (stepCount < 2 || window.inSeconds <= 0) return null;
+  final spm = stepCount * (60 / window.inSeconds);
+  if (spm < minTrustedSpm) return null;
+  return spm;
+}
+
 /// Step-ish cadence (spm) from linear acceleration peaks.
 class CadenceEngine {
   CadenceEngine({
@@ -45,9 +58,10 @@ class CadenceEngine {
       }
       _lastMag = mag;
       _prune(now);
-      if (_steps.length >= 2) {
-        spm = _steps.length * (60 / window.inSeconds);
-      }
+      spm = trustedCadenceSpm(
+        stepCount: _steps.length,
+        window: window,
+      );
     }, onError: (Object _, StackTrace _) {});
   }
 

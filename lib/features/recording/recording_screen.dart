@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
-import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
-import '../../widgets/balmi_wordmark.dart';
+import '../../widgets/circle_action.dart';
+import '../../widgets/end_recording_dialog.dart';
+import '../../widgets/live_stats_sheet.dart';
 import '../../widgets/osm_trace_map.dart';
-import '../../widgets/status_chips.dart';
+import '../../widgets/path_spark.dart';
+import '../../widgets/recording_alerts_sheet.dart';
 import '../../widgets/trust_header.dart';
 import '../session_detail/session_detail_screen.dart';
 import 'recording_controller.dart';
@@ -24,7 +25,9 @@ class RecordingScreen extends StatefulWidget {
 
 class _RecordingScreenState extends State<RecordingScreen>
     with WidgetsBindingObserver {
+  final _mapKey = GlobalKey<OsmTraceMapState>();
   Timer? _clock;
+  var _sheetExpanded = false;
 
   @override
   void initState() {
@@ -49,7 +52,10 @@ class _RecordingScreenState extends State<RecordingScreen>
     }
   }
 
-  Future<void> _stop(RecordingController rec) async {
+  Future<void> _confirmEnd(RecordingController rec) async {
+    final dist = rec.snapshot?.totalDistM ?? 0;
+    final ok = await EndRecordingDialog.confirm(context, distM: dist);
+    if (!ok || !mounted) return;
     final nav = Navigator.of(context);
     final id = await rec.stop();
     if (id == null) return;
@@ -58,207 +64,141 @@ class _RecordingScreenState extends State<RecordingScreen>
     );
   }
 
+  Future<void> _tune(RecordingController rec) async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        return ChangeNotifierProvider<RecordingController>.value(
+          value: rec,
+          child: Consumer<RecordingController>(
+            builder: (ctx, live, _) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ActivityPills(
+                      value: live.activity,
+                      onChanged: live.setActivity,
+                    ),
+                    if (live.activity.isTrack) ...[
+                      const SizedBox(height: 12),
+                      TrackSpecPills(
+                        value: live.trackSpecM,
+                        onChanged: live.setTrackSpec,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
     final snap = rec.snapshot;
-    final running = snap?.sport == 'run';
     final speed = snap?.speedKmh ?? 0;
-    final laps = snap?.lapCount ?? 0;
-    final spec = snap?.trackSpecM;
-    final specLabel = spec == null ? BalmiCopy.specFree : '${spec}m';
+    final trail = rec.liveTrail;
+    final waiting = (snap?.pointCount ?? 0) == 0;
 
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+            child: Stack(
               children: [
-                TrustHeader(
-                  snapshot: snap,
-                  waiting: (snap?.pointCount ?? 0) == 0,
-                ),
-                const SizedBox(height: 12),
-                ActivityPills(
-                  value: rec.activity,
-                  onChanged: (v) => rec.setActivity(v),
-                ),
-                if (rec.activity.isTrack) ...[
-                  const SizedBox(height: 8),
-                  TrackSpecPills(
-                    value: rec.trackSpecM,
-                    onChanged: rec.setTrackSpec,
-                  ),
-                ],
-                if (rec.lastError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    rec.lastError!,
-                    style: BalmiTheme.body(
-                      size: 13,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                SessionTraceMap(
-                  points: rec.liveTrail,
-                  lastPoint: rec.livePin,
-                  emptyLabel: BalmiCopy.waitingGpsShort,
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Text(
-                      BalmiCopy.currentPace,
-                      style: BalmiTheme.tracked(size: 11.5, trackingEm: 0.2),
-                    ),
-                    const Spacer(),
-                    SportPill(
-                      running: rec.activity == ActivityKind.run ||
-                          rec.activity == ActivityKind.trail ||
-                          rec.activity == ActivityKind.track ||
-                          running,
-                    ),
-                  ],
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    formatPace(speed),
-                    style: BalmiTheme.num(size: 74, height: 1.02),
+                Positioned.fill(
+                  child: SessionTraceMap(
+                    osmKey: _mapKey,
+                    points: trail,
+                    lastPoint: rec.livePin,
+                    emptyLabel: BalmiCopy.waitingGpsShort,
+                    height: null,
                   ),
                 ),
-                const HeartbeatDivider(),
-                Row(
-                  children: [
-                    LiveStat(
-                      label: BalmiCopy.statDistance,
-                      value: '${formatKm(snap?.totalDistM ?? 0)}km',
-                    ),
-                    const SizedBox(width: 26),
-                    LiveStat(
-                      label: BalmiCopy.statTime,
-                      value: formatElapsed(rec.elapsed),
-                    ),
-                    const SizedBox(width: 26),
-                    LiveStat(
-                      label: BalmiCopy.statSpeed,
-                      value: formatSpeedKmh(speed),
-                    ),
-                  ],
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: TrustHeader(snapshot: snap, waiting: waiting),
                 ),
-                if (rec.activity.isTrack || snap?.trackMode == true) ...[
-                  const SizedBox(height: 18),
-                  _TrackCard(
-                    specLabel: specLabel,
-                    laps: laps,
-                    lastLap: snap?.lastLapTimeS,
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Column(
+                    children: [
+                      CircleAction(
+                        icon: Icons.explore_outlined,
+                        label: BalmiCopy.resetNorth,
+                        size: 44,
+                        onTap: () => _mapKey.currentState?.resetNorth(),
+                      ),
+                      const SizedBox(height: 8),
+                      CircleAction(
+                        icon: Icons.gps_fixed,
+                        label: BalmiCopy.recenterMap,
+                        size: 44,
+                        onTap: () => _mapKey.currentState?.recenterOnUser(),
+                      ),
+                      const SizedBox(height: 8),
+                      CircleAction(
+                        icon: Icons.notifications_outlined,
+                        label: BalmiCopy.recordingAlerts,
+                        size: 44,
+                        onTap: () => showRecordingAlertsSheet(
+                          context: context,
+                          paused: rec.paused,
+                          waitingGps: waiting,
+                          lastError: rec.lastError,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      CircleAction(
+                        icon: ActivityPills.iconOf(rec.activity),
+                        label: rec.activity.label,
+                        size: 44,
+                        onTap: () => _tune(rec),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+                if (rec.lastError != null)
+                  Positioned(
+                    top: 48,
+                    left: 10,
+                    right: 64,
+                    child: Text(
+                      rec.lastError!,
+                      style: BalmiTheme.body(
+                        size: 12,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton(
-                onPressed: rec.paused ? rec.resumeLive : rec.pause,
-                child: Text(rec.paused ? BalmiCopy.resumeLive : BalmiCopy.pause),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: () => _stop(rec),
-                child: const Text(BalmiCopy.stop),
-              ),
-            ],
-          ),
+        LiveStatsSheet(
+          expanded: _sheetExpanded,
+          onToggle: () => setState(() => _sheetExpanded = !_sheetExpanded),
+          elapsed: rec.elapsed,
+          distM: snap?.totalDistM ?? 0,
+          speedKmh: speed,
+          paused: rec.paused,
+          pauseHold: rec.pauseHold,
+          altM: rec.liveAlt,
+          spark: sparkFromTrail(trail),
+          onPause: rec.pause,
+          onResume: rec.resumeLive,
+          onEnd: () => _confirmEnd(rec),
         ),
       ],
-    );
-  }
-}
-
-class _TrackCard extends StatelessWidget {
-  const _TrackCard({
-    required this.specLabel,
-    required this.laps,
-    required this.lastLap,
-  });
-
-  final String specLabel;
-  final int laps;
-  final double? lastLap;
-
-  @override
-  Widget build(BuildContext context) {
-    final filled = laps <= 0 ? 0 : ((laps - 1) % 8) + 1;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: BalmiColors.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '${BalmiCopy.activityTrack} · $specLabel',
-                style: BalmiTheme.tracked(
-                  size: 11.5,
-                  trackingEm: 0.14,
-                  color: BalmiColors.plum,
-                  weight: FontWeight.w800,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                BalmiCopy.finishAuto,
-                style: BalmiTheme.body(size: 10.5, color: BalmiColors.sub),
-              ),
-            ],
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text('$laps', style: BalmiTheme.num(size: 40)),
-              Text('바퀴', style: BalmiTheme.num(size: 18, weight: FontWeight.w700)),
-              const SizedBox(width: 12),
-              Text(BalmiCopy.lastLap, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
-              const SizedBox(width: 6),
-              Text(
-                lastLap == null ? '--\'--"' : formatLapClock(lastLap!),
-                style: BalmiTheme.num(size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: List.generate(8, (i) {
-              return Expanded(
-                child: Container(
-                  height: 5,
-                  margin: EdgeInsets.only(right: i == 7 ? 0 : 4),
-                  decoration: BoxDecoration(
-                    color: i < filled ? BalmiColors.amber : BalmiColors.line,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
     );
   }
 }

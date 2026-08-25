@@ -49,6 +49,12 @@ class RecordingController extends ChangeNotifier {
   String? lastError;
   List<LatLng> get liveTrail => List<LatLng>.unmodifiable(_pipeline?.trail ?? const []);
   LatLng? get livePin => _pipeline?.mapPin;
+  double? get liveAlt => _pipeline?.lastFix?.alt;
+
+  Duration get pauseHold {
+    if (!paused || _pauseStarted == null) return Duration.zero;
+    return DateTime.now().difference(_pauseStarted!);
+  }
 
   static const notificationIcon = NotificationIcon(
     metaDataName: 'im.balmi.app.notification_icon',
@@ -228,9 +234,8 @@ class RecordingController extends ChangeNotifier {
     int? trackSpecM,
     ActivityKind activity = ActivityKind.auto,
   }) async {
-    // Geolocator in the FGS Dart isolate often never emits (helper service
-    // bind race, no Activity). Keep the FGS as a process keep-alive and
-    // record GPS + SQLite on the UI isolate so Start actually stores points.
+    // The proven UI-isolate pipeline stays primary. The foreground task uses
+    // these values to take over after the main-isolate heartbeat expires.
     await FlutterForegroundTask.saveData(
       key: kFgDbPathKey,
       value: dbPath,
@@ -243,6 +248,7 @@ class RecordingController extends ChangeNotifier {
       key: kFgRecorderKey,
       value: 'main',
     );
+    await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
     await FlutterForegroundTask.saveData(
       key: kFgTrackModeKey,
       value: trackMode,
@@ -269,6 +275,7 @@ class RecordingController extends ChangeNotifier {
       if (fgs is ServiceRequestFailure) {
         lastError = '${BalmiCopy.keepAliveFailed} (${fgs.error})';
       }
+      _sendMainHeartbeat();
     }
 
     await _startLocalPipeline(
@@ -342,6 +349,8 @@ class RecordingController extends ChangeNotifier {
     if (!isRecording || paused) return;
     paused = true;
     _pauseStarted = DateTime.now();
+    unawaited(FlutterForegroundTask.saveData(key: kFgPausedKey, value: true));
+    _sendMainHeartbeat();
     notifyListeners();
   }
 
@@ -352,6 +361,8 @@ class RecordingController extends ChangeNotifier {
     }
     _pauseStarted = null;
     paused = false;
+    unawaited(FlutterForegroundTask.saveData(key: kFgPausedKey, value: false));
+    _sendMainHeartbeat();
     notifyListeners();
   }
 
@@ -365,6 +376,7 @@ class RecordingController extends ChangeNotifier {
     if (_ticking) return;
     _ticking = true;
     try {
+      _sendMainHeartbeat();
       if (paused) {
         unawaited(
           FlutterForegroundTask.updateService(
@@ -410,7 +422,8 @@ class RecordingController extends ChangeNotifier {
   }
 
   Future<String?> stop() async {
-    FlutterForegroundTask.sendDataToTask('stop');
+    FlutterForegroundTask.sendDataToTask(kFgStopCommand);
+    await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
     await _stopLocal();
     final id = snapshot?.sessionId;
     final steps = _pipeline?.recordingSteps ?? _localCadence?.totalSteps ?? 0;
@@ -430,6 +443,8 @@ class RecordingController extends ChangeNotifier {
   }
 
   Future<void> endRecovered(String sessionId) async {
+    FlutterForegroundTask.sendDataToTask(kFgStopCommand);
+    await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
     await repo.closeSession(sessionId, status: SessionStatus.recovered);
     if (await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();
@@ -446,5 +461,13 @@ class RecordingController extends ChangeNotifier {
     _localLocation = null;
     _localCadence = null;
     if (!isRecording) _pipeline = null;
+  }
+
+  void _sendMainHeartbeat() {
+    FlutterForegroundTask.sendDataToTask({
+      'type': kFgHeartbeatCommand,
+      'atMs': DateTime.now().millisecondsSinceEpoch,
+      'paused': paused,
+    });
   }
 }

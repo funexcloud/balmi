@@ -43,11 +43,7 @@ class _MissionTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: BalmiColors.line),
-        ),
+        decoration: BalmiTheme.card(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -63,7 +59,7 @@ class _MissionTile extends StatelessWidget {
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: mission.ratio,
-              color: BalmiColors.plum,
+              color: BalmiColors.potato,
               backgroundColor: BalmiColors.line,
             ),
             const SizedBox(height: 6),

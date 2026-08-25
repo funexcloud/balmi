@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/copy.dart';
@@ -5,33 +7,116 @@ import '../core/theme.dart';
 import '../domain/engines/farm_life.dart';
 import '../domain/engines/land_city.dart';
 
+const farmWaterDuration = Duration(milliseconds: 900);
+
 /// A small cared-for farm stage. Shapes only — no downloaded art.
-class FarmScene extends StatelessWidget {
+class FarmScene extends StatefulWidget {
   const FarmScene({
     super.key,
     required this.buildings,
     required this.herds,
     this.caredToday = false,
     this.height = 268,
+    this.watering = false,
+    this.onWateringComplete,
   });
 
   final List<FarmKind> buildings;
   final List<HerdKind> herds;
   final bool caredToday;
   final double height;
+  final bool watering;
+  final VoidCallback? onWateringComplete;
 
-  bool get _emptyYard => buildings.isEmpty && herds.isEmpty;
+  @override
+  State<FarmScene> createState() => _FarmSceneState();
+}
+
+class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMixin {
+  late final AnimationController _water;
+  var _armed = false;
+  var _notified = false;
+
+  bool get _emptyYard => widget.buildings.isEmpty && widget.herds.isEmpty;
 
   String get semanticsLabel {
     if (_emptyYard) return BalmiCopy.landEmptyField;
     final parts = <String>[
-      for (final k in buildings) k.label,
+      for (final k in widget.buildings) k.label,
     ];
     for (final kind in HerdKind.tiers) {
-      final n = herds.where((h) => h == kind).length;
+      final n = widget.herds.where((h) => h == kind).length;
       if (n > 0) parts.add('${kind.label} $n');
     }
     return parts.join(', ');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _water = AnimationController(vsync: this, duration: farmWaterDuration)
+      ..addStatusListener(_onStatus);
+    if (widget.watering) {
+      _armed = true;
+      _water.forward();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.watering && MediaQuery.disableAnimationsOf(context)) {
+      _skipMotion();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant FarmScene old) {
+    super.didUpdateWidget(old);
+    if (widget.watering && !old.watering) {
+      _armed = false;
+      _notified = false;
+      _play();
+    }
+    if (!widget.watering && old.watering) {
+      _armed = false;
+      _notified = false;
+      _water.reset();
+    }
+  }
+
+  void _onStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _notify();
+  }
+
+  void _notify() {
+    if (_notified) return;
+    _notified = true;
+    widget.onWateringComplete?.call();
+  }
+
+  void _skipMotion() {
+    if (_water.isAnimating) _water.stop();
+    _armed = true;
+    _notify();
+  }
+
+  void _play() {
+    if (!mounted || _armed) return;
+    _armed = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _skipMotion();
+      return;
+    }
+    _water.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _water
+      ..removeStatusListener(_onStatus)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -39,18 +124,24 @@ class FarmScene extends StatelessWidget {
     return Semantics(
       label: semanticsLabel,
       child: SizedBox(
-        height: height,
+        height: widget.height,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CustomPaint(
-                painter: FarmScenePainter(
-                  buildings: buildings,
-                  herds: herds,
-                  caredToday: caredToday,
-                ),
+              AnimatedBuilder(
+                animation: _water,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: FarmScenePainter(
+                      buildings: widget.buildings,
+                      herds: widget.herds,
+                      caredToday: widget.caredToday,
+                      waterT: _water.value,
+                    ),
+                  );
+                },
               ),
               if (_emptyYard)
                 Align(
@@ -92,11 +183,16 @@ class FarmScenePainter extends CustomPainter {
     required this.buildings,
     required this.herds,
     required this.caredToday,
+    this.waterT = 0,
   });
 
   final List<FarmKind> buildings;
   final List<HerdKind> herds;
   final bool caredToday;
+  final double waterT;
+
+  double get _flash => math.sin(math.pi * waterT.clamp(0.0, 1.0));
+  double get _bob => -_flash * 5;
 
   bool _has(FarmKind kind) => buildings.contains(kind);
 
@@ -125,11 +221,12 @@ class FarmScenePainter extends CustomPainter {
       _store(canvas, Offset(w * 0.82, h * 0.46), w * 0.2);
     }
 
-    final life = caredToday ? 1.0 : 0.62;
+    final life = (caredToday || waterT > 0.15) ? 1.0 : 0.62;
     _sheep(canvas, w, h, _shown(HerdKind.sheep), life);
     _chickens(canvas, w, h, _shown(HerdKind.chicken), life);
     _gardens(canvas, w, h, _shown(HerdKind.garden), life);
     _cattle(canvas, w, h, _shown(HerdKind.cattle), life);
+    if (waterT > 0) _watering(canvas, w, h);
   }
 
   void _sky(Canvas canvas, double w, double h) {
@@ -140,7 +237,7 @@ class FarmScenePainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF7EFE3), BalmiColors.paper, Color(0xFFE8D5C2)],
+          colors: [Color(0xFFF7EFE3), Color(0xFFFAF6EF), Color(0xFFE8D5C2)],
         ).createShader(rect),
     );
   }
@@ -190,11 +287,16 @@ class FarmScenePainter extends CustomPainter {
   }
 
   void _bands(Canvas canvas, double w, double h) {
-    final lush = caredToday;
+    final lush = caredToday || _flash > 0.2;
     final far = Rect.fromLTWH(0, h * 0.48, w, h * 0.14);
     canvas.drawRect(
       far,
-      Paint()..color = lush ? const Color(0xFF9BB384) : const Color(0xFF8A9B76),
+      Paint()
+        ..color = Color.lerp(
+          const Color(0xFF8A9B76),
+          const Color(0xFFA8C48A),
+          lush ? (0.65 + 0.35 * _flash) : 0,
+        )!,
     );
     final mid = Rect.fromLTWH(0, h * 0.6, w, h * 0.22);
     canvas.drawRect(
@@ -204,7 +306,7 @@ class FarmScenePainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: lush
-              ? const [Color(0xFF8FA37A), BalmiColors.sage]
+              ? [const Color(0xFF8FA37A), Color.lerp(BalmiColors.sage, const Color(0xFFA8C48A), _flash)!]
               : const [BalmiColors.sage, Color(0xFF667856)],
         ).createShader(mid),
     );
@@ -358,7 +460,7 @@ class FarmScenePainter extends CustomPainter {
     for (var i = 0; i < n; i++) {
       final t = (i + 1) / (n + 1);
       final x = w * (0.07 + t * 0.3 + (i.isOdd ? 0.018 : 0));
-      final y = h * (0.7 + (i % 3) * 0.055) + (caredToday ? 0 : 3);
+      final y = h * (0.7 + (i % 3) * 0.055) + (caredToday ? 0 : 3) + _bob;
       _oneSheep(canvas, Offset(x, y), life);
     }
   }
@@ -399,7 +501,7 @@ class FarmScenePainter extends CustomPainter {
   void _chickens(Canvas canvas, double w, double h, int n, double life) {
     for (var i = 0; i < n; i++) {
       final x = w * (0.18 + (i % 4) * 0.05);
-      final y = h * (0.58 + (i ~/ 4) * 0.055) + (caredToday ? 0 : 2);
+      final y = h * (0.58 + (i ~/ 4) * 0.055) + (caredToday ? 0 : 2) + _bob;
       _oneChicken(canvas, Offset(x, y), life);
     }
   }
@@ -444,7 +546,7 @@ class FarmScenePainter extends CustomPainter {
   void _gardens(Canvas canvas, double w, double h, int n, double life) {
     for (var i = 0; i < n; i++) {
       final left = w * (0.44 + (i % 2) * 0.13);
-      final top = h * (0.66 + (i ~/ 2) * 0.09);
+      final top = h * (0.66 + (i ~/ 2) * 0.09) + _bob;
       final bed = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, top, w * 0.11, h * 0.075),
         const Radius.circular(4),
@@ -481,7 +583,7 @@ class FarmScenePainter extends CustomPainter {
   void _cattle(Canvas canvas, double w, double h, int n, double life) {
     for (var i = 0; i < n; i++) {
       final x = w * (0.68 + i * 0.1);
-      final y = h * (0.72 + (i.isOdd ? 0.05 : 0)) + (caredToday ? 0 : 3);
+      final y = h * (0.72 + (i.isOdd ? 0.05 : 0)) + (caredToday ? 0 : 3) + _bob;
       _oneCow(canvas, Offset(x, y), life);
     }
   }
@@ -521,9 +623,65 @@ class FarmScenePainter extends CustomPainter {
     );
   }
 
+  void _watering(Canvas canvas, double w, double h) {
+    final t = waterT.clamp(0.0, 1.0);
+    if (t <= 0) return;
+    final pivot = Offset(w * 0.78, h * 0.34);
+    final tilt = -0.42 * Curves.easeInOut.transform(t);
+    canvas.save();
+    canvas.translate(pivot.dx, pivot.dy);
+    canvas.rotate(tilt);
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(-18, -10, 28, 18),
+      const Radius.circular(5),
+    );
+    canvas.drawRRect(body, Paint()..color = BalmiColors.plum);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-22, -6, 8, 10),
+        const Radius.circular(3),
+      ),
+      Paint()..color = BalmiColors.plum,
+    );
+    canvas.drawArc(
+      const Rect.fromLTWH(-4, -22, 22, 20),
+      3.4,
+      2.4,
+      false,
+      Paint()
+        ..color = BalmiColors.sage
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.restore();
+
+    final spout = Offset(
+      pivot.dx - 22 * math.cos(tilt) + 4 * math.sin(tilt),
+      pivot.dy - 22 * math.sin(tilt) - 4 * math.cos(tilt),
+    );
+    final drop = Paint()..color = BalmiColors.sage;
+    final paper = Paint()..color = BalmiColors.paper.withValues(alpha: 0.85);
+    for (var i = 0; i < 7; i++) {
+      final local = ((t * 1.35) - i * 0.09).clamp(0.0, 1.0);
+      if (local <= 0 || local >= 1) continue;
+      final dest = Offset(w * (0.18 + i * 0.07), h * 0.72);
+      final x = spout.dx + (dest.dx - spout.dx) * local;
+      final y = spout.dy + (dest.dy - spout.dy) * local * local + local * 8;
+      final a = (1 - local) * 0.95;
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, y), width: 5, height: 7),
+        Paint()..color = BalmiColors.sage.withValues(alpha: a),
+      );
+      canvas.drawCircle(Offset(x - 0.8, y - 1.2), 1.1, paper);
+    }
+    canvas.drawCircle(spout, 1.5, drop);
+  }
+
   @override
   bool shouldRepaint(covariant FarmScenePainter old) {
     return old.caredToday != caredToday ||
+        old.waterT != waterT ||
         !_same(old.buildings, buildings) ||
         !_same(old.herds, herds);
   }

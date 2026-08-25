@@ -43,6 +43,8 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
   );
   var _loaded = false;
   var _busy = false;
+  var _watering = false;
+  WaterApplyResult? _pendingWater;
 
   @override
   void initState() {
@@ -73,7 +75,7 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
       _herds.map((h) => HerdKind.fromWire(h.kind));
 
   Future<void> _waterFarm() async {
-    if (_busy || !_water.canWater) return;
+    if (_busy || _watering || !_water.canWater) return;
     setState(() => _busy = true);
     final center = _traces.center;
     final result = await context.read<SessionRepository>().applyWater(
@@ -81,9 +83,8 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
           lng: center.longitude,
         );
     if (!mounted) return;
-    setState(() => _busy = false);
-    await _load();
     if (!result.applied) {
+      setState(() => _busy = false);
       _toast(switch (_water.state) {
         WaterState.alreadyWatered => BalmiCopy.wateredToday,
         WaterState.needWalk => BalmiCopy.waterNeedWalk,
@@ -91,6 +92,28 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
       });
       return;
     }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      await _revealWater(result);
+      return;
+    }
+    _pendingWater = result;
+    setState(() => _watering = true);
+  }
+
+  Future<void> _onWateringComplete() async {
+    final result = _pendingWater;
+    _pendingWater = null;
+    if (result == null) return;
+    await _revealWater(result);
+  }
+
+  Future<void> _revealWater(WaterApplyResult result) async {
+    await _load();
+    if (!mounted) return;
+    setState(() {
+      _watering = false;
+      _busy = false;
+    });
     if (result.raised != null) {
       _toast('들판에 ${result.raised!.giftLabel}');
     } else if (result.unlocked != null) {
@@ -145,13 +168,15 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
                 ? const SizedBox(
                     height: 240,
                     child: Center(
-                      child: CircularProgressIndicator(color: BalmiColors.plum),
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 : FarmScene(
                     buildings: _builtKinds.toList(),
                     herds: _herdKinds.toList(),
                     caredToday: _water.wateredToday,
+                    watering: _watering,
+                    onWateringComplete: _onWateringComplete,
                     height: 268,
                   ),
           ),
@@ -169,7 +194,7 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: _water.canWater && !_busy ? _waterFarm : null,
+                  onPressed: _water.canWater && !_busy && !_watering ? _waterFarm : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: BalmiColors.sage,
                     disabledBackgroundColor: BalmiColors.line,
@@ -217,7 +242,7 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
                   child: ExpansionTile(
                     tilePadding: EdgeInsets.zero,
                     childrenPadding: const EdgeInsets.only(bottom: 8),
-                    iconColor: BalmiColors.plum,
+                    iconColor: BalmiColors.potato,
                     collapsedIconColor: BalmiColors.sub,
                     title: Text(
                       BalmiCopy.landGuide,

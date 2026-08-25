@@ -13,8 +13,9 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <(String, VoidCallback)>[
+    final rows = <(IconData, String, VoidCallback)>[
       (
+        Icons.person_outline,
         BalmiCopy.myActivity,
         () {
           Navigator.of(context).push(
@@ -28,19 +29,22 @@ class MoreScreen extends StatelessWidget {
         },
       ),
       (
+        Icons.flag_outlined,
         BalmiCopy.missions,
         () {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MissionsScreen()));
         },
       ),
       (
+        Icons.emoji_events_outlined,
         BalmiCopy.events,
         () {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EventsScreen()));
         },
       ),
-      (BalmiCopy.landTab, () => openLandPreview(context)),
+      (Icons.landscape_outlined, BalmiCopy.landTab, () => openLandPreview(context)),
       (
+        Icons.settings_outlined,
         BalmiCopy.settings,
         () {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
@@ -53,18 +57,18 @@ class MoreScreen extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: BalmiColors.line),
+            color: BalmiColors.mist,
+            borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
           ),
           child: Column(
             children: [
               for (var i = 0; i < rows.length; i++) ...[
                 if (i > 0) const Divider(height: 1, color: BalmiColors.line),
                 ListTile(
-                  title: Text(rows[i].$1, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+                  leading: Icon(rows[i].$1, color: BalmiColors.ink),
+                  title: Text(rows[i].$2, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
                   trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
-                  onTap: rows[i].$2,
+                  onTap: rows[i].$3,
                 ),
               ],
             ],

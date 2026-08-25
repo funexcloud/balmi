@@ -21,16 +21,26 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.about, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+            title: Text(
+              BalmiCopy.about,
+              style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
+            ),
             subtitle: Text(
               '${BalmiCopy.appName} ${BalmiCopy.versionLabel}\n${BalmiCopy.oneLiner}',
-              style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.45),
+              style: BalmiTheme.body(
+                size: 13,
+                color: BalmiColors.sub,
+                height: 1.45,
+              ),
             ),
           ),
           const Divider(color: BalmiColors.line),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.vasaCredit, style: BalmiTheme.body(size: 16, weight: FontWeight.w800)),
+            title: Text(
+              BalmiCopy.vasaCredit,
+              style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
+            ),
             subtitle: Text(
               BalmiCopy.vasaCreditDetail,
               style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
@@ -39,18 +49,19 @@ class SettingsScreen extends StatelessWidget {
           const Divider(color: BalmiColors.line),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.oemSettings, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+            title: Text(
+              BalmiCopy.oemSettings,
+              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+            ),
             onTap: () => OemBattery.openOemSettings(),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(BalmiCopy.ignoreBattery, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+            title: Text(
+              BalmiCopy.ignoreBattery,
+              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+            ),
             onTap: () => OemBattery.requestIgnore(),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'HealthKit / Health Connect는 Release 1에 포함되지 않습니다.',
-            style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
           ),
         ],
       ),

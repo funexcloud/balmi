@@ -4,7 +4,7 @@ import '../core/copy.dart';
 import '../core/theme.dart';
 import '../domain/models/activity.dart';
 
-/// Two equal rows of six activity tiles (not a ragged wrap).
+/// Two equal rows of activity icons (not labeled chrome pills).
 class ActivityPills extends StatelessWidget {
   const ActivityPills({
     super.key,
@@ -25,6 +25,15 @@ class ActivityPills extends StatelessWidget {
     ActivityKind.trail,
     ActivityKind.track,
   ];
+
+  static IconData iconOf(ActivityKind a) => switch (a) {
+        ActivityKind.auto => Icons.auto_mode,
+        ActivityKind.walk => Icons.directions_walk,
+        ActivityKind.run => Icons.directions_run,
+        ActivityKind.hike => Icons.terrain,
+        ActivityKind.trail => Icons.hiking,
+        ActivityKind.track => Icons.stadium,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -50,31 +59,22 @@ class ActivityPills extends StatelessWidget {
 
   Widget _tile(ActivityKind a) {
     final on = value == a;
-    return Material(
-      color: on ? BalmiColors.plum : Colors.white,
-      shape: const StadiumBorder(
-        side: BorderSide(color: BalmiColors.plum, width: 1.5),
-      ),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: () => onChanged(a),
-        child: SizedBox(
-          height: 38,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  a.label,
-                  maxLines: 1,
-                  style: BalmiTheme.body(
-                    size: 13,
-                    weight: FontWeight.w800,
-                    color: on ? BalmiColors.paper : BalmiColors.plum,
-                  ),
-                ),
-              ),
+    return Semantics(
+      button: true,
+      selected: on,
+      label: a.label,
+      child: Material(
+        color: on ? BalmiColors.potato : Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => onChanged(a),
+          child: SizedBox(
+            height: 48,
+            child: Icon(
+              iconOf(a),
+              size: 22,
+              color: on ? Colors.white : BalmiColors.sub,
             ),
           ),
         ),
@@ -115,23 +115,28 @@ class TrackSpecPills extends StatelessWidget {
 
   Widget _chip(int? spec, String label) {
     final on = spec == value;
-    return Material(
-      color: on ? BalmiColors.plum : Colors.white,
-      shape: const StadiumBorder(
-        side: BorderSide(color: BalmiColors.plum, width: 1.2),
-      ),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onChanged == null ? null : () => onChanged!(spec),
-        child: SizedBox(
-          height: 32,
-          child: Center(
-            child: Text(
-              label,
-              style: BalmiTheme.body(
-                size: 12,
-                weight: FontWeight.w800,
-                color: on ? BalmiColors.paper : BalmiColors.plum,
+    return Semantics(
+      button: true,
+      selected: on,
+      label: label,
+      child: Material(
+        color: on ? BalmiColors.potato : BalmiColors.mist,
+        shape: StadiumBorder(
+          side: BorderSide(color: on ? BalmiColors.potato : Colors.transparent),
+        ),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onChanged == null ? null : () => onChanged!(spec),
+          child: SizedBox(
+            height: 34,
+            child: Center(
+              child: Text(
+                label,
+                style: BalmiTheme.body(
+                  size: 12,
+                  weight: FontWeight.w800,
+                  color: on ? Colors.white : BalmiColors.ink,
+                ),
               ),
             ),
           ),

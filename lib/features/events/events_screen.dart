@@ -111,17 +111,16 @@ class _EventsScreenState extends State<EventsScreen> {
     return Scaffold(
       backgroundColor: BalmiColors.paper,
       appBar: const BalmiAppBar(title: BalmiCopy.events),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _create,
-        backgroundColor: BalmiColors.plum,
-        foregroundColor: BalmiColors.paper,
-        label: const Text(BalmiCopy.createEvent),
+        tooltip: BalmiCopy.createEvent,
+        backgroundColor: BalmiColors.potato,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 88),
         children: [
-          Text(BalmiCopy.crewLater, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
-          const SizedBox(height: 10),
           if (_events.isEmpty)
             Text('만든 대회가 없습니다', style: BalmiTheme.body(size: 14, color: BalmiColors.sub)),
           for (final e in _events)
@@ -148,11 +147,7 @@ class _EventsScreenState extends State<EventsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: BalmiColors.line),
-        ),
+        decoration: BalmiTheme.card(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -162,7 +157,7 @@ class _EventsScreenState extends State<EventsScreen> {
               style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
             ),
             const SizedBox(height: 8),
-            LinearProgressIndicator(value: ratio, color: BalmiColors.plum, backgroundColor: BalmiColors.line),
+            LinearProgressIndicator(value: ratio, color: BalmiColors.potato, backgroundColor: BalmiColors.line),
             const SizedBox(height: 4),
             Text(
               '${current.toStringAsFixed(e.goalType == 'distance_km' ? 2 : 0)} / ${e.goalValue} ${e.goalType == 'distance_km' ? 'km' : '분'}',

@@ -1,6 +1,10 @@
+import 'dart:math' as math;
+
+import 'package:balmi/core/format.dart';
 import 'package:balmi/data/db/app_database.dart';
 import 'package:balmi/data/location/location_engine.dart';
 import 'package:balmi/data/recording/recording_pipeline.dart';
+import 'package:balmi/data/recording/recording_snapshot.dart';
 import 'package:balmi/data/repositories/session_repository.dart';
 import 'package:balmi/domain/engines/distance.dart';
 import 'package:balmi/domain/engines/motion_filter.dart';
@@ -282,4 +286,228 @@ void main() {
     expect(pipe.mapPin, isNotNull);
     expect(pipe.trail, isEmpty);
   });
+
+  test('stale GPS resample does not zero live speed or drop the trail', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 24, 7);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.walk,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.walk,
+    );
+    await pipe.restore();
+    var lat = 35.532;
+    const lon = 129.259;
+    RecordingSnapshot? snap;
+    for (var tick = 0; tick < 60; tick++) {
+      if (tick % 4 == 0) {
+        lat += 1.4 / 111000;
+        pipe
+          ..onCadence(null)
+          ..onFix(
+            LocationFix(
+              ts: start.add(Duration(seconds: tick)),
+              lat: lat,
+              lng: lon,
+              speedMs: 1.4,
+              speedAccuracyMs: 0.5,
+              hAccM: 8,
+            ),
+          );
+      }
+      snap = await pipe.sampleNow(start.add(Duration(seconds: tick)));
+    }
+    expect(snap!.speedKmh, greaterThan(0.5));
+    expect(formatPace(snap.speedKmh!), isNot('--\'--"'));
+    expect(snap.totalDistM, greaterThan(8));
+    expect(pipe.trail.length, greaterThan(5));
+    final stored = await repo.pointsForSession(session.id);
+    expect(stored.length, 15);
+    expect(stored.length, pipe.seq);
+  });
+
+  test('GPS gap still plots the next accurate point on the trail', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 24, 8);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.walk,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.walk,
+    );
+    await pipe.restore();
+    var lat = 35.53;
+    const lon = 129.26;
+    for (var i = 0; i < 25; i++) {
+      lat += 1.2 / 111000;
+      pipe.onFix(
+        LocationFix(
+          ts: start.add(Duration(seconds: i)),
+          lat: lat,
+          lng: lon,
+          speedMs: 1.2,
+          speedAccuracyMs: 0.4,
+          hAccM: 8,
+        ),
+      );
+      await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    final beforeGap = pipe.trail.length;
+    expect(beforeGap, greaterThan(3));
+
+    lat += 80 / 111000;
+    pipe.onFix(
+      LocationFix(
+        ts: start.add(const Duration(seconds: 45)),
+        lat: lat,
+        lng: lon,
+        speedMs: 1.2,
+        speedAccuracyMs: 0.4,
+        hAccM: 10,
+      ),
+    );
+    final snap = await pipe.sampleNow(start.add(const Duration(seconds: 45)));
+    expect(pipe.trail.length, beforeGap + 1);
+    expect(pipe.trail.last.latitude, closeTo(lat, 0.000001));
+    expect(snap.speedKmh ?? 0, greaterThan(0.5));
+  });
+
+  test('8 x 600m laps at walk pace count near 4.8km', () {
+    final added = _walkLaps(
+      laps: 8,
+      lapM: 600,
+      speedMs: 4800 / (52 * 60),
+      hAccM: 14,
+      rawSpeedMs: 0,
+      speedAccuracyMs: 0,
+      cadenceSpm: 25,
+    );
+    expect(added, greaterThan(4000));
+    expect(added, lessThan(5600));
+  });
+
+  test('1Hz clones of one GPS fix do not invent lap distance', () {
+    final filter = GpsMotionFilter();
+    final t0 = DateTime.utc(2026, 8, 24, 19);
+    const lat = 35.532;
+    const lon = 129.259;
+    filter.evaluate(
+      now: t0,
+      lat: lat,
+      lon: lon,
+      hAccM: 10,
+      rawSpeedMs: 0,
+      speedAccuracyMs: 0,
+      cadenceSpm: 25,
+    );
+    var added = 0.0;
+    for (var i = 1; i <= 200; i++) {
+      final d = filter.evaluate(
+        now: t0.add(Duration(seconds: i)),
+        lat: lat,
+        lon: lon,
+        hAccM: 10,
+        rawSpeedMs: 0,
+        speedAccuracyMs: 0,
+        cadenceSpm: 25,
+      );
+      if (d.addDistance) added += d.distanceM;
+    }
+    expect(added, 0);
+  });
+
+  test('weak cadence still counts an outdoor walk', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 24, 19, 30);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.auto,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.auto,
+    );
+    await pipe.restore();
+    var lat = 35.532;
+    const lon = 129.259;
+    RecordingSnapshot? snap;
+    for (var i = 0; i < 180; i++) {
+      lat += 1.5 / 111000;
+      pipe
+        ..onCadence(25)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: lat,
+            lng: lon,
+            speedMs: 0,
+            speedAccuracyMs: 0,
+            hAccM: 14,
+          ),
+        );
+      snap = await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(snap!.totalDistM, greaterThan(200));
+    expect(snap.speedKmh ?? 0, greaterThan(0.5));
+  });
+}
+
+double _walkLaps({
+  required int laps,
+  required double lapM,
+  required double speedMs,
+  required double hAccM,
+  required double rawSpeedMs,
+  required double speedAccuracyMs,
+  required double? cadenceSpm,
+}) {
+  final filter = GpsMotionFilter();
+  final t0 = DateTime.utc(2026, 8, 24, 18);
+  const originLat = 35.5324;
+  const originLon = 129.2593;
+  final radiusM = lapM / (2 * math.pi);
+  final seconds = (laps * lapM / speedMs).round();
+  var added = 0.0;
+  for (var i = 0; i <= seconds; i++) {
+    final dist = speedMs * i;
+    final ang = (dist / lapM) * 2 * math.pi;
+    final lat = originLat + (radiusM * math.cos(ang)) / 111000;
+    final lon = originLon +
+        (radiusM * math.sin(ang)) /
+            (111000 * math.cos(originLat * math.pi / 180));
+    final d = filter.evaluate(
+      now: t0.add(Duration(seconds: i)),
+      lat: lat,
+      lon: lon,
+      hAccM: hAccM,
+      rawSpeedMs: rawSpeedMs,
+      speedAccuracyMs: speedAccuracyMs,
+      cadenceSpm: cadenceSpm,
+    );
+    if (d.addDistance) added += d.distanceM;
+  }
+  return added;
 }

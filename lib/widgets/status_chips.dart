@@ -29,7 +29,7 @@ class StatusChip extends StatelessWidget {
         style: BalmiTheme.body(
           size: 12,
           weight: FontWeight.w600,
-          color: on ? BalmiColors.paper : BalmiColors.ink,
+          color: on ? Colors.white : BalmiColors.ink,
         ),
         child: child,
       ),
@@ -114,21 +114,24 @@ class RecordingStatusChips extends StatelessWidget {
         ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
         : BalmiCopy.gpsChip(strength);
     final pulse = points == 0 || strength == 'strong' || strength == 'ok';
+    final acc = s?.hAccM;
 
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
-      children: [
-        StatusChip(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PulseDot(pulse: pulse),
-              Text(gpsLabel),
-            ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PulseDot(pulse: pulse),
+          Text(
+            acc == null ? gpsLabel : '$gpsLabel  ±${acc.round()}m',
+            style: BalmiTheme.body(size: 11, color: BalmiColors.ink),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -140,40 +143,41 @@ class SportPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-      decoration: BoxDecoration(
-        color: running ? BalmiColors.plum : Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: BalmiColors.plum, width: 2),
-      ),
-      child: Text(
-        running ? '${BalmiCopy.run} 🏃' : '${BalmiCopy.walk} 🚶',
-        style: BalmiTheme.body(
-          size: 15,
-          weight: FontWeight.w800,
-          color: running ? BalmiColors.paper : BalmiColors.plum,
-        ),
+    return Semantics(
+      label: running ? BalmiCopy.run : BalmiCopy.walk,
+      child: Icon(
+        running ? Icons.directions_run : Icons.directions_walk,
+        size: 22,
+        color: BalmiColors.ink,
       ),
     );
   }
 }
 
 class LiveStat extends StatelessWidget {
-  const LiveStat({super.key, required this.label, required this.value});
+  const LiveStat({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: BalmiTheme.tracked(size: 10.5, trackingEm: 0.1)),
-        const SizedBox(height: 2),
-        Text(value, style: BalmiTheme.num(size: 21)),
-      ],
+    return Semantics(
+      label: '$label $value',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: BalmiColors.sub),
+          const SizedBox(height: 2),
+          Text(value, style: BalmiTheme.num(size: 21)),
+        ],
+      ),
     );
   }
 }

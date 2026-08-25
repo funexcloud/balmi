@@ -6,9 +6,11 @@ import '../../domain/engines/distance.dart';
 import '../../domain/engines/lap_detector.dart';
 import '../../domain/engines/motion_filter.dart';
 import '../../domain/engines/sport_classifier.dart';
+import '../../domain/engines/step_distance.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../location/location_engine.dart';
+import '../map/session_trace_line.dart';
 import '../repositories/session_repository.dart';
 import 'recording_snapshot.dart';
 
@@ -23,6 +25,7 @@ class RecordingPipeline {
     SportParams params = SportParams.defaults,
     this.chunkSize = 60,
     GpsMotionFilter? filter,
+    StepDistanceIntegrator? stepDistance,
   })  : classifier = SportClassifier(params: params),
         distance = DistanceAccumulator(
           maxHorizontalAccuracyM: params.maxHorizontalAccuracyM,
@@ -30,7 +33,8 @@ class RecordingPipeline {
         laps = LapDetector(
           maxHorizontalAccuracyM: params.maxHorizontalAccuracyM,
         ),
-        filter = filter ?? GpsMotionFilter();
+        filter = filter ?? GpsMotionFilter(),
+        steps = stepDistance ?? StepDistanceIntegrator();
 
   final SessionRepository repo;
   final String sessionId;
@@ -44,8 +48,10 @@ class RecordingPipeline {
   final DistanceAccumulator distance;
   final LapDetector laps;
   final GpsMotionFilter filter;
+  final StepDistanceIntegrator steps;
 
   LocationFix? lastFix;
+  LocationFix? _consumedFix;
   double? lastCadence;
   int seq = 0;
   int _chunkFrom = 1;
@@ -77,10 +83,7 @@ class RecordingPipeline {
     final storedPts = await repo.pointsForSession(sessionId);
     trail
       ..clear()
-      ..addAll([
-        for (final p in storedPts)
-          if (p.hAccM == null || p.hAccM! <= 40) LatLng(p.lat, p.lng),
-      ]);
+      ..addAll(traceLineFromPoints(storedPts));
     if (trail.isNotEmpty) mapPin = trail.last;
     final last = await repo.lastAccuratePoint(sessionId, 30);
     if (last != null) {
@@ -90,6 +93,7 @@ class RecordingPipeline {
         meters: distance.meters,
       );
       filter.restore(lat: last.lat, lon: last.lng, ts: last.ts);
+      steps.restore(lastGpsAt: DateTime.now(), steps: recordingSteps);
     }
     final open = await repo.openSegment(sessionId);
     if (activity.isAuto) {
@@ -160,7 +164,10 @@ class RecordingPipeline {
   Future<RecordingSnapshot> sampleNow(DateTime now) async {
     lastLapTts = null;
     final fix = lastFix;
-    if (fix != null) {
+    var usedGps = false;
+    if (fix != null && !_alreadyConsumed(fix)) {
+      _consumedFix = fix;
+      usedGps = true;
       seq += 1;
       final decision = filter.evaluate(
         now: now,
@@ -176,14 +183,14 @@ class RecordingPipeline {
       }
 
       mapPin = LatLng(fix.lat, fix.lng);
-      if (decision.addDistance) {
-        trail.add(mapPin!);
+      if (decision.plotOnMap) {
+        _appendTrail(mapPin!);
       }
 
       await repo.insertPoint(
         sessionId: sessionId,
         seq: seq,
-        ts: now,
+        ts: fix.ts,
         lat: fix.lat,
         lng: fix.lng,
         alt: fix.alt,
@@ -203,22 +210,11 @@ class RecordingPipeline {
         _chunkFrom = seq + 1;
       }
 
-      if (decision.addDistance && decision.distanceM > 0) {
-        distance.meters += decision.distanceM;
-        distance.restoreLast(
-          lat: fix.lat,
-          lon: fix.lng,
-          meters: distance.meters,
-        );
-        final intoRun = activity.isAuto
-            ? classifier.current == Sport.run
-            : activity.lockedSport == Sport.run;
-        if (intoRun) {
-          runDistM += decision.distanceM;
-        } else {
-          walkDistM += decision.distanceM;
-        }
-        await repo.addToOpenSegment(sessionId, decision.distanceM);
+      steps.markGps(now, totalSteps: recordingSteps);
+      final gpsM = decision.addDistance ? decision.distanceM : 0.0;
+      final credited = steps.takeGpsMeters(gpsM);
+      if (credited > 0) {
+        await _addDistance(credited, now);
       }
 
       if (activity.isAuto && decision.useForSport) {
@@ -283,7 +279,60 @@ class RecordingPipeline {
       );
     }
 
+    if (!usedGps) {
+      final running = activity.isAuto
+          ? classifier.current == Sport.run
+          : activity.lockedSport == Sport.run;
+      final stepM = steps.sampleWhileGpsStale(
+        now: now,
+        totalSteps: recordingSteps,
+        cadenceSpm: lastCadence,
+        running: running,
+      );
+      if (stepM > 0) {
+        await _addDistance(stepM, now);
+        _displaySpeedMs = stepM;
+        await repo.updateDistances(
+          sessionId: sessionId,
+          totalDistM: distance.meters,
+          walkDistM: walkDistM,
+          runDistM: runDistM,
+        );
+      }
+    }
+
     return snapshot(now);
+  }
+
+  Future<void> _addDistance(double meters, DateTime now) async {
+    if (meters <= 0) return;
+    distance.meters += meters;
+    final intoRun = activity.isAuto
+        ? classifier.current == Sport.run
+        : activity.lockedSport == Sport.run;
+    if (intoRun) {
+      runDistM += meters;
+    } else {
+      walkDistM += meters;
+    }
+    await repo.addToOpenSegment(sessionId, meters);
+  }
+
+  bool _alreadyConsumed(LocationFix fix) {
+    final prev = _consumedFix;
+    if (prev == null) return false;
+    return prev.ts == fix.ts &&
+        prev.lat == fix.lat &&
+        prev.lng == fix.lng;
+  }
+
+  void _appendTrail(LatLng point) {
+    if (trail.isNotEmpty &&
+        trail.last.latitude == point.latitude &&
+        trail.last.longitude == point.longitude) {
+      return;
+    }
+    trail.add(point);
   }
 
   Future<RecordingSnapshot> snapshot(DateTime now) async {

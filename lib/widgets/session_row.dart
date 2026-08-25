@@ -39,7 +39,7 @@ class SessionRow extends StatelessWidget {
                 style: BalmiTheme.body(
                   size: 14,
                   weight: FontWeight.w800,
-                  color: selected ? BalmiColors.plum : BalmiColors.ink,
+                  color: selected ? BalmiColors.potato : BalmiColors.ink,
                 ),
               ),
             ),

@@ -4,6 +4,7 @@ import '../../domain/engines/land_city.dart';
 import '../../domain/engines/loop_area.dart';
 import '../db/app_database.dart';
 import '../repositories/session_repository.dart';
+import 'session_trace_line.dart';
 
 class DeviceTraces {
   const DeviceTraces({
@@ -48,14 +49,11 @@ Future<DeviceTraces> loadDeviceTraces(SessionRepository repo) async {
     if (!qualifiesForLand(s.totalDistM)) continue;
     distM += s.totalDistM;
     final pts = await repo.pointsForSession(s.id);
-    final line = <LatLng>[];
-    final geo = <GeoPoint>[];
-    for (final p in pts) {
-      if (p.hAccM != null && p.hAccM! > 40) continue;
-      line.add(LatLng(p.lat, p.lng));
-      geo.add(GeoPoint(p.lat, p.lng));
-      latSum += p.lat;
-      lngSum += p.lng;
+    final line = traceLineFromPoints(pts);
+    final geo = [for (final p in line) GeoPoint(p.latitude, p.longitude)];
+    for (final p in line) {
+      latSum += p.latitude;
+      lngSum += p.longitude;
       n += 1;
     }
     if (line.length < 2) continue;

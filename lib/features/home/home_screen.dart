@@ -5,9 +5,12 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../data/sensors/step_service.dart';
+import '../../domain/engines/farm_life.dart';
+import '../../domain/engines/land_city.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
+import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
 import '../../widgets/today_summary_card.dart';
 import '../land/land_preview_screen.dart';
@@ -24,9 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _specM = 400;
   ActivityKind _activity = ActivityKind.auto;
   PeriodStats _today = summarizePeriod(const []);
-  var _buildingCount = 0;
+  List<FarmKind> _buildings = const [];
+  List<HerdKind> _herds = const [];
   var _wateredToday = false;
-  var _progressLine = '물 0회 · 울타리까지 3회';
 
   @override
   void initState() {
@@ -40,14 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final rows = await repo.closedWorkouts();
     final today = summarizePeriod(inLocalDay(rows, DateTime.now()));
     final buildings = await repo.listBuildings();
+    final livestock = await repo.listLivestock();
     final water = await repo.loadWaterLedger();
     steps.setRecordedToday(today.steps);
     if (!mounted) return;
     setState(() {
       _today = today;
-      _buildingCount = buildings.length;
+      _buildings = buildings.map((b) => FarmKind.fromWire(b.type)).toList();
+      _herds = livestock.map((h) => HerdKind.fromWire(h.kind)).toList();
       _wateredToday = water.wateredToday;
-      _progressLine = water.progressLine;
     });
   }
 
@@ -64,6 +68,41 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _tune() async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: StatefulBuilder(
+            builder: (ctx, setLocal) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ActivityPills(
+                    value: _activity,
+                    onChanged: (v) => setLocal(() {
+                      setState(() => _activity = v);
+                    }),
+                  ),
+                  if (_activity.isTrack) ...[
+                    const SizedBox(height: 12),
+                    TrackSpecPills(
+                      value: _specM,
+                      onChanged: (v) => setLocal(() {
+                        setState(() => _specM = v);
+                      }),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
@@ -72,58 +111,49 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             children: [
-              Text(
-                BalmiCopy.trustAlways,
-                style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
-              ),
-              const SizedBox(height: 14),
-              StepLine(label: steps.label, steps: steps.displaySteps),
-              const SizedBox(height: 12),
-              TodaySummaryCard(
-                stats: _today,
+              TodayHero(
+                steps: steps.displaySteps,
                 stepLabel: steps.label,
-                steps: _today.isEmpty
-                    ? steps.displaySteps
-                    : (_today.steps > 0 ? _today.steps : steps.displaySteps),
+                stats: _today,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               FarmStatusCard(
-                buildingCount: _buildingCount,
-                progressLine: _progressLine,
+                buildings: _buildings,
+                herds: _herds,
                 caredToday: _wateredToday,
                 onOpen: () => openLandPreview(context),
               ),
               if (rec.lastError != null) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   rec.lastError!,
                   style: BalmiTheme.body(size: 13, color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              const SizedBox(height: 18),
-              Text(BalmiCopy.activityLabel, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              ActivityPills(
-                value: _activity,
-                onChanged: rec.isStarting ? (_) {} : (v) => setState(() => _activity = v),
-              ),
-              if (_activity.isTrack) ...[
-                const SizedBox(height: 8),
-                TrackSpecPills(
-                  value: _specM,
-                  onChanged: rec.isStarting ? null : (v) => setState(() => _specM = v),
                 ),
               ],
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-          child: FilledButton(
-            onPressed: rec.isStarting ? null : () => _start(rec),
-            child: Text(rec.isStarting ? BalmiCopy.starting : BalmiCopy.start),
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAction(
+                icon: ActivityPills.iconOf(_activity),
+                label: _activity.label,
+                onTap: rec.isStarting ? () {} : _tune,
+              ),
+              const SizedBox(width: 20),
+              CircleAction(
+                icon: rec.isStarting ? Icons.hourglass_empty : Icons.play_arrow,
+                label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
+                filled: true,
+                size: 68,
+                onTap: rec.isStarting ? () {} : () => _start(rec),
+              ),
+            ],
           ),
         ),
       ],

@@ -51,32 +51,34 @@ class SessionTraceMap extends StatelessWidget {
     this.lastPoint,
     this.emptyLabel,
     this.height = 220,
+    this.osmKey,
   });
 
   final List<LatLng> points;
   final LatLng? lastPoint;
   final String? emptyLabel;
-  final double height;
+  final double? height;
+  final GlobalKey<OsmTraceMapState>? osmKey;
 
   @override
   Widget build(BuildContext context) {
     final pin = lastPoint ?? (points.isEmpty ? null : points.last);
-    return SizedBox(
-      height: height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: OsmTraceMap(
-          traces: DeviceTraces(
-            lines: points.length >= 2 ? [points] : const [],
-            loops: const [],
-            loopAreaM2: 0,
-            lastPoint: pin,
-          ),
-          highlight: points.length >= 2 ? points : null,
-          emptyLabel: pin == null ? emptyLabel : null,
+    final map = ClipRRect(
+      borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+      child: OsmTraceMap(
+        key: osmKey,
+        traces: DeviceTraces(
+          lines: points.length >= 2 ? [points] : const [],
+          loops: const [],
+          loopAreaM2: 0,
+          lastPoint: pin,
         ),
+        highlight: points.length >= 2 ? points : null,
+        emptyLabel: pin == null ? emptyLabel : null,
       ),
     );
+    if (height == null) return map;
+    return SizedBox(height: height, child: map);
   }
 }
 
@@ -99,17 +101,31 @@ class OsmTraceMap extends StatefulWidget {
   final ValueChanged<LatLng>? onTap;
 
   @override
-  State<OsmTraceMap> createState() => _OsmTraceMapState();
+  State<OsmTraceMap> createState() => OsmTraceMapState();
 }
 
-class _OsmTraceMapState extends State<OsmTraceMap> {
+class OsmTraceMapState extends State<OsmTraceMap> {
   final _map = MapController();
   var _ready = false;
 
   @override
   void didUpdateWidget(covariant OsmTraceMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_ready) _fit();
+    if (!_ready) return;
+    final hadPin = oldWidget.traces.lastPoint != null;
+    final hasPin = widget.traces.lastPoint != null;
+    if (!hadPin && hasPin) recenterOnUser();
+  }
+
+  void recenterOnUser() {
+    if (!_ready) return;
+    final pin = widget.traces.lastPoint ?? widget.traces.center;
+    _map.move(pin, 16);
+  }
+
+  void resetNorth() {
+    if (!_ready) return;
+    _map.rotate(0);
   }
 
   void _fit() {
@@ -144,6 +160,9 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
           options: MapOptions(
             initialCenter: widget.traces.center,
             initialZoom: widget.traces.hasLine ? 14 : 11,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all,
+            ),
             onTap: widget.onTap == null ? null : (pos, latlng) => widget.onTap!(latlng),
             onMapReady: () {
               _ready = true;
@@ -161,8 +180,8 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
                   for (final loop in widget.traces.loops)
                     Polygon(
                       points: loop,
-                      color: BalmiColors.plum.withValues(alpha: 0.16),
-                      borderColor: BalmiColors.plum.withValues(alpha: 0.55),
+                      color: BalmiColors.ink.withValues(alpha: 0.12),
+                      borderColor: BalmiColors.ink.withValues(alpha: 0.4),
                       borderStrokeWidth: 1.5,
                     ),
                 ],
@@ -172,13 +191,13 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
                 for (final line in widget.traces.lines)
                   Polyline(
                     points: line,
-                    color: BalmiColors.plumLt,
+                    color: BalmiColors.sub,
                     strokeWidth: 3,
                   ),
                 if (highlight != null && highlight.length >= 2)
                   Polyline(
                     points: highlight,
-                    color: BalmiColors.plum,
+                    color: BalmiColors.ink,
                     strokeWidth: 4.5,
                   ),
               ],
@@ -192,9 +211,9 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
                     height: 18,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: BalmiColors.plum,
+                        color: BalmiColors.potato,
                         shape: BoxShape.circle,
-                        border: Border.all(color: BalmiColors.paper, width: 2),
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
                     ),
                   ),
@@ -218,7 +237,7 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
             ),
             SimpleAttributionWidget(
               source: const Text('OpenStreetMap'),
-              backgroundColor: BalmiColors.paper.withValues(alpha: 0.82),
+              backgroundColor: Colors.white.withValues(alpha: 0.82),
             ),
           ],
         ),
@@ -229,7 +248,7 @@ class _OsmTraceMapState extends State<OsmTraceMap> {
               padding: const EdgeInsets.all(12),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: BalmiColors.paper.withValues(alpha: 0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: BalmiColors.line),
                 ),
@@ -256,12 +275,14 @@ class _HerdSprite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Semantics(
+      label: kind.label,
+      child: Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: BalmiColors.paper,
+            color: Colors.white,
             shape: BoxShape.circle,
             border: Border.all(color: herdTint(kind), width: 2),
           ),
@@ -270,18 +291,8 @@ class _HerdSprite extends StatelessWidget {
             child: Icon(herdIcon(kind), size: 18, color: herdTint(kind)),
           ),
         ),
-        Text(
-          kind.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w800,
-            color: BalmiColors.ink,
-            height: 1.1,
-          ),
-        ),
       ],
+    ),
     );
   }
 }
@@ -293,12 +304,14 @@ class _FarmSprite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Semantics(
+      label: kind.label,
+      child: Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: BalmiColors.paper,
+            color: Colors.white,
             shape: BoxShape.circle,
             border: Border.all(color: farmTint(kind), width: 2),
           ),
@@ -307,18 +320,8 @@ class _FarmSprite extends StatelessWidget {
             child: Icon(farmIcon(kind), size: 18, color: farmTint(kind)),
           ),
         ),
-        Text(
-          kind.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w800,
-            color: BalmiColors.ink,
-            height: 1.1,
-          ),
-        ),
       ],
+    ),
     );
   }
 }

@@ -13,9 +13,20 @@ abstract final class BalmiCopy {
   static const start = '기록 시작';
   static const starting = '기록 준비 중…';
   static const stop = '기록 종료';
+  static const stopShort = '종료';
   static const pause = '기록 일시정지';
+  static const pauseShort = '정지';
   static const resumeLive = '기록 계속';
+  static const resumeShort = '재시작';
   static const recordingLive = '기록 중';
+  static const recenterMap = '내 위치로';
+  static const resetNorth = '북쪽 고정';
+  static const recordingAlerts = '기록 알림';
+  static const endConfirmTitle = '기록을 마칠까요?';
+  static const endConfirmBack = '돌아가기';
+  static const endConfirmYes = '기록 종료';
+  static const endShortWalk =
+      '거리가 짧으면 내 땅에는 안 올라가요. 기록 자체는 기기에 남습니다.';
   static const readyToRecord = '기록 준비';
   static const recordTab = '기록';
   static const landTab = '내 땅';
@@ -27,6 +38,7 @@ abstract final class BalmiCopy {
       'GPS 수신 대기 중이에요. 실내에서는 1–2분이 걸릴 수 있어요. 포인트 수가 오르면 기록이 되고 있는 겁니다.';
   static const waitingGpsShort = 'GPS 수신 대기 중';
   static const keepAliveFailed = '백그라운드 알림을 못 켰어요. 화면을 켜 둔 동안은 기록을 이어갑니다.';
+  static const backgroundRetry = '백그라운드 기록 보호를 다시 준비하고 있어요.';
   static const startFailed = '기록을 시작하지 못했어요';
   static const history = '지난 기록';
   static const settings = '설정';
@@ -160,7 +172,7 @@ abstract final class BalmiCopy {
   static const e04 = 'E04 면적이 최소 기준에 못 미쳐요';
 
   static const vasaCredit = '× VASA';
-  static const vasaCreditDetail = '움직임 기록 기술 크레딧입니다. 건강 점수나 의료 평가가 아닙니다.';
+  static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
   static const about = '이 앱 정보';
   static const versionLabel = '0.1.8';
 

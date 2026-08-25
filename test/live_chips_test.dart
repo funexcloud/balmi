@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('live header shows GPS and trust, not save/sync chips', (tester) async {
+  testWidgets('live header shows GPS, not save/sync chips', (tester) async {
     const snap = RecordingSnapshot(
       sessionId: 's',
       pointCount: 12,
@@ -26,7 +26,7 @@ void main() {
       ),
     );
     expect(find.textContaining('GPS'), findsOneWidget);
-    expect(find.text(BalmiCopy.trustAlways), findsOneWidget);
+    expect(find.text(BalmiCopy.trustAlways), findsNothing);
     expect(find.text(BalmiCopy.deviceSaved), findsNothing);
     expect(find.text(BalmiCopy.syncWaiting), findsNothing);
     expect(find.text(BalmiCopy.syncComplete), findsNothing);

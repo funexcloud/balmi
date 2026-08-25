@@ -6,9 +6,11 @@ import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
+import '../../data/map/session_trace_line.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
+import '../../widgets/activity_pills.dart';
 import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
 import '../../widgets/osm_trace_map.dart';
@@ -47,10 +49,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final durs = await repo.sportDurations(widget.sessionId);
     final integrity = await repo.integrity(widget.sessionId);
     final pts = await repo.pointsForSession(widget.sessionId);
-    final line = [
-      for (final p in pts)
-        if (p.hAccM == null || p.hAccM! <= 40) LatLng(p.lat, p.lng),
-    ];
+    final line = traceLineFromPoints(pts);
     if (!mounted) return;
     setState(() {
       _session = session;
@@ -70,15 +69,15 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final s = _session;
     return Scaffold(
       backgroundColor: BalmiColors.paper,
-      appBar: const BalmiAppBar(title: BalmiCopy.sessionDetail),
+      appBar: const BalmiAppBar(),
       body: s == null
-          ? const Center(child: CircularProgressIndicator(color: BalmiColors.plum))
+          ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Text(
-                  ActivityKind.fromWire(s.activity).label,
-                  style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
+                Icon(
+                  ActivityPills.iconOf(ActivityKind.fromWire(s.activity)),
+                  color: BalmiColors.ink,
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -102,7 +101,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   emptyLabel: BalmiCopy.mapEmpty,
                 ),
                 const HeartbeatDivider(),
-                Text(BalmiCopy.integrity, style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
+                const Icon(Icons.verified_outlined, size: 18, color: BalmiColors.sub),
                 const SizedBox(height: 8),
                 _kv(BalmiCopy.totalPoints, '$_totalPoints'),
                 _kv(BalmiCopy.excludedPoints, '$_excluded'),
@@ -111,12 +110,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   _lastSynced == null ? BalmiCopy.neverSynced : formatDateTime(_lastSynced!),
                 ),
                 const SizedBox(height: 24),
-                Text('구간', style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
-                const SizedBox(height: 8),
                 ..._segments.map(_segmentTile),
                 if (_laps.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Text('랩', style: BalmiTheme.body(size: 18, weight: FontWeight.w800)),
+                  const SizedBox(height: 16),
                   ..._laps.map(
                     (l) => ListTile(
                       contentPadding: EdgeInsets.zero,

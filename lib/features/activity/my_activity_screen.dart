@@ -57,9 +57,6 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
               onPressed: () => Navigator.of(context).maybePop(),
               icon: const Icon(Icons.arrow_back, color: BalmiColors.ink),
             ),
-            Expanded(
-              child: Text(BalmiCopy.myActivity, style: BalmiTheme.body(size: 20, weight: FontWeight.w800)),
-            ),
           ],
         ),
         Padding(
@@ -75,8 +72,6 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
                 steps: today.steps > 0 ? today.steps : steps.displaySteps,
               ),
               const SizedBox(height: 14),
-              Text(BalmiCopy.activityLabel, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
-              const SizedBox(height: 8),
               ActivityPills(
                 value: _filter ?? ActivityKind.auto,
                 onChanged: (v) => setState(() => _filter = v == ActivityKind.auto ? null : v),
@@ -88,8 +83,6 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
                 ('이번 달', month),
               ]),
               const SizedBox(height: 16),
-              Text(BalmiCopy.workoutLogTab, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
-              const SizedBox(height: 4),
               for (final r in filtered)
                 SessionRow(
                   startedAt: r.startedAt,
@@ -112,11 +105,7 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
   Widget _periodCard(List<(String, PeriodStats)> rows) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: BalmiColors.line),
-      ),
+      decoration: BalmiTheme.card(),
       child: Column(
         children: [
           for (var i = 0; i < rows.length; i++) ...[

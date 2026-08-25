@@ -19,7 +19,7 @@ class BalmiWordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = dark ? BalmiColors.paper : BalmiColors.ink;
-    final pulse = dark ? BalmiColors.amber : BalmiColors.plum;
+    final pulse = BalmiColors.potato;
     return Semantics(
       label: 'balmi',
       child: SizedBox(
@@ -87,7 +87,7 @@ class BalmiWordmark extends StatelessWidget {
 class HeartbeatDivider extends StatelessWidget {
   const HeartbeatDivider({
     super.key,
-    this.color = BalmiColors.plum,
+    this.color = BalmiColors.potato,
     this.height = 20,
   });
 
