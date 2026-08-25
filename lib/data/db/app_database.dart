@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'farm_v2_schema.dart';
 import 'meal_walk_schema.dart';
 import 'tables.dart';
 
@@ -35,13 +36,15 @@ class AppDatabase extends _$AppDatabase {
   static const fileName = 'balmi.sqlite';
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await createMealWalkTables(this);
+          await createFarmV2Tables(this);
+          await seedFarmV2MasterData(this);
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -60,6 +63,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await createMealWalkTables(this);
+          }
+          if (from < 7) {
+            await createFarmV2Tables(this);
+            await seedFarmV2MasterData(this);
           }
         },
       );

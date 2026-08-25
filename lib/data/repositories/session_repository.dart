@@ -4,11 +4,13 @@ import 'package:uuid/uuid.dart';
 import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
+import '../../domain/engines/session_farm_grant.dart';
 import '../../domain/engines/sync_backoff.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../db/app_database.dart';
+import '../repositories/farm_repository.dart';
 
 class IntegrityStats {
   const IntegrityStats({
@@ -440,6 +442,58 @@ class SessionRepository {
         endedAt: Value(at),
       ),
     );
+    await _grantFarmResourcesOnClose(sessionId, endedAt: at);
+  }
+
+  /// Farm v2: grant feed/water/nutrient when a session closes (idempotent).
+  Future<void> _grantFarmResourcesOnClose(
+    String sessionId, {
+    required DateTime endedAt,
+  }) async {
+    try {
+      final farm = FarmRepository(db);
+      if (await farm.hasSessionGrant(sessionId)) return;
+
+      final session = await sessionById(sessionId);
+      if (session == null) return;
+      if (!sessionQualifiesForFarmGrant(session.totalDistM)) return;
+
+      final duration = endedAt.difference(session.startedAt);
+      if (duration.isNegative) return;
+
+      final priorSessions = await closedSessions();
+      final cutoff = endedAt.subtract(const Duration(days: 30));
+      final prior30 = <SessionPaceSample>[];
+      final activeDays = <String>{localDateKey(endedAt)};
+
+      for (final s in priorSessions) {
+        if (s.id == sessionId) continue;
+        final end = s.endedAt ?? s.startedAt;
+        if (!sessionQualifiesForFarmGrant(s.totalDistM)) continue;
+        activeDays.add(localDateKey(end));
+        if (end.isBefore(cutoff)) continue;
+        final d = end.difference(s.startedAt);
+        if (d.isNegative) continue;
+        prior30.add(SessionPaceSample(distM: s.totalDistM, duration: d));
+      }
+
+      final input = buildSessionResourceInput(
+        totalDistM: session.totalDistM,
+        duration: duration,
+        prior30Days: prior30,
+        activeLocalDayKeys: activeDays,
+        sessionEndedAt: endedAt,
+        todayFeedGranted: await farm.todayFeedGranted(now: endedAt),
+      );
+
+      await farm.grantSessionResources(
+        sessionId: sessionId,
+        input: input,
+        now: endedAt,
+      );
+    } catch (_) {
+      // Farm grant must never break GPS/recording close path.
+    }
   }
 
   Future<IntegrityStats> integrity(String sessionId) async {

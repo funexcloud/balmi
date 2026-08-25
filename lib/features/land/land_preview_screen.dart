@@ -5,12 +5,22 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
+import '../../data/repositories/farm_repository.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../data/stubs/future_features.dart';
+import '../../domain/engines/farm_crop.dart';
 import '../../domain/engines/farm_life.dart';
+import '../../domain/engines/farm_resource.dart';
+import '../../domain/engines/farm_scene_ui.dart';
 import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
-import '../../widgets/farm_scene.dart';
+import '../../domain/models/farm/animal.dart';
+import '../../domain/models/farm/crop.dart';
+import '../../domain/models/farm/farm_slot.dart';
+import '../../domain/models/farm/farm_state.dart';
+import '../../domain/models/farm/farm_tier.dart';
+import '../../widgets/farm_resource_bar.dart';
+import '../../widgets/farm_scene_v2.dart';
 import '../../widgets/osm_trace_map.dart';
 
 void openLandPreview(BuildContext context) {
@@ -24,7 +34,7 @@ void openLandPreview(BuildContext context) {
   );
 }
 
-/// 내가 밟은 땅 — farm scene + one daily 물주기, not a leftover-㎡ shop.
+/// 내가 밟은 땅 — farm v2 scene + v1 daily 물주기.
 class LandPreviewScreen extends StatefulWidget {
   const LandPreviewScreen({super.key});
 
@@ -41,10 +51,16 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
     wateredToday: false,
     hasQualifyingWalkToday: false,
   );
+  FarmSnapshot? _farm;
+  Map<String, CropDefinition> _crops = {};
+  Map<String, AnimalDefinition> _animals = {};
   var _loaded = false;
   var _busy = false;
   var _watering = false;
   WaterApplyResult? _pendingWater;
+
+  FarmRepository get _farmRepo =>
+      FarmRepository(context.read<AppDatabase>());
 
   @override
   void initState() {
@@ -58,14 +74,28 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
     final buildings = await repo.listBuildings();
     final herds = await repo.listLivestock();
     final water = await repo.loadWaterLedger();
+    final farmRepo = _farmRepo;
+    await farmRepo.ensureInitialized();
+    final cropList = await farmRepo.listCropDefinitions();
+    final animalList = await farmRepo.listAnimalDefinitions();
+    final ownedTiles = _ownedTileCount(buildings.length);
+    final snapshot = await farmRepo.loadSnapshot(ownedTileCount: ownedTiles);
     if (!mounted) return;
     setState(() {
       _traces = traces;
       _buildings = buildings;
       _herds = herds;
       _water = water;
+      _farm = snapshot;
+      _crops = {for (final c in cropList) c.cropId: c};
+      _animals = {for (final a in animalList) a.animalId: a};
       _loaded = true;
     });
+  }
+
+  int _ownedTileCount(int buildingCount) {
+    final fromLoops = _traces.loops.isNotEmpty ? 2 : 0;
+    return (buildingCount + fromLoops).clamp(1, 12);
   }
 
   Iterable<FarmKind> get _builtKinds =>
@@ -123,6 +153,103 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
     }
   }
 
+  Future<void> _applyResource(FarmResourceType type) async {
+    final farm = _farm;
+    if (farm == null || _busy) return;
+    final amount = kFarmResourceApplyAmount;
+    final balance = switch (type) {
+      FarmResourceType.water => farm.resources.waterBalance,
+      FarmResourceType.feed => farm.resources.feedBalance,
+      FarmResourceType.nutrient => farm.resources.nutrientBalance,
+    };
+    if (balance < amount) {
+      _toast(BalmiCopy.farmV2NeedResource);
+      return;
+    }
+
+    final slot = pickSlotForResource(
+      slots: farm.slots,
+      type: type,
+      crops: _crops,
+      animals: _animals,
+    );
+    if (slot == null) {
+      _toast(BalmiCopy.farmV2NoSlot);
+      return;
+    }
+
+    setState(() => _busy = true);
+    final updated = await _farmRepo.applyResourceToSlot(
+      slotRowId: slot.id,
+      type: type,
+      amount: amount,
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (updated == null) {
+      _toast(BalmiCopy.farmV2ApplyFailed);
+      return;
+    }
+    await _load();
+    _toast(BalmiCopy.farmV2Applied);
+  }
+
+  Future<void> _onSlotTap(FarmSlotView slot) async {
+    if (_busy || !slot.unlocked) return;
+    final occ = slot.occupant;
+    if (occ != null && !occ.isEmpty) {
+      if (occ.occupantType == OccupantType.crop && occ.cropId != null) {
+        final crop = _crops[occ.cropId!];
+        if (crop != null) {
+          final hint = cropGrowthHint(
+            crop: crop,
+            cumulativeWater: occ.cumulativeWater,
+            cumulativeNutrient: occ.cumulativeNutrient,
+            currentStageIndex: occ.currentStageIndex,
+            isDormant: occ.isDormant,
+          );
+          if (hint == CropGrowthHint.readyHarvest) {
+            setState(() => _busy = true);
+            final result = await _farmRepo.harvestCrop(occ.id);
+            if (!mounted) return;
+            setState(() => _busy = false);
+            if (result != null) {
+              await _load();
+              _toast('${crop.nameKr} 수확 · 코인 ${result.coin}');
+            }
+          }
+        }
+      } else if (occ.occupantType == OccupantType.livestock) {
+        setState(() => _busy = true);
+        final result = await _farmRepo.collectAnimalYield(occ.id);
+        if (!mounted) return;
+        setState(() => _busy = false);
+        if (result != null) {
+          await _load();
+          final animal = _animals[result.animalId];
+          _toast('${animal?.nameKr ?? "가축"} 산출 · 코인 ${result.coin}');
+        }
+      }
+      return;
+    }
+
+    setState(() => _busy = true);
+    if (slot.template.slotType == SlotType.crop) {
+      await _farmRepo.plantCrop(slotId: slot.template.slotId, cropId: 'crop_carrot_01');
+    } else {
+      await _farmRepo.adoptAnimal(
+        slotId: slot.template.slotId,
+        animalId: 'animal_chicken_01',
+      );
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await _load();
+    _toast(slot.template.slotType == SlotType.crop
+        ? BalmiCopy.farmV2Planted
+        : BalmiCopy.farmV2Adopted);
+  }
+
   void _toast(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -136,7 +263,16 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
     };
   }
 
-  String get _nextLine => _water.progressLine;
+  String get _statusLine {
+    final farm = _farm;
+    if (farm == null) return _water.progressLine;
+    return primaryFarmStatusLine(
+          snapshot: farm,
+          crops: _crops,
+          animals: _animals,
+        ) ??
+        _water.progressLine;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,19 +300,21 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
           sliver: SliverToBoxAdapter(
-            child: !_loaded
+            child: !_loaded || _farm == null
                 ? const SizedBox(
                     height: 240,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   )
-                : FarmScene(
+                : FarmSceneV2(
+                    snapshot: _farm!,
+                    crops: _crops,
+                    animals: _animals,
                     buildings: _builtKinds.toList(),
                     herds: _herdKinds.toList(),
                     caredToday: _water.wateredToday,
                     watering: _watering,
                     onWateringComplete: _onWateringComplete,
+                    onSlotTap: _onSlotTap,
                     height: 268,
                   ),
           ),
@@ -187,14 +325,27 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_farm != null) ...[
+                  FarmResourceBar(
+                    balances: _farm!.resources,
+                    busy: _busy,
+                    onApply: _applyResource,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Text(
-                  _nextLine,
+                  _statusLine,
                   textAlign: TextAlign.center,
-                  style: BalmiTheme.body(size: 14, weight: FontWeight.w800, color: BalmiColors.sage),
+                  style: BalmiTheme.body(
+                    size: 14,
+                    weight: FontWeight.w800,
+                    color: BalmiColors.sage,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: _water.canWater && !_busy && !_watering ? _waterFarm : null,
+                  onPressed:
+                      _water.canWater && !_busy && !_watering ? _waterFarm : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: BalmiColors.sage,
                     disabledBackgroundColor: BalmiColors.line,
@@ -251,6 +402,7 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
                     children: [
                       _guide(BalmiCopy.landPreview),
                       _guide(BalmiCopy.farmSpendHint),
+                      _guide(BalmiCopy.farmV2Hint),
                       _guide(BalmiCopy.herdUnlockHint),
                       _guide(BalmiCopy.areaNotCash),
                       if (_buildings.isNotEmpty)
@@ -283,7 +435,10 @@ class _LandPreviewScreenState extends State<LandPreviewScreen> {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text, style: BalmiTheme.body(size: 12, color: BalmiColors.sub, height: 1.45)),
+        child: Text(
+          text,
+          style: BalmiTheme.body(size: 12, color: BalmiColors.sub, height: 1.45),
+        ),
       ),
     );
   }
