@@ -52,6 +52,7 @@ class SessionTraceMap extends StatelessWidget {
     this.emptyLabel,
     this.height = 220,
     this.osmKey,
+    this.fitToPath = false,
   });
 
   final List<LatLng> points;
@@ -59,6 +60,7 @@ class SessionTraceMap extends StatelessWidget {
   final String? emptyLabel;
   final double? height;
   final GlobalKey<OsmTraceMapState>? osmKey;
+  final bool fitToPath;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +77,7 @@ class SessionTraceMap extends StatelessWidget {
         ),
         highlight: points.length >= 2 ? points : null,
         emptyLabel: pin == null ? emptyLabel : null,
+        fitToPath: fitToPath,
       ),
     );
     if (height == null) return map;
@@ -91,6 +94,7 @@ class OsmTraceMap extends StatefulWidget {
     this.buildings = const [],
     this.herds = const [],
     this.onTap,
+    this.fitToPath = false,
   });
 
   final DeviceTraces traces;
@@ -99,6 +103,7 @@ class OsmTraceMap extends StatefulWidget {
   final List<FarmMark> buildings;
   final List<HerdMark> herds;
   final ValueChanged<LatLng>? onTap;
+  final bool fitToPath;
 
   @override
   State<OsmTraceMap> createState() => OsmTraceMapState();
@@ -112,6 +117,15 @@ class OsmTraceMapState extends State<OsmTraceMap> {
   void didUpdateWidget(covariant OsmTraceMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!_ready) return;
+    if (widget.fitToPath) {
+      final oldLen = oldWidget.highlight?.length ?? 0;
+      final newLen = widget.highlight?.length ?? 0;
+      final pinChanged = oldWidget.traces.lastPoint != widget.traces.lastPoint;
+      if (oldLen != newLen || pinChanged) {
+        _fit();
+      }
+      return;
+    }
     final hadPin = oldWidget.traces.lastPoint != null;
     final hasPin = widget.traces.lastPoint != null;
     if (!hadPin && hasPin) recenterOnUser();
@@ -139,7 +153,8 @@ class OsmTraceMapState extends State<OsmTraceMap> {
       for (final h in widget.herds) h.point,
     ];
     if (pts.length < 2) {
-      _map.move(widget.traces.center, widget.traces.hasLine ? 15 : 11);
+      final pin = widget.traces.lastPoint ?? widget.traces.center;
+      _map.move(pin, widget.traces.lastPoint != null ? 16 : 11);
       return;
     }
     _map.fitCamera(
@@ -234,10 +249,6 @@ class OsmTraceMapState extends State<OsmTraceMap> {
                     child: _HerdSprite(kind: h.kind),
                   ),
               ],
-            ),
-            SimpleAttributionWidget(
-              source: const Text('OpenStreetMap'),
-              backgroundColor: Colors.white.withValues(alpha: 0.82),
             ),
           ],
         ),

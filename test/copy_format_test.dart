@@ -129,6 +129,27 @@ void main() {
       );
     }
   });
+
+  test('session detail hides backend integrity rows', () {
+    final detail =
+        File('lib/features/session_detail/session_detail_screen.dart')
+            .readAsStringSync();
+    expect(detail, isNot(contains('integrity')));
+    expect(detail, isNot(contains('BalmiCopy.totalPoints')));
+    expect(detail, isNot(contains('BalmiCopy.excludedPoints')));
+    expect(detail, isNot(contains('BalmiCopy.lastSynced')));
+    expect(detail, contains('fitToPath: true'));
+  });
+
+  test('map OSD has no flutter_map badge; OSM credit lives in settings', () {
+    final map = File('lib/widgets/osm_trace_map.dart').readAsStringSync();
+    final settings = File('lib/features/settings/settings_screen.dart')
+        .readAsStringSync();
+    expect(map, isNot(contains('SimpleAttributionWidget')));
+    expect(map, isNot(contains('RichAttributionWidget')));
+    expect(settings, contains('BalmiCopy.mapCredit'));
+    expect(BalmiCopy.mapCredit, contains('OpenStreetMap'));
+  });
 }
 
 Iterable<File> _dartUnder(Directory dir) {

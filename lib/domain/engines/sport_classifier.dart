@@ -41,10 +41,7 @@ class SportClassifier {
     }
 
     if (current == Sport.walk) {
-      final cadence = sample.cadenceSpm;
-      final ready = sample.speedKmh >= params.walkToRunSpeedKmh &&
-          cadence != null &&
-          cadence >= params.walkToRunCadenceSpm;
+      final ready = _walkToRunReady(sample);
       if (ready) {
         _walkToRunSince ??= sample.ts;
         if (!sample.ts.difference(_walkToRunSince!).isNegative &&
@@ -73,5 +70,15 @@ class SportClassifier {
       }
     }
     return null;
+  }
+
+  /// Run if speed is clearly running, or a jog with running cadence.
+  /// Cadence is optional so pocket-weak step counts still switch.
+  bool _walkToRunReady(SportSample sample) {
+    if (sample.speedKmh >= params.walkToRunSpeedKmh) return true;
+    final cadence = sample.cadenceSpm;
+    return cadence != null &&
+        cadence >= params.walkToRunCadenceSpm &&
+        sample.speedKmh >= params.runToWalkSpeedKmh;
   }
 }

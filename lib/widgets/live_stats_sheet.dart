@@ -20,6 +20,12 @@ class LiveStatsSheet extends StatelessWidget {
     this.pauseHold = Duration.zero,
     this.altM,
     this.spark = const [],
+    this.lapCount = 0,
+    this.trackMode = false,
+    this.showLaps = false,
+    this.liveSport,
+    this.lastLapTimeS,
+    this.movingDuration = Duration.zero,
   });
 
   final bool expanded;
@@ -34,10 +40,20 @@ class LiveStatsSheet extends StatelessWidget {
   final Duration pauseHold;
   final double? altM;
   final List<double> spark;
+  final int lapCount;
+  final bool trackMode;
+  final bool showLaps;
+  final String? liveSport;
+  final double? lastLapTimeS;
+  final Duration movingDuration;
+
+  bool get _showLaps => showLaps || trackMode || lapCount > 0;
 
   double get _avgKmh {
-    if (elapsed.inSeconds < 1) return 0;
-    return (distM / 1000) / (elapsed.inSeconds / 3600);
+    final moving = movingDuration.inSeconds;
+    final sec = moving >= 1 ? moving : elapsed.inSeconds;
+    if (sec < 1) return 0;
+    return (distM / 1000) / (sec / 3600);
   }
 
   @override
@@ -76,6 +92,14 @@ class LiveStatsSheet extends StatelessWidget {
                     _cell(BalmiCopy.statTime, formatElapsed(elapsed)),
                     _divider(),
                     _cell(BalmiCopy.statDistance, distM < 1000 ? formatMeters(distM) : '${formatKm(distM)}km'),
+                    if (_showLaps) ...[
+                      _divider(),
+                      _cell(BalmiCopy.statLaps, '$lapCount바퀴'),
+                    ],
+                    if (liveSport != null) ...[
+                      _divider(),
+                      _cell(BalmiCopy.activityAuto, liveSport!),
+                    ],
                   ],
                 ),
                 if (expanded) ...[
@@ -91,7 +115,10 @@ class LiveStatsSheet extends StatelessWidget {
                   Row(
                     children: [
                       _cell(BalmiCopy.currentPace, formatPace(speedKmh)),
-                      if (altM != null) ...[
+                      if (lastLapTimeS != null) ...[
+                        _divider(),
+                        _cell(BalmiCopy.lastLap, formatLapClock(lastLapTimeS!)),
+                      ] else if (altM != null) ...[
                         _divider(),
                         _cell('고도', '${altM!.round()}m'),
                       ],

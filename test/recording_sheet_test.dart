@@ -89,6 +89,57 @@ void main() {
     expect(find.textContaining('kcal'), findsNothing);
     expect(find.textContaining('칼로리'), findsNothing);
   });
+
+  testWidgets('auto mode shows 0 laps and live walk/run', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: LiveStatsSheet(
+            expanded: false,
+            onToggle: _noop,
+            elapsed: Duration(minutes: 10),
+            distM: 1200,
+            speedKmh: 0,
+            paused: false,
+            onPause: _noop,
+            onResume: _noop,
+            onEnd: _noop,
+            lapCount: 0,
+            showLaps: true,
+            liveSport: BalmiCopy.walk,
+          ),
+        ),
+      ),
+    );
+    expect(find.text(BalmiCopy.statLaps), findsOneWidget);
+    expect(find.text('0바퀴'), findsOneWidget);
+    expect(find.text(BalmiCopy.walk), findsOneWidget);
+  });
+
+  testWidgets('lap count shows on the live sheet when tracking', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: LiveStatsSheet(
+            expanded: false,
+            onToggle: _noop,
+            elapsed: Duration(minutes: 10),
+            distM: 1200,
+            speedKmh: 0,
+            paused: false,
+            onPause: _noop,
+            onResume: _noop,
+            onEnd: _noop,
+            lapCount: 3,
+            trackMode: true,
+          ),
+        ),
+      ),
+    );
+    expect(find.text(BalmiCopy.statLaps), findsOneWidget);
+    expect(find.text('3바퀴'), findsOneWidget);
+  });
 }
 
 void _noop() {}
+

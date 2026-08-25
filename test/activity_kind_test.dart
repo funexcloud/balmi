@@ -28,7 +28,9 @@ void main() {
     expect(home, isNot(contains('SwitchListTile')));
     expect(home, isNot(contains('_trackMode')));
     expect(home, isNot(contains('DropdownButtonFormField')));
+    expect(home, contains('ActivityPills'));
     expect(home, contains('TrackSpecPills'));
     expect(home, contains('isTrack'));
+    expect(home, isNot(contains('showBalmiSheet')));
   });
 }

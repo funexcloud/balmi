@@ -74,6 +74,12 @@ class MoreScreen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        Text(
+          BalmiCopy.mapCredit,
+          style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

@@ -20,6 +20,7 @@ class RecordingSnapshot {
     this.walkDurationMs = 0,
     this.runDurationMs = 0,
     this.syncedPoints = 0,
+    this.movingDurationMs = 0,
   });
 
   final String sessionId;
@@ -42,6 +43,7 @@ class RecordingSnapshot {
   final int walkDurationMs;
   final int runDurationMs;
   final int syncedPoints;
+  final int movingDurationMs;
 
   int get pendingPoints =>
       (pointCount - syncedPoints).clamp(0, pointCount);
@@ -67,6 +69,7 @@ class RecordingSnapshot {
         'walkDurationMs': walkDurationMs,
         'runDurationMs': runDurationMs,
         'syncedPoints': syncedPoints,
+        'movingDurationMs': movingDurationMs,
       };
 
   factory RecordingSnapshot.fromJson(Map<Object?, Object?> json) {
@@ -98,6 +101,7 @@ class RecordingSnapshot {
       walkDurationMs: i(json['walkDurationMs']),
       runDurationMs: i(json['runDurationMs']),
       syncedPoints: i(json['syncedPoints']),
+      movingDurationMs: i(json['movingDurationMs']),
     );
   }
 

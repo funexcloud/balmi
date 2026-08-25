@@ -17,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const BalmiWordmark(height: 28),
+          const BalmiWordmark(height: 34),
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -32,6 +32,18 @@ class SettingsScreen extends StatelessWidget {
                 color: BalmiColors.sub,
                 height: 1.45,
               ),
+            ),
+          ),
+          const Divider(color: BalmiColors.line),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              BalmiCopy.mapCredit,
+              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+            ),
+            subtitle: Text(
+              '기록 지도는 OpenStreetMap 타일을 씁니다.',
+              style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
             ),
           ),
           const Divider(color: BalmiColors.line),

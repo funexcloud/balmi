@@ -35,11 +35,13 @@ class LapEvent {
 /// School/park track laps from GPS. First 200m defines virtual finish.
 class LapDetector {
   LapDetector({
-    this.startRadiusM = 18,
-    this.headingToleranceDeg = 60,
+    this.startRadiusM = 22,
+    this.headingToleranceDeg = 90,
     this.minGap = const Duration(seconds: 60),
     this.calibrationDistM = 200,
     this.maxHorizontalAccuracyM = 30,
+    this.autoLoopMinM = 250,
+    this.autoLoopMaxM = 850,
   });
 
   final double startRadiusM;
@@ -47,6 +49,10 @@ class LapDetector {
   final Duration minGap;
   final double calibrationDistM;
   final double maxHorizontalAccuracyM;
+  final double autoLoopMinM;
+  final double autoLoopMaxM;
+
+  static const trackSpecsM = [200, 300, 400, 500, 600];
 
   double? startLat;
   double? startLon;
@@ -57,6 +63,8 @@ class LapDetector {
   DateTime? _sessionStart;
 
   final DistanceAccumulator _calib = DistanceAccumulator();
+  final DistanceAccumulator _path = DistanceAccumulator();
+  double _metersAtLastLap = 0;
   double? _lastLat;
   double? _lastLon;
   bool _insideRadius = true;
@@ -71,6 +79,8 @@ class LapDetector {
     lastLapAt = null;
     _sessionStart = null;
     _calib.reset();
+    _path.reset();
+    _metersAtLastLap = 0;
     _lastLat = null;
     _lastLon = null;
     _insideRadius = true;
@@ -107,9 +117,31 @@ class LapDetector {
     return gpsDistM;
   }
 
-  LapEvent? ingest(TrackSample sample) {
+  static int? guessSpecM(double loopM) {
+    int? best;
+    var bestErr = double.infinity;
+    for (final spec in trackSpecsM) {
+      final err = (loopM - spec).abs();
+      if (err <= spec * 0.18 && err < bestErr) {
+        best = spec;
+        bestErr = err;
+      }
+    }
+    return best;
+  }
+
+  bool isTrackLikeLoop(double loopM) =>
+      loopM >= autoLoopMinM && loopM <= autoLoopMaxM;
+
+  /// [countAnyLoop] is true when the user locked 트랙. Auto-detect only
+  /// counts a finish-line return after a stadium-like loop length.
+  LapEvent? ingest(TrackSample sample, {bool countAnyLoop = false}) {
     _sessionStart ??= sample.ts;
     final accurate = isAccurateEnough(sample.hAccM, maxHorizontalAccuracyM);
+
+    if (accurate) {
+      _path.add(lat: sample.lat, lon: sample.lon, hAccM: sample.hAccM);
+    }
 
     if (calibrating) {
       if (accurate) {
@@ -177,15 +209,22 @@ class LapDetector {
 
     LapEvent? event;
     if (!_insideRadius && nowInside && headingOk && timeOk) {
-      lapNo += 1;
-      final lapTimeS = sample.ts.difference(last).inMilliseconds / 1000.0;
-      lastLapAt = sample.ts;
-      event = LapEvent(
-        lapNo: lapNo,
-        crossedAt: sample.ts,
-        lapTimeS: lapTimeS,
-        lapDistM: distToStart,
-      );
+      final loopM = _path.meters > _metersAtLastLap
+          ? _path.meters - _metersAtLastLap
+          : 0.0;
+      final accept = countAnyLoop || isTrackLikeLoop(loopM);
+      if (accept) {
+        lapNo += 1;
+        final lapTimeS = sample.ts.difference(last).inMilliseconds / 1000.0;
+        lastLapAt = sample.ts;
+        _metersAtLastLap = _path.meters;
+        event = LapEvent(
+          lapNo: lapNo,
+          crossedAt: sample.ts,
+          lapTimeS: lapTimeS,
+          lapDistM: loopM,
+        );
+      }
     }
 
     _insideRadius = nowInside;

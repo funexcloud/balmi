@@ -68,41 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _tune() async {
-    await showBalmiSheet(
-      context: context,
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-          child: StatefulBuilder(
-            builder: (ctx, setLocal) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ActivityPills(
-                    value: _activity,
-                    onChanged: (v) => setLocal(() {
-                      setState(() => _activity = v);
-                    }),
-                  ),
-                  if (_activity.isTrack) ...[
-                    const SizedBox(height: 12),
-                    TrackSpecPills(
-                      value: _specM,
-                      onChanged: (v) => setLocal(() {
-                        setState(() => _specM = v);
-                      }),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
@@ -136,21 +101,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+          child: Column(
             children: [
-              CircleAction(
-                icon: ActivityPills.iconOf(_activity),
-                label: _activity.label,
-                onTap: rec.isStarting ? () {} : _tune,
+              ActivityPills(
+                value: _activity,
+                onChanged: (v) => setState(() => _activity = v),
               ),
-              const SizedBox(width: 20),
+              if (_activity.isTrack) ...[
+                const SizedBox(height: 8),
+                TrackSpecPills(
+                  value: _specM,
+                  onChanged: (v) => setState(() => _specM = v),
+                ),
+              ],
+              const SizedBox(height: 10),
               CircleAction(
                 icon: rec.isStarting ? Icons.hourglass_empty : Icons.play_arrow,
                 label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
                 filled: true,
-                size: 68,
+                size: CircleAction.playSize,
                 onTap: rec.isStarting ? () {} : () => _start(rec),
               ),
             ],

@@ -204,7 +204,7 @@ void main() {
       ),
     );
     await pipe.sampleNow(start);
-    expect(pipe.laps.startLat, isNull);
+    expect(pipe.laps.startLat, isNotNull);
 
     await pipe.setActivity(ActivityKind.track, start.add(const Duration(seconds: 1)));
     expect(pipe.trackMode, isTrue);
@@ -472,6 +472,119 @@ void main() {
     }
     expect(snap!.totalDistM, greaterThan(200));
     expect(snap.speedKmh ?? 0, greaterThan(0.5));
+  });
+
+  test('standing GPS jitter reports 0 km/h', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 25, 14);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.auto,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.auto,
+    );
+    await pipe.restore();
+    var lat = 35.532;
+    const lon = 129.259;
+    RecordingSnapshot? snap;
+    for (var i = 0; i < 25; i++) {
+      lat += 1.4 / 111000;
+      pipe
+        ..onCadence(110)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: lat,
+            lng: lon,
+            speedMs: 1.4,
+            speedAccuracyMs: 0.5,
+            hAccM: 4,
+          ),
+        );
+      snap = await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(snap!.speedKmh ?? 0, greaterThan(2));
+
+    const standLat = 35.532 + 25 * 1.4 / 111000;
+    for (var i = 25; i < 50; i++) {
+      final jitterM = (i.isEven ? 1.6 : -1.4);
+      pipe
+        ..onCadence(null)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: standLat + jitterM / 111000,
+            lng: lon + (i % 3 == 0 ? 1.2 : -0.8) / 88000,
+            speedMs: 0.53,
+            speedAccuracyMs: 1.8,
+            hAccM: 4,
+          ),
+        );
+      snap = await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(snap!.speedKmh ?? 0, closeTo(0, 0.15));
+    expect(formatPace(snap.speedKmh ?? 0), '--\'--"');
+  });
+
+  test('600m stadium loop auto-detects a lap from GPS', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 25, 15);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.auto,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.auto,
+    );
+    await pipe.restore();
+    const originLat = 35.5324;
+    const originLon = 129.2593;
+    const lapM = 600.0;
+    const speedMs = 1.5;
+    final radiusM = lapM / (2 * math.pi);
+    final seconds = (lapM / speedMs).round() + 12;
+    RecordingSnapshot? snap;
+    for (var i = 0; i <= seconds; i++) {
+      final dist = speedMs * i;
+      final ang = (dist / lapM) * 2 * math.pi;
+      final lat = originLat + (radiusM * math.cos(ang) - radiusM) / 111000;
+      final lon = originLon +
+          (radiusM * math.sin(ang)) /
+              (111000 * math.cos(originLat * math.pi / 180));
+      pipe
+        ..onCadence(100)
+        ..onFix(
+          LocationFix(
+            ts: start.add(Duration(seconds: i)),
+            lat: lat,
+            lng: lon,
+            speedMs: speedMs,
+            speedAccuracyMs: 0.4,
+            hAccM: 6,
+          ),
+        );
+      snap = await pipe.sampleNow(start.add(Duration(seconds: i)));
+    }
+    expect(snap!.lapCount, 1);
+    expect(snap.trackMode, isTrue);
+    expect(pipe.trackSpecM, 600);
+    final stored = await repo.lapsFor(session.id);
+    expect(stored, hasLength(1));
   });
 }
 

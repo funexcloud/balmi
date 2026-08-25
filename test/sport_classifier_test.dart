@@ -15,41 +15,49 @@ void main() {
     );
   }
 
-  test('WALK→RUN requires 15s of speed and cadence', () {
+  test('WALK→RUN after 8s of running speed without cadence', () {
     final c = SportClassifier();
-    for (var i = 0; i < 15; i++) {
-      expect(c.ingest(sample(i)), isNull);
+    for (var i = 0; i < 8; i++) {
+      expect(c.ingest(sample(i, cadence: null)), isNull);
     }
-    expect(c.ingest(sample(15)), Sport.run);
+    expect(c.ingest(sample(8, cadence: null)), Sport.run);
     expect(c.current, Sport.run);
   });
 
-  test('WALK→RUN does not fire without cadence', () {
+  test('WALK→RUN does not fire at walking speed without cadence', () {
     final c = SportClassifier();
     for (var i = 0; i <= 20; i++) {
-      expect(c.ingest(sample(i, cadence: null)), isNull);
+      expect(c.ingest(sample(i, speed: 5, cadence: null)), isNull);
     }
     expect(c.current, Sport.walk);
   });
 
-  test('interrupt before 15s resets walk→run timer', () {
+  test('WALK→RUN from jog cadence at 7 km/h', () {
     final c = SportClassifier();
-    for (var i = 0; i < 10; i++) {
-      expect(c.ingest(sample(i)), isNull);
+    for (var i = 0; i < 8; i++) {
+      expect(c.ingest(sample(i, speed: 7, cadence: 140)), isNull);
     }
-    expect(c.ingest(sample(10, speed: 5, cadence: 90)), isNull);
-    for (var i = 11; i < 25; i++) {
-      expect(c.ingest(sample(i)), isNull);
-    }
-    expect(c.ingest(sample(26)), Sport.run);
+    expect(c.ingest(sample(8, speed: 7, cadence: 140)), Sport.run);
   });
 
-  test('RUN→WALK after 15s of slow speed', () {
-    final c = SportClassifier()..current = Sport.run;
-    for (var i = 0; i < 15; i++) {
-      expect(c.ingest(sample(i, speed: 6, cadence: 110)), isNull);
+  test('interrupt before hold resets walk→run timer', () {
+    final c = SportClassifier();
+    for (var i = 0; i < 4; i++) {
+      expect(c.ingest(sample(i)), isNull);
     }
-    expect(c.ingest(sample(15, speed: 6, cadence: 110)), Sport.walk);
+    expect(c.ingest(sample(4, speed: 5, cadence: 90)), isNull);
+    for (var i = 5; i < 12; i++) {
+      expect(c.ingest(sample(i)), isNull);
+    }
+    expect(c.ingest(sample(13)), Sport.run);
+  });
+
+  test('RUN→WALK after hold of slow speed', () {
+    final c = SportClassifier()..current = Sport.run;
+    for (var i = 0; i < 8; i++) {
+      expect(c.ingest(sample(i, speed: 5, cadence: 110)), isNull);
+    }
+    expect(c.ingest(sample(8, speed: 5, cadence: 110)), Sport.walk);
   });
 
   test('h_acc > 30 holds current sport', () {
@@ -67,7 +75,7 @@ void main() {
     });
     expect(params.walkToRunSpeedKmh, 8);
     expect(params.holdSeconds, 5);
-    expect(params.walkToRunCadenceSpm, 140);
+    expect(params.walkToRunCadenceSpm, 130);
 
     final c = SportClassifier(params: params);
     for (var i = 0; i < 5; i++) {

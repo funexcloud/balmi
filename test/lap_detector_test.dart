@@ -64,6 +64,49 @@ void main() {
       1180,
     );
   });
+
+  test('guessSpec maps 600m stadium loops', () {
+    expect(LapDetector.guessSpecM(620), 600);
+    expect(LapDetector.guessSpecM(400), 400);
+    expect(LapDetector.guessSpecM(1200), isNull);
+  });
+
+  test('600m walk loop auto-counts a lap without locked track mode', () {
+    const startLat = 35.5324;
+    const startLon = 129.2593;
+    const trackM = 600.0;
+    final radiusM = trackM / (2 * math.pi);
+    final detector = LapDetector();
+    final t0 = DateTime.utc(2026, 8, 25, 12);
+    LapEvent? lastLap;
+    const speedMs = 1.4;
+    final seconds = (trackM / speedMs).round() + 8;
+
+    for (var i = 0; i <= seconds; i++) {
+      final dist = speedMs * i;
+      final ang = (dist / trackM) * 2 * math.pi;
+      final north = radiusM * math.cos(ang) - radiusM;
+      final east = radiusM * math.sin(ang);
+      final pos = _offset(startLat, startLon, north, east);
+      final event = detector.ingest(
+        TrackSample(
+          ts: t0.add(Duration(seconds: i)),
+          lat: pos.$1,
+          lon: pos.$2,
+          hAccM: 6,
+        ),
+        countAnyLoop: false,
+      );
+      if (event != null) lastLap = event;
+    }
+
+    expect(detector.calibrating, isFalse);
+    expect(lastLap, isNotNull);
+    expect(lastLap!.lapNo, 1);
+    expect(lastLap.lapDistM, greaterThan(500));
+    expect(lastLap.lapDistM, lessThan(750));
+    expect(detector.isTrackLikeLoop(lastLap.lapDistM), isTrue);
+  });
 }
 
 (double, double) _offset(double lat, double lon, double northM, double eastM) {

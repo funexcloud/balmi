@@ -27,13 +27,11 @@ class SessionDetailScreen extends StatefulWidget {
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Session? _session;
   List<LatLng> _line = [];
+  LatLng? _lastPoint;
   List<Segment> _segments = [];
   List<Lap> _laps = [];
   Duration _walk = Duration.zero;
   Duration _run = Duration.zero;
-  int _totalPoints = 0;
-  int _excluded = 0;
-  DateTime? _lastSynced;
 
   @override
   void initState() {
@@ -47,20 +45,23 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final segs = await repo.segmentsFor(widget.sessionId);
     final laps = await repo.lapsFor(widget.sessionId);
     final durs = await repo.sportDurations(widget.sessionId);
-    final integrity = await repo.integrity(widget.sessionId);
     final pts = await repo.pointsForSession(widget.sessionId);
     final line = traceLineFromPoints(pts);
+    LatLng? last;
+    if (line.isNotEmpty) {
+      last = line.last;
+    } else if (pts.isNotEmpty) {
+      last = LatLng(pts.last.lat, pts.last.lng);
+    }
     if (!mounted) return;
     setState(() {
       _session = session;
       _line = line;
+      _lastPoint = last;
       _segments = segs;
       _laps = laps;
       _walk = durs[Sport.walk] ?? Duration.zero;
       _run = durs[Sport.run] ?? Duration.zero;
-      _totalPoints = integrity.totalPoints;
-      _excluded = integrity.excludedLowQuality;
-      _lastSynced = integrity.lastSyncedAt;
     });
   }
 
@@ -97,19 +98,11 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 const SizedBox(height: 12),
                 SessionTraceMap(
                   points: _line,
-                  lastPoint: _line.isEmpty ? null : _line.last,
+                  lastPoint: _lastPoint,
                   emptyLabel: BalmiCopy.mapEmpty,
+                  fitToPath: true,
                 ),
                 const HeartbeatDivider(),
-                const Icon(Icons.verified_outlined, size: 18, color: BalmiColors.sub),
-                const SizedBox(height: 8),
-                _kv(BalmiCopy.totalPoints, '$_totalPoints'),
-                _kv(BalmiCopy.excludedPoints, '$_excluded'),
-                _kv(
-                  BalmiCopy.lastSynced,
-                  _lastSynced == null ? BalmiCopy.neverSynced : formatDateTime(_lastSynced!),
-                ),
-                const SizedBox(height: 24),
                 ..._segments.map(_segmentTile),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 16),
@@ -129,18 +122,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 ],
               ],
             ),
-    );
-  }
-
-  Widget _kv(String k, String v) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Expanded(child: Text(k, style: BalmiTheme.body(size: 14, color: BalmiColors.sub))),
-          Text(v, style: BalmiTheme.num(size: 15)),
-        ],
-      ),
     );
   }
 

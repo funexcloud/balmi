@@ -59,6 +59,8 @@ class RecordingPipeline {
   double? lastLapTimeS;
   double? _displaySpeedMs;
   int recordingSteps = 0;
+  int movingMs = 0;
+  DateTime? _lastSampleAt;
 
   double walkDistM = 0;
   double runDistM = 0;
@@ -217,57 +219,59 @@ class RecordingPipeline {
         await _addDistance(credited, now);
       }
 
-      if (activity.isAuto && decision.useForSport) {
-        final speedKmh = (_displaySpeedMs ?? 0) * 3.6;
-        final changed = classifier.ingest(
-          SportSample(
-            ts: now,
-            speedKmh: speedKmh,
-            hAccM: fix.hAccM ?? 999,
-            cadenceSpm: lastCadence,
-          ),
+      if (activity.isAuto) {
+        await _maybeSwitchSport(
+          now: now,
+          speedKmh: (_displaySpeedMs ?? 0) * 3.6,
+          hAccM: fix.hAccM ?? 999,
         );
-        if (changed != null) {
-          await repo.splitSegment(
-            sessionId: sessionId,
-            newSport: changed,
-            at: now,
-          );
-        }
       }
 
-      if (trackMode) {
-        final lap = laps.ingest(
-          TrackSample(
-            ts: now,
-            lat: fix.lat,
-            lon: fix.lng,
-            hAccM: fix.hAccM ?? 999,
-            headingDeg: fix.headingDeg,
-            speedMs: _displaySpeedMs,
-          ),
-        );
-        if (lap != null) {
-          final specDist = LapDetector.correctedDistanceM(
+      if (decision.moving ||
+          (decision.filteredSpeedMs != null && decision.filteredSpeedMs! >= 0.4)) {
+        movingMs += _elapsedTickMs(now);
+      }
+
+      final lap = laps.ingest(
+        TrackSample(
+          ts: now,
+          lat: fix.lat,
+          lon: fix.lng,
+          hAccM: fix.hAccM ?? 999,
+          headingDeg: fix.headingDeg,
+          speedMs: _displaySpeedMs,
+        ),
+        countAnyLoop: activity.isTrack,
+      );
+      if (lap != null) {
+        if (!trackMode) {
+          trackMode = true;
+          trackSpecM ??= LapDetector.guessSpecM(lap.lapDistM);
+          await repo.updateTrackMode(
+            sessionId,
+            trackMode: true,
             trackSpecM: trackSpecM,
-            laps: lap.lapNo,
-            gpsDistM: distance.meters,
           );
-          final lapDist = trackSpecM != null && trackSpecM! > 0
-              ? trackSpecM!.toDouble()
-              : lap.lapDistM;
-          await repo.insertLap(
-            sessionId: sessionId,
-            lapNo: lap.lapNo,
-            crossedAt: lap.crossedAt,
-            lapTimeS: lap.lapTimeS,
-            lapDistM: lapDist,
-          );
-          lastLapTts = formatLapTts(lapNo: lap.lapNo, lapTimeS: lap.lapTimeS);
-          lastLapTimeS = lap.lapTimeS;
-          if (trackSpecM != null && trackSpecM! > 0) {
-            distance.meters = specDist;
-          }
+        }
+        final specDist = LapDetector.correctedDistanceM(
+          trackSpecM: trackSpecM,
+          laps: lap.lapNo,
+          gpsDistM: distance.meters,
+        );
+        final lapDist = trackSpecM != null && trackSpecM! > 0
+            ? trackSpecM!.toDouble()
+            : lap.lapDistM;
+        await repo.insertLap(
+          sessionId: sessionId,
+          lapNo: lap.lapNo,
+          crossedAt: lap.crossedAt,
+          lapTimeS: lap.lapTimeS,
+          lapDistM: lapDist,
+        );
+        lastLapTts = formatLapTts(lapNo: lap.lapNo, lapTimeS: lap.lapTimeS);
+        lastLapTimeS = lap.lapTimeS;
+        if (activity.isTrack && trackSpecM != null && trackSpecM! > 0) {
+          distance.meters = specDist;
         }
       }
 
@@ -291,7 +295,16 @@ class RecordingPipeline {
       );
       if (stepM > 0) {
         await _addDistance(stepM, now);
-        _displaySpeedMs = stepM;
+        final dt = _elapsedTickMs(now) / 1000.0;
+        _displaySpeedMs = dt > 0.2 ? stepM / dt : stepM;
+        movingMs += _elapsedTickMs(now);
+        if (activity.isAuto) {
+          await _maybeSwitchSport(
+            now: now,
+            speedKmh: (_displaySpeedMs ?? 0) * 3.6,
+            hAccM: lastFix?.hAccM ?? 15,
+          );
+        }
         await repo.updateDistances(
           sessionId: sessionId,
           totalDistM: distance.meters,
@@ -301,7 +314,37 @@ class RecordingPipeline {
       }
     }
 
+    _lastSampleAt = now;
     return snapshot(now);
+  }
+
+  int _elapsedTickMs(DateTime now) {
+    final prev = _lastSampleAt;
+    if (prev == null) return 0;
+    final ms = now.difference(prev).inMilliseconds;
+    if (ms <= 0) return 0;
+    return ms > 2000 ? 2000 : ms;
+  }
+
+  Future<void> _maybeSwitchSport({
+    required DateTime now,
+    required double speedKmh,
+    required double hAccM,
+  }) async {
+    final changed = classifier.ingest(
+      SportSample(
+        ts: now,
+        speedKmh: speedKmh,
+        hAccM: hAccM,
+        cadenceSpm: lastCadence,
+      ),
+    );
+    if (changed == null) return;
+    await repo.splitSegment(
+      sessionId: sessionId,
+      newSport: changed,
+      at: now,
+    );
   }
 
   Future<void> _addDistance(double meters, DateTime now) async {
@@ -363,6 +406,7 @@ class RecordingPipeline {
       walkDurationMs: (durs[Sport.walk] ?? Duration.zero).inMilliseconds,
       runDurationMs: (durs[Sport.run] ?? Duration.zero).inMilliseconds,
       syncedPoints: synced,
+      movingDurationMs: movingMs,
     );
   }
 }

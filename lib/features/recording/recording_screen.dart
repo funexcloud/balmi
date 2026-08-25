@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
 import '../../core/theme.dart';
+import '../../widgets/activity_circle_picker.dart';
 import '../../widgets/activity_pills.dart';
 import '../../widgets/circle_action.dart';
 import '../../widgets/end_recording_dialog.dart';
@@ -158,11 +159,33 @@ class _RecordingScreenState extends State<RecordingScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      CircleAction(
-                        icon: ActivityPills.iconOf(rec.activity),
-                        label: rec.activity.label,
-                        size: 44,
-                        onTap: () => _tune(rec),
+                      Builder(
+                        builder: (btnCtx) {
+                          return CircleAction(
+                            icon: rec.activity.isAuto
+                                ? ((snap?.sport ?? 'walk') == 'run'
+                                    ? Icons.directions_run
+                                    : Icons.directions_walk)
+                                : ActivityPills.iconOf(rec.activity),
+                            label: rec.activity.isAuto
+                                ? '${BalmiCopy.activityAuto} · ${((snap?.sport ?? 'walk') == 'run') ? BalmiCopy.run : BalmiCopy.walk}'
+                                : rec.activity.label,
+                            size: 44,
+                            onTap: () => _tune(rec),
+                            onLongPress: () async {
+                              final box = btnCtx.findRenderObject() as RenderBox?;
+                              final origin = box?.localToGlobal(
+                                box.size.center(Offset.zero),
+                              );
+                              final picked = await showActivityCirclePicker(
+                                context: context,
+                                selected: rec.activity,
+                                origin: origin,
+                              );
+                              if (picked != null) rec.setActivity(picked);
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -194,6 +217,14 @@ class _RecordingScreenState extends State<RecordingScreen>
           pauseHold: rec.pauseHold,
           altM: rec.liveAlt,
           spark: sparkFromTrail(trail),
+          lapCount: snap?.lapCount ?? 0,
+          trackMode: snap?.trackMode ?? false,
+          showLaps: rec.activity.isAuto || rec.activity.isTrack,
+          liveSport: rec.activity.isAuto
+              ? ((snap?.sport ?? 'walk') == 'run' ? BalmiCopy.run : BalmiCopy.walk)
+              : null,
+          lastLapTimeS: snap?.lastLapTimeS,
+          movingDuration: Duration(milliseconds: snap?.movingDurationMs ?? 0),
           onPause: rec.pause,
           onResume: rec.resumeLive,
           onEnd: () => _confirmEnd(rec),

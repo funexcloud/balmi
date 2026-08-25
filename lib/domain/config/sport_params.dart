@@ -1,10 +1,10 @@
 /// Remote-config-shaped sport hysteresis. Defaults live in code; maps override.
 class SportParams {
   const SportParams({
-    this.walkToRunSpeedKmh = 9.0,
-    this.runToWalkSpeedKmh = 7.0,
-    this.walkToRunCadenceSpm = 140,
-    this.holdSeconds = 15,
+    this.walkToRunSpeedKmh = 8.0,
+    this.runToWalkSpeedKmh = 6.5,
+    this.walkToRunCadenceSpm = 130,
+    this.holdSeconds = 8,
     this.maxHorizontalAccuracyM = 30,
   });
 
@@ -33,10 +33,10 @@ class SportParams {
     }
 
     return SportParams(
-      walkToRunSpeedKmh: asDouble(map['walk_to_run_speed_kmh'], 9.0),
-      runToWalkSpeedKmh: asDouble(map['run_to_walk_speed_kmh'], 7.0),
-      walkToRunCadenceSpm: asDouble(map['walk_to_run_cadence_spm'], 140),
-      holdSeconds: asInt(map['hold_seconds'], 15),
+      walkToRunSpeedKmh: asDouble(map['walk_to_run_speed_kmh'], 8.0),
+      runToWalkSpeedKmh: asDouble(map['run_to_walk_speed_kmh'], 6.5),
+      walkToRunCadenceSpm: asDouble(map['walk_to_run_cadence_spm'], 130),
+      holdSeconds: asInt(map['hold_seconds'], 8),
       maxHorizontalAccuracyM: asDouble(map['max_horizontal_accuracy_m'], 30),
     );
   }

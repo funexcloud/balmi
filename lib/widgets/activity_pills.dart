@@ -83,7 +83,7 @@ class ActivityPills extends StatelessWidget {
   }
 }
 
-/// Compact spec chips under 트랙 — 400 / 300 / 200 / 자유.
+/// Compact spec chips under 트랙 — 400 / 600 / 300 / 자유.
 class TrackSpecPills extends StatelessWidget {
   const TrackSpecPills({
     super.key,
@@ -96,8 +96,8 @@ class TrackSpecPills extends StatelessWidget {
 
   static const _items = <(int?, String)>[
     (400, '400'),
+    (600, '600'),
     (300, '300'),
-    (200, '200'),
     (null, BalmiCopy.specFree),
   ];
 

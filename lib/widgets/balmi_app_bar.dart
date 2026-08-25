@@ -26,7 +26,7 @@ class BalmiAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       titleSpacing: 8,
       title: showWordmark
-          ? const BalmiWordmark(height: 24)
+          ? const BalmiWordmark(height: 32)
           : (title == null || title!.isEmpty)
               ? null
               : Text(

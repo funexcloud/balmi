@@ -83,6 +83,19 @@ class SessionRepository {
     );
   }
 
+  Future<void> updateTrackMode(
+    String sessionId, {
+    required bool trackMode,
+    int? trackSpecM,
+  }) {
+    return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
+      SessionsCompanion(
+        trackMode: Value(trackMode),
+        trackSpecM: Value(trackSpecM),
+      ),
+    );
+  }
+
   Future<void> updateTrackSpec(String sessionId, int? trackSpecM) {
     return (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
       SessionsCompanion(trackSpecM: Value(trackSpecM)),

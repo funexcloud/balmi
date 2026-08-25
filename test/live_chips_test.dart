@@ -1,5 +1,6 @@
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/data/recording/recording_snapshot.dart';
+import 'package:balmi/widgets/status_chips.dart';
 import 'package:balmi/widgets/trust_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,7 +26,8 @@ void main() {
         home: Scaffold(body: TrustHeader(snapshot: snap)),
       ),
     );
-    expect(find.textContaining('GPS'), findsOneWidget);
+    expect(find.textContaining('GPS'), findsNothing);
+    expect(find.byType(GpsSignalBars), findsOneWidget);
     expect(find.text(BalmiCopy.trustAlways), findsNothing);
     expect(find.text(BalmiCopy.deviceSaved), findsNothing);
     expect(find.text(BalmiCopy.syncWaiting), findsNothing);

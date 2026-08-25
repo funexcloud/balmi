@@ -32,10 +32,10 @@ class _AppShellState extends State<AppShell> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(24, 18, 24, 8),
+              padding: EdgeInsets.fromLTRB(24, 14, 24, 6),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: BalmiWordmark(height: 26),
+                child: BalmiWordmark(height: 38),
               ),
             ),
             Expanded(child: _body(rec)),

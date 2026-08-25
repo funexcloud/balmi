@@ -9,6 +9,7 @@ class CircleAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.onLongPress,
     this.filled = false,
     this.size = 52,
   });
@@ -16,8 +17,12 @@ class CircleAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool filled;
   final double size;
+
+  /// Same diameter as the home play control.
+  static const double playSize = 68;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +39,7 @@ class CircleAction extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
+          onLongPress: onLongPress,
           child: SizedBox(
             width: size,
             height: size,

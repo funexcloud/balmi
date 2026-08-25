@@ -77,6 +77,8 @@ abstract final class BalmiCopy {
   static const statDistance = '거리';
   static const statTime = '시간';
   static const statSpeed = '속도';
+  static const statLaps = '트랙';
+  static const mapCredit = '지도 © OpenStreetMap 기여자';
   static const finishAuto = '결승선 자동 감지';
   static const lastLap = '최근 랩';
   static const deviceSaved = '기기 저장';
@@ -174,7 +176,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.8';
+  static const versionLabel = '0.1.10';
 
   static String gpsStrength(String code) {
     switch (code) {

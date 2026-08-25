@@ -110,30 +110,88 @@ class RecordingStatusChips extends StatelessWidget {
     final s = snapshot;
     final points = s?.pointCount ?? 0;
     final strength = s?.gpsStrength ?? 'none';
-    final gpsLabel = waiting && points == 0
-        ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
-        : BalmiCopy.gpsChip(strength);
     final pulse = points == 0 || strength == 'strong' || strength == 'ok';
     final acc = s?.hAccM;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PulseDot(pulse: pulse),
-          Text(
-            acc == null ? gpsLabel : '$gpsLabel  ±${acc.round()}m',
-            style: BalmiTheme.body(size: 11, color: BalmiColors.ink),
-          ),
-        ],
+    return Semantics(
+      label: waiting && points == 0
+          ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
+          : acc == null
+              ? '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(strength)}'
+              : '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(strength)} ±${acc.round()}m',
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PulseDot(pulse: pulse),
+            GpsSignalBars(
+              strength: waiting && points == 0 ? 'none' : strength,
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Wifi-style GPS strength. Accuracy stays in semantics, not chrome text.
+class GpsSignalBars extends StatelessWidget {
+  const GpsSignalBars({super.key, required this.strength});
+
+  final String strength;
+
+  int get _filled => switch (strength) {
+        'strong' => 4,
+        'ok' => 3,
+        'weak' => 2,
+        'poor' => 1,
+        _ => 0,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 22,
+      height: 16,
+      child: CustomPaint(
+        painter: _GpsBarsPainter(filled: _filled),
+      ),
+    );
+  }
+}
+
+class _GpsBarsPainter extends CustomPainter {
+  const _GpsBarsPainter({required this.filled});
+
+  final int filled;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const n = 4;
+    final gap = size.width * 0.12;
+    final w = (size.width - gap * (n - 1)) / n;
+    for (var i = 0; i < n; i++) {
+      final h = size.height * ((i + 1) / n);
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(i * (w + gap), size.height - h, w, h),
+        const Radius.circular(1.6),
+      );
+      canvas.drawRRect(
+        rect,
+        Paint()
+          ..color = i < filled ? BalmiColors.ink : BalmiColors.line
+          ..style = PaintingStyle.fill,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GpsBarsPainter old) => old.filled != filled;
 }
 
 class SportPill extends StatelessWidget {

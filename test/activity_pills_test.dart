@@ -41,8 +41,9 @@ void main() {
       ),
     );
     expect(find.text('400'), findsOneWidget);
+    expect(find.text('600'), findsOneWidget);
     expect(find.text('300'), findsOneWidget);
-    expect(find.text('200'), findsOneWidget);
+    expect(find.text('200'), findsNothing);
     expect(find.text('자유'), findsOneWidget);
     expect(find.byType(DropdownButtonFormField<int?>), findsNothing);
 
