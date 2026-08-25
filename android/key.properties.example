@@ -1,0 +1,6 @@
+# Copy to key.properties for local release builds.
+# The committed key.properties + keystore/ are used for consistent GitHub APK signing.
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=balmi
+storeFile=keystore/balmi-upload.jks

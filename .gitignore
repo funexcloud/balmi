@@ -53,6 +53,10 @@ app.*.map.json
 *.keystore
 *.jks
 key.properties
+# Committed upload keystore keeps GitHub APK signatures consistent across machines.
+!android/keystore/
+!android/keystore/balmi-upload.jks
+!android/key.properties
 android/local.properties
 android/.gradle/
 
