@@ -21,4 +21,22 @@ void main() {
     expect(find.text(BalmiCopy.todaySteps), findsOneWidget);
     expect(find.text('8420'), findsOneWidget);
   });
+
+  testWidgets('TodayStepsCard shows compact steps without workout extras', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TodayStepsCard(
+            stepLabel: BalmiCopy.todaySteps,
+            steps: 21076,
+            stepGoal: 10000,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(BalmiCopy.todaySteps), findsOneWidget);
+    expect(find.text('21076'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+  });
 }

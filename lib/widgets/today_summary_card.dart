@@ -12,6 +12,8 @@ class TodayHero extends StatelessWidget {
     required this.stepLabel,
     required this.steps,
     this.stepGoal,
+    this.compact = false,
+    this.showWorkoutExtras = true,
   });
 
   final PeriodStats stats;
@@ -19,42 +21,57 @@ class TodayHero extends StatelessWidget {
   final int steps;
   final int? stepGoal;
 
+  /// Smaller type for half-width home row.
+  final bool compact;
+
+  /// When false, only steps + goal (no km / duration line).
+  final bool showWorkoutExtras;
+
   @override
   Widget build(BuildContext context) {
     final goal = stepGoal;
     final hasGoal = goal != null && goal > 0;
     final ratio = hasGoal ? (steps / goal).clamp(0.0, 1.0) : null;
+    final numSize = compact ? 36.0 : 56.0;
+    final labelSize = compact ? 12.0 : 13.0;
     return Semantics(
       label: '$stepLabel $steps'
           '${hasGoal ? ' / $goal' : ''}'
-          '${stats.isEmpty ? '' : ' ${formatKm(stats.distM)}km ${formatElapsed(stats.duration)}'}',
+          '${!showWorkoutExtras || stats.isEmpty ? '' : ' ${formatKm(stats.distM)}km ${formatElapsed(stats.duration)}'}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             stepLabel,
-            style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+            style: BalmiTheme.body(
+              size: labelSize,
+              weight: FontWeight.w800,
+              color: BalmiColors.sub,
+            ),
           ),
-          const SizedBox(height: 4),
-          Text('$steps', style: BalmiTheme.num(size: 56)),
+          SizedBox(height: compact ? 6 : 4),
+          Text('$steps', style: BalmiTheme.num(size: numSize)),
           if (hasGoal) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: compact ? 8 : 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: ratio,
-                minHeight: 6,
+                minHeight: compact ? 5 : 6,
                 color: BalmiColors.potato,
                 backgroundColor: BalmiColors.line,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: compact ? 6 : 6),
             Text(
               '${formatSteps(steps)} / ${formatSteps(goal)}',
-              style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+              style: BalmiTheme.body(
+                size: compact ? 11 : 13,
+                color: BalmiColors.sub,
+              ),
             ),
           ],
-          if (!stats.isEmpty) ...[
+          if (showWorkoutExtras && !stats.isEmpty) ...[
             const SizedBox(height: 6),
             Row(
               children: [
@@ -65,6 +82,37 @@ class TodayHero extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Home half-width card: 오늘 걸음 count + goal progress.
+class TodayStepsCard extends StatelessWidget {
+  const TodayStepsCard({
+    super.key,
+    required this.stepLabel,
+    required this.steps,
+    this.stepGoal,
+  });
+
+  final String stepLabel;
+  final int steps;
+  final int? stepGoal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BalmiTheme.card(),
+      child: TodayHero(
+        stats: summarizeEmpty,
+        stepLabel: stepLabel,
+        steps: steps,
+        stepGoal: stepGoal,
+        compact: true,
+        showWorkoutExtras: false,
       ),
     );
   }

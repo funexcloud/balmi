@@ -129,17 +129,28 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             children: [
-              TodayHero(
-                steps: steps.displaySteps,
-                stepLabel: steps.label,
-                stats: _today,
-                stepGoal: stepGoal.goal,
-              ),
-              const SizedBox(height: 12),
-              TodayExerciseCard(
-                stats: _today,
-                exerciseMinutes: stepGoal.exerciseMinutes,
-                exerciseKm: stepGoal.exerciseKm,
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: TodayStepsCard(
+                        steps: steps.displaySteps,
+                        stepLabel: steps.label,
+                        stepGoal: stepGoal.goal,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TodayExerciseCard(
+                        stats: _today,
+                        exerciseMinutes: stepGoal.exerciseMinutes,
+                        exerciseKm: stepGoal.exerciseKm,
+                        compact: true,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               FarmStatusCard(

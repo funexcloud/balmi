@@ -11,11 +11,15 @@ class TodayExerciseCard extends StatelessWidget {
     required this.stats,
     required this.exerciseMinutes,
     required this.exerciseKm,
+    this.compact = false,
   });
 
   final PeriodStats stats;
   final int exerciseMinutes;
   final double exerciseKm;
+
+  /// Tighter padding / type for half-width home row.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -24,31 +28,39 @@ class TodayExerciseCard extends StatelessWidget {
       exerciseMinutes: exerciseMinutes,
       exerciseKm: exerciseKm,
     );
+    final pad = compact ? 14.0 : 18.0;
     return Semantics(
       label: stats.isEmpty
           ? '${BalmiCopy.todayExercise}. ${BalmiCopy.todayEmpty}'
           : '${BalmiCopy.todayExercise} ${_minutesLine(progress)} ${_kmLine(progress)}',
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+        padding: EdgeInsets.fromLTRB(pad, pad, pad, pad),
         decoration: BalmiTheme.card(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               BalmiCopy.todayExercise,
-              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+              style: BalmiTheme.body(
+                size: compact ? 12 : 15,
+                weight: FontWeight.w800,
+                color: BalmiColors.sub,
+              ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: compact ? 8 : 10),
             if (stats.isEmpty)
               Text(
                 BalmiCopy.todayEmpty,
-                style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                style: BalmiTheme.body(
+                  size: compact ? 12 : 13,
+                  color: BalmiColors.sub,
+                ),
               )
             else ...[
               if (stats.sessions > 1)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(bottom: compact ? 6 : 8),
                   child: Text(
                     '${stats.sessions}회',
                     style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
@@ -58,12 +70,14 @@ class TodayExerciseCard extends StatelessWidget {
                 icon: Icons.timer_outlined,
                 line: _minutesLine(progress),
                 ratio: progress.minutesRatio,
+                compact: compact,
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: compact ? 8 : 10),
               _GoalTrack(
                 icon: Icons.route_outlined,
                 line: _kmLine(progress),
                 ratio: progress.kmRatio,
+                compact: compact,
               ),
             ],
           ],
@@ -84,11 +98,13 @@ class _GoalTrack extends StatelessWidget {
     required this.icon,
     required this.line,
     required this.ratio,
+    this.compact = false,
   });
 
   final IconData icon;
   final String line;
   final double ratio;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -97,19 +113,24 @@ class _GoalTrack extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: BalmiColors.potato),
+            Icon(icon, size: compact ? 14 : 16, color: BalmiColors.potato),
             const SizedBox(width: 6),
             Expanded(
-              child: Text(line, style: BalmiTheme.num(size: 16)),
+              child: Text(
+                line,
+                style: BalmiTheme.num(size: compact ? 13 : 16),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: compact ? 5 : 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: ratio,
-            minHeight: 5,
+            minHeight: compact ? 4 : 5,
             color: BalmiColors.potato,
             backgroundColor: BalmiColors.line,
           ),
