@@ -28,42 +28,51 @@ class _AppShellState extends State<AppShell> {
     // Floating dock overlays the bottom; pad the body by [BalmiDock.extent]
     // so recording sheets / CTAs lay out above it instead of under it.
     final dockExtent = BalmiDock.extent(context);
+    final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: BalmiColors.paper,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 14, 24, 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: BalmiWordmark(height: 38),
+    return Theme(
+      data: theme.copyWith(
+        snackBarTheme: theme.snackBarTheme.copyWith(
+          behavior: SnackBarBehavior.floating,
+          insetPadding: EdgeInsets.fromLTRB(16, 8, 16, dockExtent + 8),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: BalmiColors.paper,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 14, 24, 6),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: BalmiWordmark(height: 38),
+                ),
               ),
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: dockExtent),
-                      child: _body(rec),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: dockExtent),
+                        child: _body(rec),
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: BalmiDock(
-                      index: _tab,
-                      onChanged: (i) => setState(() => _tab = i),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: BalmiDock(
+                        index: _tab,
+                        onChanged: (i) => setState(() => _tab = i),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

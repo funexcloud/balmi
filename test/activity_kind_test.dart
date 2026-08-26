@@ -56,6 +56,8 @@ void main() {
     expect(sheet, contains('BalmiDock.extent'));
     expect(sheet, contains('dockClearance'));
     expect(sheet, contains('Colors.transparent'));
+    expect(sheet, contains('balmi-sheet-dock-cover'));
+    expect(sheet, contains('useRootNavigator: true'));
     final home = File('lib/features/home/home_screen.dart').readAsStringSync();
     expect(home, contains('_pickTrackSpec'));
     expect(home, contains('TrackSpecPills'));
@@ -64,5 +66,13 @@ void main() {
         File('lib/features/recording/recording_screen.dart').readAsStringSync();
     expect(recording, contains('showBalmiSheet'));
     expect(recording, contains('TrackSpecPills'));
+    final share =
+        File('lib/features/share/activity_share_sheet.dart').readAsStringSync();
+    expect(share, contains('showBalmiSheet'));
+    expect(share, isNot(contains('showModalBottomSheet')));
+    final recovery = File('lib/features/activity_recovery/activity_recovery_flow.dart')
+        .readAsStringSync();
+    expect(recovery, contains('showBalmiSheet'));
+    expect(recovery, isNot(contains('showModalBottomSheet')));
   });
 }

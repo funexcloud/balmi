@@ -229,6 +229,10 @@ void main() {
         sheetBox.localToGlobal(Offset(0, sheetBox.size.height)).dy;
     // Sheet bottom must clear the dock band (screenH - dockExtent).
     expect(sheetBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+    expect(
+      find.byKey(const ValueKey('balmi-sheet-dock-cover')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('track spec pills in Balmi sheet clear the dock', (tester) async {
