@@ -14,6 +14,9 @@ import '../../widgets/today_exercise_card.dart';
 import '../session_detail/session_detail_screen.dart';
 import '../settings/step_goal_controller.dart';
 
+/// My Activity: **오늘의 운동** only — never reintroduce home's 오늘 걸음 /
+/// step heroes (`TodayStepsCard` / `TodayHero`) here.
+/// Regression: `test/my_activity_screen_test.dart`.
 class MyActivityScreen extends StatefulWidget {
   const MyActivityScreen({super.key});
 
@@ -60,6 +63,12 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
               onPressed: () => Navigator.of(context).maybePop(),
               icon: const Icon(Icons.arrow_back, color: BalmiColors.ink),
             ),
+            Expanded(
+              child: Text(
+                BalmiCopy.myActivity,
+                style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
+              ),
+            ),
           ],
         ),
         Padding(
@@ -67,6 +76,7 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Intentionally only TodayExerciseCard — not TodayStepsCard / step heroes.
               TodayExerciseCard(
                 stats: todayExercise,
                 exerciseMinutes: stepGoal.exerciseMinutes,
