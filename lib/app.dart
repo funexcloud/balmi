@@ -7,11 +7,13 @@ import 'core/theme.dart';
 import 'data/db/app_database.dart';
 import 'data/notifications/meal_walk_alarms.dart';
 import 'data/repositories/meal_walk_store.dart';
+import 'data/repositories/step_goal_store.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sensors/step_service.dart';
 import 'data/sync/sync_worker.dart';
 import 'features/meal_walk/meal_walk_controller.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/settings/step_goal_controller.dart';
 import 'features/recording/recording_controller.dart';
 import 'features/recovery/recovery_dialog.dart';
 import 'features/session_detail/session_detail_screen.dart';
@@ -35,6 +37,7 @@ class _BalmiAppState extends State<BalmiApp> {
   late final SessionRepository _repo;
   late final RecordingController _recording;
   late final MealWalkController _mealWalk;
+  late final StepGoalController _stepGoal;
   late final StepService _steps;
   late final SyncWorker _sync;
   bool? _onboarded;
@@ -52,7 +55,7 @@ class _BalmiAppState extends State<BalmiApp> {
       recording: _recording,
       alarms: MealWalkAlarms(),
     );
-    _steps = StepService()..start();
+    _steps = StepService(repo: _repo)..start();
     _sync = SyncWorker(_repo)..start();
     _load();
   }
