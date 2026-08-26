@@ -155,8 +155,9 @@ class GpsMotionFilter {
     final jitterR = math.max(h, minMoveM);
     final insideCircle = d < jitterR || d < 0.7 * h;
     final stepping = cadenceSpm != null && cadenceSpm >= lowCadenceSpm;
+    // Instantaneous walk band only — window net can look "walk-like" under
+    // standing GPS zig-zag and must not bypass the standing-cadence freeze.
     final gpsWalk = (derived >= walkFloorMs && derived <= 4.0) ||
-        (windowSp >= walkFloorMs && windowSp <= 4.0) ||
         (dopplerOk && rawSpeedMs >= walkFloorMs && rawSpeedMs <= 4.0);
     final windowStill = _isWindowStill();
 
