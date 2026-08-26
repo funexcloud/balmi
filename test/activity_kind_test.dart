@@ -23,17 +23,20 @@ void main() {
     ]);
   });
 
-  test('home uses single activity circle with long-press picker', () {
+  test('home play-only: long-press picker, track spec in sheet', () {
     final home = File('lib/features/home/home_screen.dart').readAsStringSync();
     expect(home, isNot(contains('SwitchListTile')));
     expect(home, isNot(contains('_trackMode')));
     expect(home, isNot(contains('DropdownButtonFormField')));
     expect(home, isNot(contains('ActivityPills(')));
+    expect(home, isNot(contains('ActivityPills.iconOf')));
     expect(home, contains('showActivityCirclePicker'));
     expect(home, contains('onLongPress'));
     expect(home, contains('TrackSpecPills'));
     expect(home, contains('showBalmiSheet'));
     expect(home, contains('isTrack'));
     expect(home, contains('CircleAction.playSize'));
+    expect(home, contains('Icons.play_arrow'));
+    expect(home, contains('filled: true'));
   });
 }
