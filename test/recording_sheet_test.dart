@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('end dialog asks to finish and warns only when walk is short', (tester) async {
+  testWidgets('end confirm sheet asks to finish and warns only when walk is short', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -22,6 +22,8 @@ void main() {
     expect(find.textContaining('100m'), findsNothing);
     expect(find.text(BalmiCopy.endConfirmBack), findsOneWidget);
     expect(find.text(BalmiCopy.endConfirmYes), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -31,6 +33,67 @@ void main() {
       ),
     );
     expect(find.text(BalmiCopy.endShortWalk), findsNothing);
+  });
+
+  testWidgets('end confirm presents as Balmi sheet above dock, not AlertDialog', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    late double dockExtent;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 48),
+            viewPadding: EdgeInsets.only(bottom: 48),
+          ),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) {
+                dockExtent = BalmiDock.extent(context);
+                return Center(
+                  child: TextButton(
+                    onPressed: () {
+                      EndRecordingDialog.confirm(context, distM: 40);
+                    },
+                    child: const Text('end'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('end'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text(BalmiCopy.endConfirmTitle), findsOneWidget);
+    expect(find.text(BalmiCopy.endShortWalk), findsOneWidget);
+    expect(find.byKey(const ValueKey('balmi-sheet-chrome')), findsOneWidget);
+    expect(find.byKey(const ValueKey('balmi-sheet-dock-cover')), findsOneWidget);
+
+    final back = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    expect(back.onPressed, isNotNull);
+    final yes = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(yes.onPressed, isNotNull);
+
+    final titleBox = tester.renderObject<RenderBox>(find.text(BalmiCopy.endConfirmTitle));
+    final titleBottom = titleBox.localToGlobal(Offset(0, titleBox.size.height)).dy;
+    expect(titleBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+
+    final chrome = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-chrome')),
+    );
+    final chromeBottom = chrome.localToGlobal(Offset(0, chrome.size.height)).dy;
+    expect(chromeBottom, closeTo(844, 1.0));
+
+    await tester.tap(find.text(BalmiCopy.endConfirmBack));
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.endConfirmTitle), findsNothing);
   });
 
   testWidgets('collapsed sheet shows time and distance; pause shows 종료 and 재시작', (tester) async {
@@ -227,8 +290,22 @@ void main() {
     final sheetBox = tester.renderObject<RenderBox>(find.text(sheetLabel));
     final sheetBottom =
         sheetBox.localToGlobal(Offset(0, sheetBox.size.height)).dy;
-    // Sheet bottom must clear the dock band (screenH - dockExtent).
+    // Sheet content must clear the dock band (screenH - dockExtent).
     expect(sheetBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+
+    // Opaque chrome covers the dock — no transparent peek-under gap.
+    final chrome = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-chrome')),
+    );
+    final chromeBottom = chrome.localToGlobal(Offset(0, chrome.size.height)).dy;
+    expect(chromeBottom, closeTo(844, 0.5));
+
+    final cover = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-dock-cover')),
+    );
+    expect(cover.size.height, dockExtent);
+    final coverTop = cover.localToGlobal(Offset.zero).dy;
+    expect(coverTop, greaterThanOrEqualTo(sheetBottom - 0.5));
   });
 
   testWidgets('track spec pills in Balmi sheet clear the dock', (tester) async {
@@ -283,6 +360,12 @@ void main() {
     final pillBottom =
         pillBox.localToGlobal(Offset(0, pillBox.size.height)).dy;
     expect(pillBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+
+    final chrome = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-chrome')),
+    );
+    final chromeBottom = chrome.localToGlobal(Offset(0, chrome.size.height)).dy;
+    expect(chromeBottom, closeTo(844, 0.5));
   });
 }
 
