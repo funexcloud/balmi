@@ -160,6 +160,9 @@ abstract final class BalmiCopy {
   static const sessionLandLoop = '닫힌 루프';
   static const sessionLandCells = '칸';
   static const landEmptyMine = '아직 내 땅이 없어요';
+  static const landRanking = '순위';
+  static const landRankingMe = '나';
+  static const landRankingLocalHint = '기기에 쌓인 면적·칸 기준이에요';
 
   static const shareTitle = '공유하기';
   static const shareSubtitle = '기록을 보내 친구도 balmi를 발견하게 해요.';

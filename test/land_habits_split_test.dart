@@ -10,7 +10,11 @@ void main() {
     expect(land, isNot(contains('landGuide')));
     expect(land, isNot(contains('BalmiCopy.landWalkedPath')));
     expect(land, isNot(contains('BalmiCopy.landGuide')));
+    expect(land, isNot(contains('landTitle')));
+    expect(land, isNot(contains('registryEyebrow')));
     expect(land, contains('landEmptyMine'));
+    expect(land, contains('landRanking'));
+    expect(land, contains('buildLocalLandRanking'));
     expect(farm, isNot(contains('landWalkedPath')));
     expect(farm, isNot(contains('landGuide')));
   });

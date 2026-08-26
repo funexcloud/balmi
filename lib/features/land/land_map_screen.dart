@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../data/map/device_traces.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/engines/land_city.dart';
+import '../../domain/engines/land_ranking.dart';
 import '../../domain/engines/loop_area.dart';
 import '../../domain/engines/session_land_reward.dart';
 import '../../widgets/osm_trace_map.dart';
@@ -22,7 +23,7 @@ void openLandMap(BuildContext context) {
   );
 }
 
-/// 내 땅 — claimed area summary + path map.
+/// 내 땅 — claimed area summary + path map + local ranking below the map.
 /// No walked-path section header and no deed-guide section.
 class LandMapScreen extends StatefulWidget {
   const LandMapScreen({super.key});
@@ -35,6 +36,7 @@ class _LandMapScreenState extends State<LandMapScreen> {
   DeviceTraces _traces = const DeviceTraces(lines: [], loops: [], loopAreaM2: 0);
   var _earnedM2 = 0.0;
   var _cellCount = 0;
+  List<LandRankEntry> _ranking = const [];
   var _loaded = false;
 
   @override
@@ -65,6 +67,11 @@ class _LandMapScreenState extends State<LandMapScreen> {
       _traces = traces;
       _earnedM2 = earned;
       _cellCount = cells.length;
+      _ranking = buildLocalLandRanking(
+        myEarnedM2: earned,
+        myCellCount: cells.length,
+        myName: BalmiCopy.landRankingMe,
+      );
       _loaded = true;
     });
   }
@@ -112,8 +119,9 @@ class _LandMapScreenState extends State<LandMapScreen> {
             ),
           ),
         Expanded(
+          flex: 5,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
               child: !_loaded
@@ -127,6 +135,13 @@ class _LandMapScreenState extends State<LandMapScreen> {
                       fitToPath: _traces.hasLine,
                     ),
             ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: _LandRankingPanel(
+            loaded: _loaded,
+            entries: _ranking,
           ),
         ),
       ],
@@ -155,6 +170,107 @@ class _LandStat extends StatelessWidget {
           style: BalmiTheme.body(size: 20, weight: FontWeight.w800),
         ),
       ],
+    );
+  }
+}
+
+/// Ranking under the map — quiet label, no deed-guide chrome.
+class _LandRankingPanel extends StatelessWidget {
+  const _LandRankingPanel({
+    required this.loaded,
+    required this.entries,
+  });
+
+  final bool loaded;
+  final List<LandRankEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            BalmiCopy.landRanking,
+            style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            BalmiCopy.landRankingLocalHint,
+            style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: !loaded
+                ? const SizedBox.shrink()
+                : ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: entries.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) => _LandRankRow(entry: entries[i]),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LandRankRow extends StatelessWidget {
+  const _LandRankRow({required this.entry});
+
+  final LandRankEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final me = entry.isMe;
+    final area = entry.earnedM2 > 0 ? formatAreaM2(entry.earnedM2) : '—';
+    final cells =
+        entry.cellCount > 0 ? '${entry.cellCount}${BalmiCopy.sessionLandCells}' : '—';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: me
+            ? BalmiColors.potato.withValues(alpha: 0.12)
+            : BalmiColors.mist,
+        borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+        border: me
+            ? Border.all(color: BalmiColors.potato.withValues(alpha: 0.35))
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '${entry.rank}',
+              style: BalmiTheme.num(
+                size: 18,
+                color: me ? BalmiColors.potatoDk : BalmiColors.ink,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              entry.name,
+              style: BalmiTheme.body(
+                size: 15,
+                weight: me ? FontWeight.w800 : FontWeight.w600,
+                color: me ? BalmiColors.potatoDk : BalmiColors.ink,
+              ),
+            ),
+          ),
+          Text(
+            '$area · $cells',
+            style: BalmiTheme.body(
+              size: 13,
+              weight: FontWeight.w700,
+              color: me ? BalmiColors.potatoDk : BalmiColors.sub,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
