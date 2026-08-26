@@ -1,5 +1,6 @@
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/domain/engines/land_city.dart';
+import 'package:balmi/widgets/activity_pills.dart';
 import 'package:balmi/widgets/balmi_dock.dart';
 import 'package:balmi/widgets/circle_action.dart';
 import 'package:balmi/widgets/end_recording_dialog.dart';
@@ -228,6 +229,60 @@ void main() {
         sheetBox.localToGlobal(Offset(0, sheetBox.size.height)).dy;
     // Sheet bottom must clear the dock band (screenH - dockExtent).
     expect(sheetBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+  });
+
+  testWidgets('track spec pills in Balmi sheet clear the dock', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    late double dockExtent;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 48),
+            viewPadding: EdgeInsets.only(bottom: 48),
+          ),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) {
+                dockExtent = BalmiDock.extent(context);
+                return Center(
+                  child: TextButton(
+                    onPressed: () {
+                      showBalmiSheet(
+                        context: context,
+                        builder: (_) => Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                          child: TrackSpecPills(
+                            value: 400,
+                            onChanged: (_) {},
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('pick-track'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('pick-track'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('400'), findsOneWidget);
+    expect(find.text('600'), findsOneWidget);
+    expect(find.text('300'), findsOneWidget);
+
+    final pillBox = tester.renderObject<RenderBox>(find.text('400'));
+    final pillBottom =
+        pillBox.localToGlobal(Offset(0, pillBox.size.height)).dy;
+    expect(pillBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
   });
 }
 
