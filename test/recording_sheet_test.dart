@@ -183,6 +183,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     const sheetLabel = 'activity-sheet-body';
+    late double dockExtent;
     await tester.pumpWidget(
       MaterialApp(
         home: MediaQuery(
@@ -194,6 +195,7 @@ void main() {
           child: Scaffold(
             body: Builder(
               builder: (context) {
+                dockExtent = BalmiDock.extent(context);
                 return Center(
                   child: TextButton(
                     onPressed: () {
@@ -215,13 +217,11 @@ void main() {
       ),
     );
 
+    // 2 + 52 + 48 inset + 12
+    expect(dockExtent, 114);
+
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-
-    final dockExtent = BalmiDock.extent(
-      tester.element(find.text(sheetLabel)),
-    );
-    expect(dockExtent, greaterThan(66));
 
     final sheetBox = tester.renderObject<RenderBox>(find.text(sheetLabel));
     final sheetBottom =
