@@ -32,7 +32,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(BalmiCopy.landEmptyField), findsNothing);
     expect(find.text(BalmiCopy.landWalkHint), findsNothing);
-    expect(find.byType(FarmSpeechBubble), findsNothing);
+    expect(find.text('탭'), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
   });
 
   testWidgets('dismissed tip set stays hidden when farm is rebuilt',
@@ -48,12 +49,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byType(FarmSpeechBubble));
     await tester.pumpAndSettle();
-    expect(find.byType(FarmSpeechBubble), findsNothing);
+    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
 
     await tester.pumpWidget(scene());
     await tester.pumpAndSettle();
-    expect(find.byType(FarmSpeechBubble), findsNothing);
     expect(find.text(BalmiCopy.landEmptyField), findsNothing);
+    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
+    expect(find.text('탭'), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
   });
 
   testWidgets('new tip set shows again after farm state changes',
@@ -69,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byType(FarmSpeechBubble));
     await tester.pumpAndSettle();
-    expect(find.byType(FarmSpeechBubble), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -85,6 +89,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(FarmSpeechBubble), findsOneWidget);
     expect(find.text(BalmiCopy.herdsFed), findsOneWidget);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)).height, greaterThan(0));
   });
 
   testWidgets('speech bubble tap does not open land; scene tap does',
