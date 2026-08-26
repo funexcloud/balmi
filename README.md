@@ -4,7 +4,8 @@
 
 기록이 끊기거나 앱이 죽어도 걸음은 기기에 남습니다.
 
-Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).
+Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).  
+웰니스 확장: **Activity Recovery / 회복 체크** — 스펙 동일 문서의 「Activity Recovery」 절.
 
 ## 다운로드
 

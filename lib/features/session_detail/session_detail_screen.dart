@@ -7,6 +7,7 @@ import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/session_trace_line.dart';
+import '../../data/repositories/activity_recovery_store.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
@@ -14,6 +15,8 @@ import '../../widgets/activity_pills.dart';
 import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
 import '../../widgets/osm_trace_map.dart';
+import '../activity_recovery/activity_recovery_controller.dart';
+import '../activity_recovery/activity_recovery_flow.dart';
 
 class SessionDetailScreen extends StatefulWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -32,6 +35,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   List<Lap> _laps = [];
   Duration _walk = Duration.zero;
   Duration _run = Duration.zero;
+  ActivityRecoveryRecord? _recovery;
 
   @override
   void initState() {
@@ -41,12 +45,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   Future<void> _load() async {
     final repo = context.read<SessionRepository>();
+    final recovery = context.read<ActivityRecoveryController>();
     final session = await repo.sessionById(widget.sessionId);
     final segs = await repo.segmentsFor(widget.sessionId);
     final laps = await repo.lapsFor(widget.sessionId);
     final durs = await repo.sportDurations(widget.sessionId);
     final pts = await repo.pointsForSession(widget.sessionId);
     final line = traceLineFromPoints(pts);
+    final recoveryRow = await recovery.latestForWorkout(widget.sessionId);
     LatLng? last;
     if (line.isNotEmpty) {
       last = line.last;
@@ -62,7 +68,37 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _laps = laps;
       _walk = durs[Sport.walk] ?? Duration.zero;
       _run = durs[Sport.run] ?? Duration.zero;
+      _recovery = recoveryRow;
     });
+  }
+
+  Duration _sessionDuration(Session s) {
+    final end = s.endedAt ?? DateTime.now();
+    final d = end.difference(s.startedAt);
+    return d.isNegative ? Duration.zero : d;
+  }
+
+  double? _avgSpeedKmh(Session s, Duration duration) {
+    final h = duration.inMilliseconds / 3600000.0;
+    if (h <= 0 || s.totalDistM <= 0) return null;
+    return (s.totalDistM / 1000) / h;
+  }
+
+  Future<void> _openRecovery() async {
+    final s = _session;
+    if (s == null) return;
+    final duration = _sessionDuration(s);
+    await openActivityRecoveryFlow(
+      context,
+      workoutSessionId: s.id,
+      activity: ActivityKind.fromWire(s.activity),
+      distanceM: s.totalDistM,
+      duration: duration,
+      avgSpeedKmh: _avgSpeedKmh(s, duration),
+      resumeCheckId: _recovery?.id,
+    );
+    if (!mounted) return;
+    await _load();
   }
 
   @override
@@ -98,6 +134,19 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   '${formatKm(s.totalDistM)} km · ${formatDateTime(s.startedAt)}',
                   style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
                 ),
+                if (s.endedAt != null) ...[
+                  const SizedBox(height: 14),
+                  ActivityRecoveryEntryCard(
+                    workoutSessionId: s.id,
+                    activity: ActivityKind.fromWire(s.activity),
+                    distanceM: s.totalDistM,
+                    duration: _sessionDuration(s),
+                    avgSpeedKmh: _avgSpeedKmh(s, _sessionDuration(s)),
+                    existingStatus: _recovery?.status,
+                    onStart: _openRecovery,
+                    onContinue: _openRecovery,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 SessionTraceMap(
                   points: _line,
