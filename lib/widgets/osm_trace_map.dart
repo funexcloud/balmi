@@ -95,6 +95,7 @@ class OsmTraceMap extends StatefulWidget {
     this.herds = const [],
     this.onTap,
     this.fitToPath = false,
+    this.preferUserLocation = false,
   });
 
   final DeviceTraces traces;
@@ -105,6 +106,10 @@ class OsmTraceMap extends StatefulWidget {
   final ValueChanged<LatLng>? onTap;
   final bool fitToPath;
 
+  /// When true (map tab "내 주변"), center on [DeviceTraces.lastPoint]
+  /// instead of fitting historical paths — unless a [highlight] is selected.
+  final bool preferUserLocation;
+
   @override
   State<OsmTraceMap> createState() => OsmTraceMapState();
 }
@@ -112,6 +117,9 @@ class OsmTraceMap extends StatefulWidget {
 class OsmTraceMapState extends State<OsmTraceMap> {
   final _map = MapController();
   var _ready = false;
+
+  LatLng get _pinOrCenter =>
+      widget.traces.lastPoint ?? widget.traces.center;
 
   @override
   void didUpdateWidget(covariant OsmTraceMap oldWidget) {
@@ -126,6 +134,20 @@ class OsmTraceMapState extends State<OsmTraceMap> {
       }
       return;
     }
+    if (widget.preferUserLocation) {
+      final highlightChanged = oldWidget.highlight != widget.highlight;
+      final pinAppeared =
+          oldWidget.traces.lastPoint == null && widget.traces.lastPoint != null;
+      final pinMoved = oldWidget.traces.lastPoint != widget.traces.lastPoint &&
+          widget.traces.lastPoint != null &&
+          oldWidget.highlight == widget.highlight;
+      if (highlightChanged || pinAppeared) {
+        _fit();
+      } else if (pinMoved && widget.highlight == null) {
+        recenterOnUser();
+      }
+      return;
+    }
     final hadPin = oldWidget.traces.lastPoint != null;
     final hasPin = widget.traces.lastPoint != null;
     if (!hadPin && hasPin) recenterOnUser();
@@ -133,8 +155,7 @@ class OsmTraceMapState extends State<OsmTraceMap> {
 
   void recenterOnUser() {
     if (!_ready) return;
-    final pin = widget.traces.lastPoint ?? widget.traces.center;
-    _map.move(pin, 16);
+    _map.move(_pinOrCenter, 16);
   }
 
   void resetNorth() {
@@ -144,6 +165,21 @@ class OsmTraceMapState extends State<OsmTraceMap> {
 
   void _fit() {
     final focus = widget.highlight;
+    if (widget.preferUserLocation) {
+      if (focus != null && focus.length >= 2) {
+        _map.fitCamera(
+          CameraFit.bounds(
+            bounds: LatLngBounds.fromPoints(focus),
+            padding: const EdgeInsets.all(36),
+          ),
+        );
+        return;
+      }
+      if (widget.traces.lastPoint != null) {
+        _map.move(widget.traces.lastPoint!, 16);
+        return;
+      }
+    }
     final pts = <LatLng>[
       if (focus != null && focus.length >= 2) ...focus,
       if (focus == null)
@@ -153,7 +189,7 @@ class OsmTraceMapState extends State<OsmTraceMap> {
       for (final h in widget.herds) h.point,
     ];
     if (pts.length < 2) {
-      final pin = widget.traces.lastPoint ?? widget.traces.center;
+      final pin = _pinOrCenter;
       _map.move(pin, widget.traces.lastPoint != null ? 16 : 11);
       return;
     }
@@ -168,13 +204,20 @@ class OsmTraceMapState extends State<OsmTraceMap> {
   @override
   Widget build(BuildContext context) {
     final highlight = widget.highlight;
+    final initial = widget.preferUserLocation && widget.traces.lastPoint != null
+        ? widget.traces.lastPoint!
+        : widget.traces.center;
+    final initialZoom =
+        widget.preferUserLocation && widget.traces.lastPoint != null
+            ? 16.0
+            : (widget.traces.hasLine ? 14.0 : 11.0);
     return Stack(
       children: [
         FlutterMap(
           mapController: _map,
           options: MapOptions(
-            initialCenter: widget.traces.center,
-            initialZoom: widget.traces.hasLine ? 14 : 11,
+            initialCenter: initial,
+            initialZoom: initialZoom,
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.all,
             ),

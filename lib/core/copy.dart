@@ -82,6 +82,14 @@ abstract final class BalmiCopy {
   static const crewLater = '크루 랭킹은 나중에';
   static const landOnMapHint = '등기(내 땅)는 2차 기능입니다';
   static const mapEmpty = '아직 기기에 저장된 경로가 없어요';
+  static const mapLocationOff =
+      '위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 눌러 주세요.';
+  static const mapLocationDenied =
+      '위치 권한이 없어 내 주변을 보여줄 수 없어요. 정확한 위치를 허용해 주세요.';
+  static const mapLocationDeniedForever =
+      '위치 권한이 거부되어 있어요. 앱 설정에서 위치를 허용한 뒤 다시 눌러 주세요.';
+  static const mapWaitingLocation = '내 위치를 찾는 중…';
+  static const mapLocationUnavailable = '지금 위치를 찾지 못했어요. 잠시 후 다시 눌러 주세요.';
   static const createEvent = '대회 만들기';
   static const eventOpen = '진행 중';
   static const eventClosed = '종료';
