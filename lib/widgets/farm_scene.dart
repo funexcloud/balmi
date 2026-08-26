@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../core/copy.dart';
 import '../core/theme.dart';
+import '../domain/engines/farm_captions.dart';
 import '../domain/engines/farm_life.dart';
 import '../domain/engines/farm_time_of_day.dart';
 import '../domain/engines/land_city.dart';
+import 'farm_speech_bubble.dart';
 
 const farmWaterDuration = Duration(milliseconds: 900);
 
@@ -23,6 +25,7 @@ class FarmScene extends StatefulWidget {
     this.onWateringComplete,
     this.nowOverride,
     this.latitude,
+    this.showSpeechCaptions = true,
   });
 
   final List<FarmKind> buildings;
@@ -37,6 +40,9 @@ class FarmScene extends StatefulWidget {
 
   /// Optional latitude from last GPS fix; defaults to central Korea.
   final double? latitude;
+
+  /// Home / preview captions as one-sentence speech bubbles (tap to advance).
+  final bool showSpeechCaptions;
 
   @override
   State<FarmScene> createState() => _FarmSceneState();
@@ -158,6 +164,8 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       label: semanticsLabel,
       child: SizedBox(
         height: widget.height,
@@ -180,30 +188,17 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
                   );
                 },
               ),
-              if (_emptyYard)
+              if (widget.showSpeechCaptions)
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          BalmiCopy.landEmptyField,
-                          textAlign: TextAlign.center,
-                          style: BalmiTheme.body(
-                            size: 14,
-                            weight: FontWeight.w800,
-                            color: BalmiColors.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          BalmiCopy.landWalkHint,
-                          textAlign: TextAlign.center,
-                          style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-                        ),
-                      ],
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                    child: FarmSpeechBubble(
+                      lines: farmHomeCaptionLines(
+                        buildings: widget.buildings,
+                        herds: widget.herds,
+                        caredToday: widget.caredToday,
+                      ),
                     ),
                   ),
                 ),

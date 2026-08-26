@@ -53,6 +53,8 @@ class FarmSceneV2 extends StatelessWidget {
               height: height,
               watering: watering,
               onWateringComplete: onWateringComplete,
+              // Land preview keeps its own status line below the scene.
+              showSpeechCaptions: false,
             ),
             ...snapshot.slots.map((slot) => _SlotAnchor(
                   slot: slot,

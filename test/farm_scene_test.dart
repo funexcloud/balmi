@@ -14,8 +14,9 @@ void main() {
         ),
       ),
     );
+    // One sentence at a time in the speech bubble.
     expect(find.text(BalmiCopy.landEmptyField), findsOneWidget);
-    expect(find.text(BalmiCopy.landWalkHint), findsOneWidget);
+    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
     expect(find.text(BalmiCopy.landNoPath), findsNothing);
     expect(find.byType(CustomPaint), findsWidgets);
   });
