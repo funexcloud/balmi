@@ -1,3 +1,4 @@
+import '../../core/copy.dart';
 import '../models/farm/animal.dart';
 import '../models/farm/farm_tier.dart';
 
@@ -123,11 +124,13 @@ int animalStageAfterFeed({
 String animalStatusLine({
   required AnimalDefinition animal,
   required AnimalStatus status,
+  int cumulativeFeed = 0,
 }) {
   return switch (status.state) {
     AnimalYieldState.growing => animalGrowingStatusLine(
         animal: animal,
         stageIndex: status.stageIndex,
+        cumulativeFeed: cumulativeFeed,
       ),
     AnimalYieldState.readyYield => '${animal.nameKr} · 산출물을 받을 수 있어요',
     AnimalYieldState.cooldown =>
@@ -139,14 +142,24 @@ String animalStatusLine({
 }
 
 /// Growth copy without opaque feed totals (e.g. old 「사료 400까지」).
+///
+/// Causal order: stage-0 start beat (egg / birth) before any grow copy.
 String animalGrowingStatusLine({
   required AnimalDefinition animal,
   required int stageIndex,
+  int cumulativeFeed = 0,
 }) {
   final stage = animal.stageAt(stageIndex);
   final name = stage?.stageName ?? '';
   if (name == '계란' || name == '품는 중' || name == '알') {
-    return '계란을 품고 있어요';
+    return BalmiCopy.farmBirthChickenEgg;
+  }
+  // Sheep/cow: birth toast while still at stage 0 with no feed yet.
+  if (stageIndex == 0 && cumulativeFeed == 0) {
+    if (animal.animalId.contains('sheep')) return BalmiCopy.farmBirthSheep;
+    if (animal.animalId.contains('cow') || animal.animalId.contains('cattle')) {
+      return BalmiCopy.farmBirthCow;
+    }
   }
   if (name == '병아리') {
     return '${animal.nameKr} · 병아리가 자라고 있어요';
@@ -167,12 +180,15 @@ String animalGrowingStatusLine({
 }
 
 /// Toast / snackbar after adopting into an empty livestock slot.
+/// Always the species start beat — never a later grow/adult line.
 String farmAdoptedCopy(AnimalDefinition animal) {
   if (animal.startsAsEgg || animal.animalId.contains('chicken')) {
-    return '계란을 품고 있어요';
+    return BalmiCopy.farmBirthChickenEgg;
   }
-  if (animal.animalId.contains('sheep')) return '양이 태어났어요!';
-  if (animal.animalId.contains('cow')) return '송아지가 태어났어요!';
+  if (animal.animalId.contains('sheep')) return BalmiCopy.farmBirthSheep;
+  if (animal.animalId.contains('cow') || animal.animalId.contains('cattle')) {
+    return BalmiCopy.farmBirthCow;
+  }
   return '${animal.nameKr} 한 마리를 입양했어요';
 }
 

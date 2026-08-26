@@ -125,8 +125,23 @@ void main() {
         now: DateTime(2026, 8, 26),
       );
       expect(young.state, AnimalYieldState.growing);
-      expect(animalGrowingStatusLine(animal: sheep, stageIndex: 0),
-          '양 · 새끼양이 자라고 있어요');
+      // Stage 0 / no feed: birth beat first — not grow copy.
+      expect(
+        animalGrowingStatusLine(
+          animal: sheep,
+          stageIndex: 0,
+          cumulativeFeed: 0,
+        ),
+        BalmiCopy.farmBirthSheep,
+      );
+      expect(
+        animalGrowingStatusLine(
+          animal: sheep,
+          stageIndex: 0,
+          cumulativeFeed: 20,
+        ),
+        '양 · 새끼양이 자라고 있어요',
+      );
       expect(farmAdoptedCopy(sheep), BalmiCopy.farmBirthSheep);
 
       expect(
@@ -151,8 +166,22 @@ void main() {
       final cow = cowDef();
       expect(cow.nameKr, '소');
       expect(cow.startsAsYoung, isTrue);
-      expect(animalGrowingStatusLine(animal: cow, stageIndex: 0),
-          '소 · 송아지가 자라고 있어요');
+      expect(
+        animalGrowingStatusLine(
+          animal: cow,
+          stageIndex: 0,
+          cumulativeFeed: 0,
+        ),
+        BalmiCopy.farmBirthCow,
+      );
+      expect(
+        animalGrowingStatusLine(
+          animal: cow,
+          stageIndex: 0,
+          cumulativeFeed: 20,
+        ),
+        '소 · 송아지가 자라고 있어요',
+      );
       expect(farmAdoptedCopy(cow), BalmiCopy.farmBirthCow);
     });
 

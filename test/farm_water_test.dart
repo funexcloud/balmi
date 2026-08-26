@@ -28,7 +28,7 @@ void main() {
         qualifyingSessionsToday: 1,
         buildings: const [FarmKind.pastureFence],
       ).progressLine,
-      '물 3회 · 다음 물 주면 양 한 마리',
+      '물 3회 · 다음 물 주면 양이 태어났어요!',
     );
     expect(
       evaluateWater(
@@ -38,7 +38,7 @@ void main() {
         buildings: const [FarmKind.pastureFence],
         herds: const [HerdKind.sheep],
       ).progressLine,
-      '물 4회 · 다음 물 주면 양 한 마리',
+      '물 4회 · 다음 물 주면 양이 태어났어요!',
     );
   });
 

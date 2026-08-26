@@ -74,7 +74,11 @@ String? primaryFarmStatusLine({
       };
       if (score > bestScore) {
         bestScore = score;
-        best = animalStatusLine(animal: animal, status: status);
+        best = animalStatusLine(
+          animal: animal,
+          status: status,
+          cumulativeFeed: occ.cumulativeFeed,
+        );
       }
     }
   }

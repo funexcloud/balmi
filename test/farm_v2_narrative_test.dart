@@ -104,7 +104,7 @@ void main() {
       expect(chicken.stageAt(3)?.stageName, '암탉');
     });
 
-    test('adopt / incubating status says 계란을 품고 있어요', () {
+    test('adopt / incubating status says 계란을 품고 있어요!', () {
       final egg = evaluateAnimal(
         animal: chicken,
         cumulativeFeed: 0,
@@ -114,7 +114,7 @@ void main() {
         now: DateTime(2026, 8, 26, 12),
       );
       expect(egg.state, AnimalYieldState.growing);
-      expect(animalStatusLine(animal: chicken, status: egg), '계란을 품고 있어요');
+      expect(animalStatusLine(animal: chicken, status: egg), '계란을 품고 있어요!');
 
       final incubating = evaluateAnimal(
         animal: chicken,
@@ -127,7 +127,7 @@ void main() {
       expect(incubating.stageIndex, 1);
       expect(
         animalStatusLine(animal: chicken, status: incubating),
-        '계란을 품고 있어요',
+        '계란을 품고 있어요!',
       );
     });
 
@@ -193,11 +193,11 @@ void main() {
     });
 
     test('toast / BalmiCopy adopt + plant match story beats', () {
-      expect(BalmiCopy.farmV2Adopted, '계란을 품고 있어요');
+      expect(BalmiCopy.farmV2Adopted, '계란을 품고 있어요!');
       expect(BalmiCopy.farmV2Planted, '씨앗을 뿌렸어요!');
       expect(BalmiCopy.farmBirthSheep, '양이 태어났어요!');
       expect(BalmiCopy.farmBirthCow, '송아지가 태어났어요!');
-      expect(BalmiCopy.farmBirthChickenEgg, '계란을 품고 있어요');
+      expect(BalmiCopy.farmBirthChickenEgg, '계란을 품고 있어요!');
       expect(BalmiCopy.farmBirthCropSeed, '씨앗을 뿌렸어요!');
     });
   });
@@ -206,7 +206,7 @@ void main() {
     test('herd water-raise toasts', () {
       expect(farmBirthToastForHerd(HerdKind.sheep), '양이 태어났어요!');
       expect(farmBirthToastForHerd(HerdKind.cattle), '송아지가 태어났어요!');
-      expect(farmBirthToastForHerd(HerdKind.chicken), '계란을 품고 있어요');
+      expect(farmBirthToastForHerd(HerdKind.chicken), '계란을 품고 있어요!');
       expect(farmBirthToastForHerd(HerdKind.garden), '씨앗을 뿌렸어요!');
     });
 
@@ -215,7 +215,7 @@ void main() {
       expect(farmBirthToastForAnimalId('animal_cow_01'), '송아지가 태어났어요!');
       expect(
         farmBirthToastForAnimalId('animal_chicken_01'),
-        '계란을 품고 있어요',
+        '계란을 품고 있어요!',
       );
       expect(farmBirthToastForCrop(), '씨앗을 뿌렸어요!');
     });
@@ -296,14 +296,14 @@ void main() {
       );
       expect(farmAdoptedCopy(sheep), '양이 태어났어요!');
       expect(farmAdoptedCopy(cow), '송아지가 태어났어요!');
-      expect(farmAdoptedCopy(starterChicken()), '계란을 품고 있어요');
+      expect(farmAdoptedCopy(starterChicken()), '계란을 품고 있어요!');
     });
   });
 
   group('crop seed narrative', () {
     final carrot = starterCarrot();
 
-    test('just-planted status is 씨앗을 뿌렸어요', () {
+    test('just-planted status is 씨앗을 뿌렸어요!', () {
       expect(
         cropStatusLine(
           crop: carrot,
@@ -312,7 +312,7 @@ void main() {
           currentStageIndex: 0,
           isDormant: false,
         ),
-        '씨앗을 뿌렸어요',
+        '씨앗을 뿌렸어요!',
       );
     });
 
@@ -354,8 +354,100 @@ void main() {
         currentStageIndex: 0,
         isDormant: false,
       );
-      expect(line, isNot(equals('씨앗을 뿌렸어요')));
+      expect(line, isNot(equals('씨앗을 뿌렸어요!')));
       expect(line, contains('물'));
+    });
+  });
+
+  group('causal order: stage-0 / first toast before later beats', () {
+    test('crop never shows grow/harvest before plant toast', () {
+      final carrot = starterCarrot();
+      final planted = cropStatusLine(
+        crop: carrot,
+        cumulativeWater: 0,
+        cumulativeNutrient: 0,
+        currentStageIndex: 0,
+        isDormant: false,
+      );
+      expect(planted, BalmiCopy.farmV2Planted);
+      expect(planted, isNot(contains('잘 자라고')));
+      expect(planted, isNot(contains('수확')));
+    });
+
+    test('chicken stage 0 status matches first toast, not chick/hen', () {
+      final chicken = starterChicken();
+      final egg = evaluateAnimal(
+        animal: chicken,
+        cumulativeFeed: 0,
+        currentStageIndex: 0,
+        lastYieldAt: null,
+        isDormant: false,
+        now: DateTime(2026, 8, 26, 12),
+      );
+      final line = animalStatusLine(
+        animal: chicken,
+        status: egg,
+        cumulativeFeed: 0,
+      );
+      expect(line, BalmiCopy.farmV2Adopted);
+      expect(line, isNot(contains('병아리')));
+      expect(line, isNot(contains('암탉')));
+      expect(farmAdoptedCopy(chicken), BalmiCopy.farmV2Adopted);
+    });
+
+    test('sheep/cow stage 0 no-feed is birth toast before grow', () {
+      final sheep = AnimalDefinition(
+        animalId: 'animal_sheep_01',
+        nameKr: '양',
+        tier: FarmTier.common,
+        unlockType: UnlockType.level,
+        unlockValue: 5,
+        hexTileRequirement: 2,
+        yieldType: YieldType.wool,
+        feedPerCycle: 100,
+        cooldownHours: 24,
+        starvationGraceDays: 3,
+        rewardCoin: 60,
+        rewardXp: 40,
+        growthStages: const [
+          AnimalStage(
+            stageIndex: 0,
+            stageName: '새끼양',
+            feedThreshold: 0,
+            spriteAssetKey: 'animal/sheep/stage_0',
+          ),
+          AnimalStage(
+            stageIndex: 1,
+            stageName: '성장',
+            feedThreshold: 300,
+            spriteAssetKey: 'animal/sheep/stage_1',
+          ),
+        ],
+      );
+      expect(
+        animalGrowingStatusLine(
+          animal: sheep,
+          stageIndex: 0,
+          cumulativeFeed: 0,
+        ),
+        BalmiCopy.farmBirthSheep,
+      );
+      expect(
+        animalGrowingStatusLine(
+          animal: sheep,
+          stageIndex: 0,
+          cumulativeFeed: 10,
+        ),
+        contains('자라고'),
+      );
+      expect(farmAdoptedCopy(sheep), BalmiCopy.farmBirthSheep);
+    });
+
+    test('first toasts never use later-stage adult gift labels', () {
+      expect(farmBirthToastForHerd(HerdKind.sheep), isNot(contains('한 마리')));
+      expect(farmBirthToastForHerd(HerdKind.cattle), isNot(contains('한 마리')));
+      expect(farmBirthToastForHerd(HerdKind.chicken), isNot(contains('한 마리')));
+      expect(farmBirthToastForHerd(HerdKind.garden), BalmiCopy.farmV2Planted);
     });
   });
 }
