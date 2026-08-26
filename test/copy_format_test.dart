@@ -32,7 +32,8 @@ void main() {
         '${BalmiCopy.about} ${BalmiCopy.versionLabel} '
         '${BalmiCopy.mealWalkDiscover} ${BalmiCopy.mealWalkIntro} '
         '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
-        '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge}';
+        '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge} '
+        '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps}';
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
       expect(
@@ -45,6 +46,8 @@ void main() {
     expect(blob, isNot(contains('장례')));
     expect(BalmiCopy.positioning, '잃어버리지 않는 기록');
     expect(BalmiCopy.trustAlways, '통신이 끊겨도 기록은 기기에 전부 저장됩니다');
+    expect(BalmiCopy.todaySteps, '오늘 걸음');
+    expect(BalmiCopy.recordingSteps, '기록 중 걸음');
   });
 
   test('lib / Android / iOS UI sources do not name competitors', () {
