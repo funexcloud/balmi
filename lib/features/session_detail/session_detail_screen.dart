@@ -215,10 +215,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   fitToPath: true,
                 ),
                 const HeartbeatDivider(),
-                ..._segments.asMap().entries.map(
-                  (e) => _segmentTile(e.value, showLand: e.key == 0),
-                ),
-                if (_segments.isEmpty) _landRewardCard(),
+                ..._segments.map(_segmentTile),
+                // Reward summary only — no 「내 땅 보기」 CTA / land-map link.
+                _landRewardSummary(),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   ..._laps.map(
@@ -240,7 +239,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
   }
 
-  Widget _segmentTile(Segment seg, {required bool showLand}) {
+  Widget _segmentTile(Segment seg) {
     final sport = Sport.fromWire(seg.sport);
     final judged = Sport.fromWire(seg.judgedSport);
     return Card(
@@ -255,66 +254,32 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           '${seg.userOverride == 1 ? ' · 수정됨' : ''}',
           style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
         ),
-        trailing: showLand ? _landRewardTrailing() : null,
       ),
     );
   }
 
-  Widget _landRewardCard() {
-    return Card(
-      child: ListTile(
-        title: Text(
-          BalmiCopy.sessionLandReward,
-          style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-        ),
-        trailing: _landRewardTrailing(),
-      ),
-    );
-  }
-
-  Widget _landRewardTrailing() {
-    if (!_land.qualifies) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+  /// Session-earned 내 땅 area — display only, not a land-map entry point.
+  Widget _landRewardSummary() {
+    final value = !_land.qualifies
+        ? BalmiCopy.sessionLandNone
+        : (_land.cellCount > 0
+            ? '+${_land.cellCount}칸 · ${formatAreaM2(_land.earnedM2)}'
+            : formatAreaM2(_land.earnedM2));
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
           Text(
             BalmiCopy.sessionLandReward,
-            style: BalmiTheme.body(
-              size: 13,
-              weight: FontWeight.w800,
-              color: BalmiColors.potato,
-            ),
+            style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
           ),
+          const Spacer(),
           Text(
-            BalmiCopy.sessionLandNone,
-            style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+            value,
+            style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
           ),
         ],
-      );
-    }
-    final subtitle = _land.cellCount > 0
-        ? '+${_land.cellCount}칸 · ${formatAreaM2(_land.earnedM2)}'
-        : formatAreaM2(_land.earnedM2);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          BalmiCopy.sessionLandReward,
-          style: BalmiTheme.body(
-            size: 13,
-            weight: FontWeight.w800,
-            color: BalmiColors.potato,
-          ),
-        ),
-        Text(
-          subtitle,
-          style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
-        ),
-      ],
+      ),
     );
   }
 }
