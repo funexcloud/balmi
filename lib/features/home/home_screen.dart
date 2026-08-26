@@ -10,12 +10,14 @@ import '../../domain/engines/land_city.dart';
 import '../../domain/engines/meal_walk.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
+import '../../widgets/activity_circle_picker.dart';
+import '../../widgets/activity_circle_picker.dart';
+import '../../widgets/activity_circle_picker.dart';
 import '../../widgets/activity_pills.dart';
 import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
 import '../../widgets/today_exercise_card.dart';
 import '../../widgets/today_summary_card.dart';
-import '../health/health_goals_controller.dart';
 import '../land/land_preview_screen.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
@@ -75,6 +77,79 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _pickTrackSpec() async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: TrackSpecPills(
+            value: _specM,
+            onChanged: (v) {
+              setState(() => _specM = v);
+              Navigator.of(ctx).pop();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onLongPressPlay(BuildContext btnCtx) async {
+    final box = btnCtx.findRenderObject() as RenderBox?;
+    final origin = box?.localToGlobal(box.size.center(Offset.zero));
+    final picked = await showActivityCirclePicker(
+      context: context,
+      selected: _activity,
+      origin: origin,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _activity = picked);
+    if (picked.isTrack) await _pickTrackSpec();
+  }
+
+  Future<void> _pickActivity(Offset? origin) async {
+    final picked = await showActivityCirclePicker(
+      context: context,
+      selected: _activity,
+      origin: origin,
+    );
+    if (picked != null && mounted) setState(() => _activity = picked);
+  }
+
+  Future<void> _showTrackSpecSheet() async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: TrackSpecPills(
+            value: _specM,
+            onChanged: (v) {
+              setState(() => _specM = v);
+              Navigator.of(ctx).pop();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showTrackSpecSheet() async {
+    await showBalmiSheet(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: TrackSpecPills(
+            value: _specM,
+            onChanged: (v) => setState(() => _specM = v),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
@@ -104,7 +179,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 stats: _today,
                 stepGoal: stepGoal.goal,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              TodayExerciseCard(
+                stats: _today,
+                exerciseMinutes: stepGoal.exerciseMinutes,
+                exerciseKm: stepGoal.exerciseKm,
+              ),
+              const SizedBox(height: 12),
               FarmStatusCard(
                 buildings: _buildings,
                 herds: _herds,
@@ -143,20 +224,34 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ActivityPills(
-                value: _activity,
-                onChanged: (v) => setState(() => _activity = v),
+              Builder(
+                builder: (btnCtx) {
+                  return CircleAction(
+                    icon: ActivityPills.iconOf(_activity),
+                    label: _activity.label,
+                    size: CircleAction.playSize,
+                    onTap: _activity.isTrack ? _showTrackSpecSheet : () {},
+                    onLongPress: () async {
+                      final box = btnCtx.findRenderObject() as RenderBox?;
+                      final origin = box?.localToGlobal(
+                        box.size.center(Offset.zero),
+                      );
+                      final picked = await showActivityCirclePicker(
+                        context: context,
+                        selected: _activity,
+                        origin: origin,
+                      );
+                      if (picked != null && mounted) {
+                        setState(() => _activity = picked);
+                      }
+                    },
+                  );
+                },
               ),
-              if (_activity.isTrack) ...[
-                const SizedBox(height: 8),
-                TrackSpecPills(
-                  value: _specM,
-                  onChanged: (v) => setState(() => _specM = v),
-                ),
-              ],
-              const SizedBox(height: 10),
+              const SizedBox(width: 12),
               CircleAction(
                 icon: rec.isStarting ? Icons.hourglass_empty : Icons.play_arrow,
                 label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
