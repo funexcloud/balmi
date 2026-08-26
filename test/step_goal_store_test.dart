@@ -30,6 +30,30 @@ void main() {
     expect(await store.loadGoal(), kMinDailyStepGoal);
   });
 
+  test('exercise goals default and persist', () async {
+    expect(await store.loadExerciseMinutes(), kDefaultDailyExerciseMin);
+    expect(await store.loadExerciseKm(), kDefaultDailyExerciseKm);
+
+    await store.saveExerciseMinutes(45);
+    await store.saveExerciseKm(3.5);
+    expect(await store.loadExerciseMinutes(), 45);
+    expect(await store.loadExerciseKm(), closeTo(3.5, 0.01));
+
+    await store.saveExerciseMinutes(999);
+    await store.saveExerciseKm(200);
+    expect(await store.loadExerciseMinutes(), kMaxDailyExerciseMin);
+    expect(await store.loadExerciseKm(), kMaxDailyExerciseKm);
+  });
+
+  test('controller bootstrap loads exercise goals', () async {
+    await store.saveExerciseMinutes(20);
+    await store.saveExerciseKm(1.5);
+    final controller = StepGoalController(store: store);
+    await controller.bootstrap();
+    expect(controller.exerciseMinutes, 20);
+    expect(controller.exerciseKm, closeTo(1.5, 0.01));
+  });
+
   test('controller bootstrap loads saved goal', () async {
     await store.saveGoal(12000);
     final controller = StepGoalController(store: store);

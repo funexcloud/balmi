@@ -1,5 +1,4 @@
 import '../models/activity.dart';
-import '../models/health_goals.dart';
 
 class WorkoutRow {
   const WorkoutRow({
@@ -232,13 +231,14 @@ class ExerciseGoalProgress {
 
 ExerciseGoalProgress exerciseGoalProgress({
   required PeriodStats stats,
-  required HealthGoals goals,
+  required int exerciseMinutes,
+  required double exerciseKm,
 }) {
   return ExerciseGoalProgress(
     minutesCurrent: stats.duration.inMinutes.toDouble(),
-    minutesTarget: goals.exerciseMinutes,
+    minutesTarget: exerciseMinutes,
     kmCurrent: stats.distM / 1000,
-    kmTarget: goals.exerciseKm,
+    kmTarget: exerciseKm,
   );
 }
 

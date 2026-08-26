@@ -68,7 +68,8 @@ abstract final class BalmiCopy {
   static const todayEmpty = '오늘 아직 기록이 없습니다';
   static const todaySteps = '오늘 걸음';
   static const dailyGoals = '일일 목표';
-  static const dailyGoalsHint = 'balmi 기록과 걸음 수에 맞춰 조정하세요';
+  static const dailyGoalsHint =
+      '걸음·운동 시간·거리 목표를 맞춰 주세요. 홈 오늘의 운동은 balmi 기록만 집계합니다.';
   static const stepGoal = '걸음 목표';
   static const exerciseTimeGoal = '운동 시간 목표';
   static const exerciseDistanceGoal = '운동 거리 목표';

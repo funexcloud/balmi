@@ -8,12 +8,21 @@ class StepGoalController extends ChangeNotifier {
   final StepGoalStore store;
 
   int goal = kDefaultDailyStepGoal;
+  int exerciseMinutes = kDefaultDailyExerciseMin;
+  double exerciseKm = kDefaultDailyExerciseKm;
   var _loaded = false;
 
   bool get isLoaded => _loaded;
 
   Future<void> bootstrap() async {
-    goal = await store.loadGoal();
+    final results = await Future.wait([
+      store.loadGoal(),
+      store.loadExerciseMinutes(),
+      store.loadExerciseKm(),
+    ]);
+    goal = results[0] as int;
+    exerciseMinutes = results[1] as int;
+    exerciseKm = results[2] as double;
     _loaded = true;
     notifyListeners();
   }
@@ -24,6 +33,22 @@ class StepGoalController extends ChangeNotifier {
     goal = next;
     notifyListeners();
     await store.saveGoal(next);
+  }
+
+  Future<void> setExerciseMinutes(int minutes) async {
+    final next = minutes.clamp(kMinDailyExerciseMin, kMaxDailyExerciseMin);
+    if (exerciseMinutes == next) return;
+    exerciseMinutes = next;
+    notifyListeners();
+    await store.saveExerciseMinutes(next);
+  }
+
+  Future<void> setExerciseKm(double km) async {
+    final next = km.clamp(kMinDailyExerciseKm, kMaxDailyExerciseKm);
+    if ((exerciseKm - next).abs() < 1e-6) return;
+    exerciseKm = next;
+    notifyListeners();
+    await store.saveExerciseKm(next);
   }
 
   double progressFor(int steps) {

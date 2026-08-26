@@ -62,6 +62,19 @@ void main() {
     expect(missions[3].done, isTrue);
   });
 
+  test('exerciseGoalProgress uses session stats not pedometer', () {
+    final today = summarizePeriod(inLocalDay(rows, day));
+    final progress = exerciseGoalProgress(
+      stats: today,
+      exerciseMinutes: 30,
+      exerciseKm: 2.0,
+    );
+    expect(progress.minutesCurrent, 35);
+    expect(progress.kmCurrent, closeTo(5.0, 0.01));
+    expect(progress.minutesDone, isTrue);
+    expect(progress.kmDone, isTrue);
+  });
+
   test('event progress sums only matching window and activity', () {
     final event = EventSpec(
       id: 'e',

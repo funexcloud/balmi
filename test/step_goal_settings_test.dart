@@ -54,9 +54,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(BalmiCopy.mealWalkHealthSection), findsOneWidget);
+    expect(find.text(BalmiCopy.dailyGoals), findsOneWidget);
     expect(find.text(BalmiCopy.dailyStepGoal), findsOneWidget);
+    expect(find.text(BalmiCopy.exerciseTimeGoal), findsOneWidget);
+    expect(find.text(BalmiCopy.exerciseDistanceGoal), findsOneWidget);
     expect(find.text('10,000'), findsWidgets);
     expect(find.byIcon(Icons.flag_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.timer_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.route_outlined), findsOneWidget);
 
     await tester.tap(find.text('8,000').last);
     await tester.pumpAndSettle();

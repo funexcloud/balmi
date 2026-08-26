@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 
 import '../core/copy.dart';
-import '../core/format.dart';
 import '../core/theme.dart';
 import '../domain/engines/workout_stats.dart';
-import '../domain/models/health_goals.dart';
 
 /// Home card for balmi-recorded workouts vs daily exercise goals.
 class TodayExerciseCard extends StatelessWidget {
   const TodayExerciseCard({
     super.key,
     required this.stats,
-    required this.goals,
+    required this.exerciseMinutes,
+    required this.exerciseKm,
   });
 
   final PeriodStats stats;
-  final HealthGoals goals;
+  final int exerciseMinutes;
+  final double exerciseKm;
 
   @override
   Widget build(BuildContext context) {
-    final progress = exerciseGoalProgress(stats: stats, goals: goals);
+    final progress = exerciseGoalProgress(
+      stats: stats,
+      exerciseMinutes: exerciseMinutes,
+      exerciseKm: exerciseKm,
+    );
     return Semantics(
       label: stats.isEmpty
           ? '${BalmiCopy.todayExercise}. ${BalmiCopy.todayEmpty}'
