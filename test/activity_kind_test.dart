@@ -56,6 +56,8 @@ void main() {
     expect(sheet, contains('BalmiDock.extent'));
     expect(sheet, contains('dockClearance'));
     expect(sheet, contains('Colors.transparent'));
+    expect(sheet, contains('balmi-sheet-dock-cover'));
+    expect(sheet, contains('useRootNavigator: true'));
     final home = File('lib/features/home/home_screen.dart').readAsStringSync();
     expect(home, contains('_pickTrackSpec'));
     expect(home, contains('TrackSpecPills'));
@@ -64,5 +66,15 @@ void main() {
         File('lib/features/recording/recording_screen.dart').readAsStringSync();
     expect(recording, contains('showBalmiSheet'));
     expect(recording, contains('TrackSpecPills'));
+  });
+
+  test('end recording confirm is Balmi sheet, not centered dialog', () {
+    final end = File('lib/widgets/end_recording_dialog.dart').readAsStringSync();
+    expect(end, contains('showBalmiSheet'));
+    expect(end, isNot(contains('showDialog')));
+    expect(end, isNot(contains('AlertDialog')));
+    expect(end, contains('OutlinedButton'));
+    expect(end, contains('FilledButton'));
+    expect(end, contains('BalmiCopy.endShortWalk'));
   });
 }
