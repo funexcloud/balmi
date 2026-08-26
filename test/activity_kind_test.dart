@@ -34,6 +34,7 @@ void main() {
     expect(home, contains('onLongPress'));
     expect(home, contains('TrackSpecPills'));
     expect(home, contains('showBalmiSheet'));
+    expect(home, contains('_pickTrackSpec'));
     expect(home, contains('isTrack'));
     expect(home, contains('CircleAction.playSize'));
     expect(home, contains('Icons.play_arrow'));
@@ -42,5 +43,20 @@ void main() {
     expect(home, contains('setPreferredActivity'));
     expect(home, contains('openFarmPreview'));
     expect(home, isNot(contains('openLandPreview')));
+  });
+
+  test('track spec sheets clear floating dock via showBalmiSheet', () {
+    final sheet = File('lib/widgets/circle_action.dart').readAsStringSync();
+    expect(sheet, contains('BalmiDock.extent'));
+    expect(sheet, contains('dockClearance'));
+    expect(sheet, contains('Colors.transparent'));
+    final home = File('lib/features/home/home_screen.dart').readAsStringSync();
+    expect(home, contains('_pickTrackSpec'));
+    expect(home, contains('TrackSpecPills'));
+    expect(home, contains('showBalmiSheet'));
+    final recording =
+        File('lib/features/recording/recording_screen.dart').readAsStringSync();
+    expect(recording, contains('showBalmiSheet'));
+    expect(recording, contains('TrackSpecPills'));
   });
 }
