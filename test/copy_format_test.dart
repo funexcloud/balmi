@@ -36,10 +36,15 @@ void main() {
         '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
         '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge} '
         '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps} '
+<<<<<<< HEAD
         '${BalmiCopy.brandStoryTitle} ${BalmiCopy.brandStoryWhyTitle} '
         '${BalmiCopy.brandStoryHook} ${BalmiCopy.brandStoryBody1} '
         '${BalmiCopy.brandStoryBody2} ${BalmiCopy.brandStoryBody3} '
         '${BalmiCopy.brandStoryBridge} ${BalmiCopy.brandStoryCredit}';
+=======
+        '${BalmiCopy.shareTitle} ${BalmiCopy.shareSubtitle} ${BalmiCopy.shareAction} '
+        '${BalmiCopy.shareHideStartEnd} ${BalmiCopy.recordedToday}';
+>>>>>>> origin/cursor/activity-share-plan-36aa
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
       expect(

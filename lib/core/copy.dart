@@ -161,6 +161,7 @@ abstract final class BalmiCopy {
   static const sessionLandCells = '칸';
   static const landEmptyMine = '아직 내 땅이 없어요';
 
+<<<<<<< HEAD
   // Onboarding — MOVE → OFFLINE → RECOVERY → PROMISE (no OS perms mid-story)
   static const onboardingPageCount = 4;
   static const onboardingNext = '다음';
@@ -197,6 +198,27 @@ abstract final class BalmiCopy {
   /// Legacy aliases for older call sites / tests.
   static const onboardingWelcome = slogan;
   static const onboardingTrustTitle = onboardingOfflineTitle;
+=======
+  static const shareTitle = '공유하기';
+  static const shareSubtitle = '기록을 보내 친구도 balmi를 발견하게 해요.';
+  static const shareAction = '공유 시트 열기';
+  static const shareStyleLabel = 'CARD STYLE';
+  static const shareStyleMap = 'MAP';
+  static const shareStyleRecord = 'RECORD';
+  static const shareStyleMinimal = 'MINIMAL';
+  static const shareStyleVasa = 'VASA (준비 중)';
+  static const shareHideStartEnd = '시작·종료 위치 숨기기';
+  static const shareHideStartEndHint =
+      '집 근처 경로가 드러나지 않도록 기본으로 켭니다.';
+  static const shareMapPrivacyOn = '경로 · 시작·종료 위치는 숨겼어요';
+  static const shareMapPrivacyOff = '경로 포함 (위치 노출에 주의)';
+  static const shareDeepLinkStubHint =
+      '링크는 balmi.im/a/… 형태 미리보기예요. 웹 공유 페이지는 아직 없어요.';
+  static const recordedToday = '오늘도 기록했습니다.';
+
+  static const onboardingWelcome = '안녕하세요, balmi예요';
+  static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';
+>>>>>>> origin/cursor/activity-share-plan-36aa
   static const onboardingPermsTitle = '기록이 끊기지 않게 권한을 켜 주세요';
   static const onboardingBatteryTitle = '배터리 최적화만 꺼 주세요';
   static const onboardingBatteryBody =

@@ -19,6 +19,7 @@ import '../../widgets/balmi_wordmark.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../activity_recovery/activity_recovery_controller.dart';
 import '../activity_recovery/activity_recovery_flow.dart';
+import '../share/activity_share_sheet.dart';
 
 class SessionDetailScreen extends StatefulWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -112,6 +113,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     await _load();
   }
 
+  Future<void> _openShare() async {
+    final s = _session;
+    if (s == null) return;
+    final activity = ActivityKind.fromWire(s.activity);
+    await openActivityShareSheet(
+      context,
+      sessionId: s.id,
+      activityLabel: activity.label == '자동' ? BalmiCopy.walk : activity.label,
+      distanceM: s.totalDistM,
+      duration: _sessionDuration(s),
+      steps: s.steps,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = _session;
@@ -146,6 +161,40 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
                 ),
                 if (s.endedAt != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    BalmiCopy.recordedToday,
+                    style: BalmiTheme.body(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: BalmiColors.plum,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _openShare,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: BalmiColors.potato,
+                            foregroundColor: BalmiColors.paper,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            BalmiCopy.shareTitle,
+                            style: BalmiTheme.body(
+                              size: 14,
+                              weight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 14),
                   ActivityRecoveryEntryCard(
                     workoutSessionId: s.id,

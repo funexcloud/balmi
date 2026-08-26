@@ -261,6 +261,18 @@ CGM은 실측 연동 시에만 별도 glucose-aware 로직. 실제 119 자동 �
 
 ---
 
+## 활동 공유 (Growth / Share)
+
+제품 흐름: **App → Share → Web → App**. Landing=WHY, App=USE, Share=DISCOVER.
+
+정식 명세: [`ACTIVITY_SHARE.md`](ACTIVITY_SHARE.md).
+
+Release 범위에 소셜 그래프·친구 서버·Web Share 호스팅은 **넣지 않는다**. Light MVP는 세션 상세 **공유하기** → OS Share Sheet → 요약 문구 + `https://balmi.im/a/…` 딥링크 **스텁** + 시작·종료 GPS 숨김(기본 ON).
+
+하드 규칙: 의료 과대표현 금지, Naver Maps 미사용(경로 UI는 OSM), VASA 공유는 실데이터 전까지 잠금.
+
+---
+
 ## 테스트
 
 분류기, 랩 감지기, 거리 제외, 백오프 유닛 테스트. `flutter test` 녹색 목표.
