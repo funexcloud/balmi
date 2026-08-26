@@ -138,6 +138,24 @@ String animalStatusLine({
   };
 }
 
+/// Chicken early / chick incubating status (egg story).
+const kChickenIncubatingCopy = '계란을 품고 있어요!';
+
+bool _isChickenIncubatingStage(AnimalDefinition animal, String stageName) {
+  final chicken =
+      animal.startsAsEgg || animal.animalId.toLowerCase().contains('chicken');
+  if (!chicken) {
+    // Generic egg/알 labels still use incubating copy.
+    return stageName == '계란' || stageName == '품는 중' || stageName == '알';
+  }
+  // Align 병아리/새끼 early messaging with incubating-egg story.
+  return stageName == '계란' ||
+      stageName == '품는 중' ||
+      stageName == '알' ||
+      stageName == '병아리' ||
+      stageName == '새끼';
+}
+
 /// Growth copy without opaque feed totals (e.g. old 「사료 400까지」).
 String animalGrowingStatusLine({
   required AnimalDefinition animal,
@@ -145,11 +163,8 @@ String animalGrowingStatusLine({
 }) {
   final stage = animal.stageAt(stageIndex);
   final name = stage?.stageName ?? '';
-  if (name == '계란' || name == '품는 중' || name == '알') {
-    return '계란을 품고 있어요';
-  }
-  if (name == '병아리') {
-    return '${animal.nameKr} · 병아리가 자라고 있어요';
+  if (_isChickenIncubatingStage(animal, name)) {
+    return kChickenIncubatingCopy;
   }
   if (name == '새끼양' || (animal.animalId.contains('sheep') && name == '새끼')) {
     return '양 · 새끼양이 자라고 있어요';
@@ -169,7 +184,7 @@ String animalGrowingStatusLine({
 /// Toast / snackbar after adopting into an empty livestock slot.
 String farmAdoptedCopy(AnimalDefinition animal) {
   if (animal.startsAsEgg || animal.animalId.contains('chicken')) {
-    return '계란을 품고 있어요';
+    return kChickenIncubatingCopy;
   }
   if (animal.animalId.contains('sheep')) return '양이 태어났어요!';
   if (animal.animalId.contains('cow')) return '송아지가 태어났어요!';

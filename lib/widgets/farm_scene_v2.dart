@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../domain/engines/farm_life.dart';
 import '../domain/engines/farm_scene_ui.dart';
+import '../domain/engines/farm_slot_move.dart';
 import '../domain/engines/land_city.dart';
 import '../domain/models/farm/animal.dart';
 import '../domain/models/farm/crop.dart';
 import '../domain/models/farm/farm_slot.dart';
 import '../domain/models/farm/farm_state.dart';
 import 'farm_scene.dart';
+
+typedef FarmSlotMoveCallback = void Function(
+  FarmSlotView from,
+  FarmSlotView to,
+);
 
 /// Farm gamification v2 scene — v1 painted backdrop + anchored slot overlays.
 class FarmSceneV2 extends StatelessWidget {
@@ -24,6 +30,7 @@ class FarmSceneV2 extends StatelessWidget {
     this.watering = false,
     this.onWateringComplete,
     this.onSlotTap,
+    this.onSlotMove,
   });
 
   final FarmSnapshot snapshot;
@@ -36,6 +43,7 @@ class FarmSceneV2 extends StatelessWidget {
   final bool watering;
   final VoidCallback? onWateringComplete;
   final ValueChanged<FarmSlotView>? onSlotTap;
+  final FarmSlotMoveCallback? onSlotMove;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +73,7 @@ class FarmSceneV2 extends StatelessWidget {
                       ? animals[slot.occupant!.animalId!]
                       : null,
                   onTap: onSlotTap == null ? null : () => onSlotTap!(slot),
+                  onSlotMove: onSlotMove,
                 )),
             Positioned(
               left: 12,
@@ -106,20 +115,18 @@ class _SlotAnchor extends StatelessWidget {
     required this.crop,
     required this.animal,
     this.onTap,
+    this.onSlotMove,
   });
 
   final FarmSlotView slot;
   final CropDefinition? crop;
   final AnimalDefinition? animal;
   final VoidCallback? onTap;
+  final FarmSlotMoveCallback? onSlotMove;
 
   @override
   Widget build(BuildContext context) {
     final t = slot.template;
-    final label = slotDisplayLabel(slot: slot, crop: crop, animal: animal);
-    final icon = slotIcon(slot: slot, crop: crop, animal: animal);
-    final empty = slot.occupant == null || slot.occupant!.isEmpty;
-    final alpha = slot.unlocked ? 1.0 : 0.35;
 
     return Positioned(
       left: 0,
@@ -139,55 +146,12 @@ class _SlotAnchor extends StatelessWidget {
               Positioned(
                 left: cx - 28,
                 top: cy - 36,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: slot.unlocked ? onTap : null,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Opacity(
-                      opacity: alpha,
-                      child: Container(
-                        width: 56,
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: BalmiColors.paper.withValues(alpha: empty ? 0.72 : 0.92),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: empty ? BalmiColors.line : BalmiColors.sage.withValues(alpha: 0.5),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: BalmiColors.ink.withValues(alpha: 0.08),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              empty ? Icons.add : icon,
-                              size: 22,
-                              color: empty ? BalmiColors.sub : BalmiColors.sage,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              label,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: BalmiTheme.body(
-                                size: 9,
-                                weight: FontWeight.w700,
-                                color: BalmiColors.ink,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                child: _SlotChip(
+                  slot: slot,
+                  crop: crop,
+                  animal: animal,
+                  onTap: onTap,
+                  onSlotMove: onSlotMove,
                 ),
               ),
             ],
@@ -195,5 +159,121 @@ class _SlotAnchor extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class _SlotChip extends StatelessWidget {
+  const _SlotChip({
+    required this.slot,
+    required this.crop,
+    required this.animal,
+    this.onTap,
+    this.onSlotMove,
+  });
+
+  final FarmSlotView slot;
+  final CropDefinition? crop;
+  final AnimalDefinition? animal;
+  final VoidCallback? onTap;
+  final FarmSlotMoveCallback? onSlotMove;
+
+  bool get _occupied =>
+      slot.occupant != null && !slot.occupant!.isEmpty && slot.unlocked;
+
+  Widget _chip({required bool highlight, double opacity = 1}) {
+    final label = slotDisplayLabel(slot: slot, crop: crop, animal: animal);
+    final icon = slotIcon(slot: slot, crop: crop, animal: animal);
+    final empty = slot.occupant == null || slot.occupant!.isEmpty;
+    final alpha = (slot.unlocked ? 1.0 : 0.35) * opacity;
+
+    return Opacity(
+      opacity: alpha,
+      child: Container(
+        width: 56,
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        decoration: BoxDecoration(
+          color: BalmiColors.paper.withValues(alpha: empty ? 0.72 : 0.92),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: highlight
+                ? BalmiColors.sage
+                : (empty
+                    ? BalmiColors.line
+                    : BalmiColors.sage.withValues(alpha: 0.5)),
+            width: highlight ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: BalmiColors.ink.withValues(alpha: 0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              empty ? Icons.add : icon,
+              size: 22,
+              color: empty ? BalmiColors.sub : BalmiColors.sage,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: BalmiTheme.body(
+                size: 9,
+                weight: FontWeight.w700,
+                color: BalmiColors.ink,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final moveEnabled = onSlotMove != null && slot.unlocked;
+
+    Widget body({required bool highlight}) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: slot.unlocked ? onTap : null,
+          borderRadius: BorderRadius.circular(14),
+          child: _chip(highlight: highlight),
+        ),
+      );
+    }
+
+    if (!moveEnabled) return body(highlight: false);
+
+    final target = DragTarget<FarmSlotView>(
+      onWillAcceptWithDetails: (details) =>
+          canRearrangeFarmSlots(from: details.data, to: slot),
+      onAcceptWithDetails: (details) => onSlotMove!(details.data, slot),
+      builder: (context, candidate, rejected) {
+        final highlight = candidate.isNotEmpty;
+        final child = body(highlight: highlight);
+        if (!_occupied) return child;
+        return LongPressDraggable<FarmSlotView>(
+          data: slot,
+          feedback: Material(
+            color: Colors.transparent,
+            elevation: 6,
+            child: _chip(highlight: true),
+          ),
+          childWhenDragging: _chip(highlight: false, opacity: 0.35),
+          child: child,
+        );
+      },
+    );
+
+    return target;
   }
 }

@@ -4,6 +4,7 @@ import '../../domain/engines/farm_animal.dart';
 import '../../domain/engines/farm_crop.dart';
 import '../../domain/engines/farm_milestone.dart';
 import '../../domain/engines/farm_resource.dart';
+import '../../domain/engines/farm_slot_move.dart';
 import '../../domain/models/farm/animal.dart';
 import '../../domain/models/farm/crop.dart';
 import '../../domain/models/farm/farm_slot.dart';
@@ -415,6 +416,92 @@ ON CONFLICT(user_id, slot_id) DO UPDATE SET
       [kFarmLocalUserId, slotId, animalId, at.millisecondsSinceEpoch],
     );
     return _slotOccupant(slotId);
+  }
+
+  /// Move or swap occupants between unlocked same-type slots. Persists in DB.
+  ///
+  /// Empty destination → relocate source row's `slot_id`.
+  /// Occupied destination → swap occupant payloads (slot_ids stay put).
+  Future<bool> moveOccupantBetweenSlots({
+    required String fromSlotId,
+    required String toSlotId,
+    required int ownedTileCount,
+  }) async {
+    await ensureInitialized();
+    if (fromSlotId == toSlotId) return false;
+
+    final templates = await listSlotTemplates();
+    final fromT = templates.where((t) => t.slotId == fromSlotId).firstOrNull;
+    final toT = templates.where((t) => t.slotId == toSlotId).firstOrNull;
+    if (fromT == null || toT == null) return false;
+
+    final fromOcc = await _slotOccupant(fromSlotId);
+    final toOcc = await _slotOccupant(toSlotId);
+    final fromView = FarmSlotView(
+      template: fromT,
+      occupant: fromOcc,
+      unlocked: ownedTileCount >= fromT.unlockTileCount,
+    );
+    final toView = FarmSlotView(
+      template: toT,
+      occupant: toOcc,
+      unlocked: ownedTileCount >= toT.unlockTileCount,
+    );
+    if (!canRearrangeFarmSlots(from: fromView, to: toView)) return false;
+
+    if (toOcc == null || toOcc.isEmpty) {
+      if (toOcc != null && toOcc.isEmpty) {
+        await db.customStatement(
+          'DELETE FROM user_farm_slots WHERE id = ?',
+          [toOcc.id],
+        );
+      }
+      await db.customStatement(
+        'UPDATE user_farm_slots SET slot_id = ? WHERE id = ?',
+        [toSlotId, fromOcc!.id],
+      );
+      return true;
+    }
+
+    // Swap payloads in place so UNIQUE(user_id, slot_id) stays intact.
+    await _writeOccupantPayload(rowId: fromOcc!.id, data: toOcc);
+    await _writeOccupantPayload(rowId: toOcc.id, data: fromOcc);
+    return true;
+  }
+
+  Future<void> _writeOccupantPayload({
+    required int rowId,
+    required UserFarmSlot data,
+  }) async {
+    await db.customStatement(
+      '''
+UPDATE user_farm_slots SET
+  occupant_type = ?,
+  crop_id = ?,
+  animal_id = ?,
+  cumulative_water = ?,
+  cumulative_nutrient = ?,
+  cumulative_feed = ?,
+  current_stage_index = ?,
+  is_dormant = ?,
+  last_yield_at = ?,
+  planted_at = ?
+WHERE id = ?
+''',
+      [
+        data.occupantType?.wire,
+        data.cropId,
+        data.animalId,
+        data.cumulativeWater,
+        data.cumulativeNutrient,
+        data.cumulativeFeed,
+        data.currentStageIndex,
+        data.isDormant ? 1 : 0,
+        data.lastYieldAt?.millisecondsSinceEpoch,
+        data.plantedAt.millisecondsSinceEpoch,
+        rowId,
+      ],
+    );
   }
 
   Future<UserFarmSlot?> applyResourceToSlot({

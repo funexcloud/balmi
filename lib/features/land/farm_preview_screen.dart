@@ -12,6 +12,7 @@ import '../../domain/engines/farm_birth.dart';
 import '../../domain/engines/farm_crop.dart';
 import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/farm_scene_ui.dart';
+import '../../domain/engines/farm_slot_move.dart';
 import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/models/farm/animal.dart';
@@ -269,6 +270,29 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
     _toast(toast);
   }
 
+  Future<void> _onSlotMove(FarmSlotView from, FarmSlotView to) async {
+    if (_busy) return;
+    if (!canRearrangeFarmSlots(from: from, to: to)) {
+      _toast(BalmiCopy.farmV2MoveFailed);
+      return;
+    }
+    final owned = _ownedTileCount(_buildings.length, _traces);
+    setState(() => _busy = true);
+    final ok = await _farmRepo.moveOccupantBetweenSlots(
+      fromSlotId: from.template.slotId,
+      toSlotId: to.template.slotId,
+      ownedTileCount: owned,
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) {
+      _toast(BalmiCopy.farmV2MoveFailed);
+      return;
+    }
+    await _load();
+    _toast(BalmiCopy.farmV2Moved);
+  }
+
   void _toast(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -334,6 +358,7 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
                     watering: _watering,
                     onWateringComplete: _onWateringComplete,
                     onSlotTap: _onSlotTap,
+                    onSlotMove: _onSlotMove,
                     height: 268,
                   ),
           ),

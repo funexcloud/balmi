@@ -114,7 +114,7 @@ void main() {
         now: DateTime(2026, 8, 26, 12),
       );
       expect(egg.state, AnimalYieldState.growing);
-      expect(animalStatusLine(animal: chicken, status: egg), '계란을 품고 있어요');
+      expect(animalStatusLine(animal: chicken, status: egg), '계란을 품고 있어요!');
 
       final incubating = evaluateAnimal(
         animal: chicken,
@@ -127,11 +127,11 @@ void main() {
       expect(incubating.stageIndex, 1);
       expect(
         animalStatusLine(animal: chicken, status: incubating),
-        '계란을 품고 있어요',
+        '계란을 품고 있어요!',
       );
     });
 
-    test('growing copy never exposes opaque feed totals', () {
+    test('병아리 early stage uses incubating egg copy', () {
       final mid = evaluateAnimal(
         animal: chicken,
         cumulativeFeed: 60,
@@ -141,7 +141,7 @@ void main() {
         now: DateTime(2026, 8, 26, 12),
       );
       final line = animalStatusLine(animal: chicken, status: mid);
-      expect(line, contains('병아리'));
+      expect(line, '계란을 품고 있어요!');
       expect(line, isNot(contains('사료')));
       expect(line, isNot(contains('400')));
       expect(line, isNot(contains('120까지')));
@@ -185,11 +185,11 @@ void main() {
     });
 
     test('toast / BalmiCopy adopt + plant match story beats', () {
-      expect(BalmiCopy.farmV2Adopted, '계란을 품고 있어요');
+      expect(BalmiCopy.farmV2Adopted, '계란을 품고 있어요!');
       expect(BalmiCopy.farmV2Planted, '씨앗을 뿌렸어요!');
       expect(BalmiCopy.farmBirthSheep, '양이 태어났어요!');
       expect(BalmiCopy.farmBirthCow, '송아지가 태어났어요!');
-      expect(BalmiCopy.farmBirthChickenEgg, '계란을 품고 있어요');
+      expect(BalmiCopy.farmBirthChickenEgg, '계란을 품고 있어요!');
       expect(BalmiCopy.farmBirthCropSeed, '씨앗을 뿌렸어요!');
     });
   });
@@ -198,7 +198,7 @@ void main() {
     test('herd water-raise toasts', () {
       expect(farmBirthToastForHerd(HerdKind.sheep), '양이 태어났어요!');
       expect(farmBirthToastForHerd(HerdKind.cattle), '송아지가 태어났어요!');
-      expect(farmBirthToastForHerd(HerdKind.chicken), '계란을 품고 있어요');
+      expect(farmBirthToastForHerd(HerdKind.chicken), '계란을 품고 있어요!');
       expect(farmBirthToastForHerd(HerdKind.garden), '씨앗을 뿌렸어요!');
     });
 
@@ -207,7 +207,7 @@ void main() {
       expect(farmBirthToastForAnimalId('animal_cow_01'), '송아지가 태어났어요!');
       expect(
         farmBirthToastForAnimalId('animal_chicken_01'),
-        '계란을 품고 있어요',
+        '계란을 품고 있어요!',
       );
       expect(farmBirthToastForCrop(), '씨앗을 뿌렸어요!');
     });
@@ -288,7 +288,7 @@ void main() {
       );
       expect(farmAdoptedCopy(sheep), '양이 태어났어요!');
       expect(farmAdoptedCopy(cow), '송아지가 태어났어요!');
-      expect(farmAdoptedCopy(starterChicken()), '계란을 품고 있어요');
+      expect(farmAdoptedCopy(starterChicken()), '계란을 품고 있어요!');
     });
   });
 
