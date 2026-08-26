@@ -162,7 +162,8 @@ String slotDisplayLabel({
   if (!slot.unlocked) return '잠김';
   final occ = slot.occupant;
   if (occ == null || occ.isEmpty) {
-    return slot.template.slotType == SlotType.crop ? '심기' : '입양';
+    // Livestock empty slot: incubate eggs, not adopt an adult.
+    return slot.template.slotType == SlotType.crop ? '심기' : '품기';
   }
   if (occ.occupantType == OccupantType.crop && crop != null) {
     final stage = crop.stageAt(occ.currentStageIndex);
@@ -170,7 +171,8 @@ String slotDisplayLabel({
   }
   if (occ.occupantType == OccupantType.livestock && animal != null) {
     final stage = animal.stageAt(occ.currentStageIndex);
-    return '${animal.nameKr} · ${stage?.stageName ?? "새끼"}';
+    final fallback = animal.startsAsEgg ? '계란' : '새끼';
+    return '${animal.nameKr} · ${stage?.stageName ?? fallback}';
   }
   return '비어 있음';
 }

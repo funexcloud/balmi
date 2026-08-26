@@ -37,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileName = 'balmi.sqlite';
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -72,6 +72,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 8) {
             await createActivityRecoveryTables(this);
+          }
+          if (from < 9) {
+            await patchFarmV2ChickenEggNarrative(this);
           }
         },
       );

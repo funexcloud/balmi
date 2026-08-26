@@ -25,6 +25,7 @@ class FarmRepository {
   Future<void> ensureInitialized() async {
     await createFarmV2Tables(db);
     await seedFarmV2MasterData(db);
+    await patchFarmV2ChickenEggNarrative(db);
     final now = DateTime.now();
     final ms = now.millisecondsSinceEpoch;
     await db.customStatement(

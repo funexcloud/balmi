@@ -96,6 +96,15 @@ String cropStatusLine({
 }) {
   if (isDormant) return '${crop.nameKr} · 휴면 중이에요';
 
+  final stage = crop.stageAt(currentStageIndex);
+  // Seed / just-planted narrative before resource gauges take over.
+  if (stage != null &&
+      (stage.stageName == '씨앗' || currentStageIndex == 0) &&
+      cumulativeWater == 0 &&
+      cumulativeNutrient == 0) {
+    return '씨앗을 뿌렸어요';
+  }
+
   final hint = cropGrowthHint(
     crop: crop,
     cumulativeWater: cumulativeWater,
@@ -111,6 +120,8 @@ String cropStatusLine({
     CropGrowthHint.needNutrient =>
       '${crop.nameKr} · 영양제가 더 필요해요 (${cumulativeNutrient}/${crop.stageAt(currentStageIndex + 1)?.nutrientThreshold ?? "—"})',
     CropGrowthHint.dormant => '${crop.nameKr} · 휴면 중이에요',
-    CropGrowthHint.ok => '${crop.nameKr} · 잘 자라고 있어요',
+    CropGrowthHint.ok => currentStageIndex == 0
+        ? '씨앗을 뿌렸어요'
+        : '${crop.nameKr} · 잘 자라고 있어요',
   };
 }

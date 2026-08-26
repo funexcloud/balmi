@@ -53,9 +53,33 @@ class AnimalDefinition {
   }
 
   int get adultFeedThreshold {
-    final adult = growthStages.where((s) => s.stageName == '성체');
+    final adult = growthStages.where(
+      (s) =>
+          s.stageName == '성체' ||
+          s.stageName == '암탉' ||
+          s.stageName == '다 큰 양' ||
+          s.stageName == '다 큰 소',
+    );
     if (adult.isNotEmpty) return adult.first.feedThreshold;
     return growthStages.isEmpty ? 0 : growthStages.last.feedThreshold;
+  }
+
+  /// True for egg / incubating stages (chicken narrative starts here).
+  bool get startsAsEgg {
+    final first = stageAt(0);
+    if (first == null) return false;
+    return first.stageName == '계란' || first.stageName == '알';
+  }
+
+  /// Young livestock (lamb / calf) — not adult spawn.
+  bool get startsAsYoung {
+    final first = stageAt(0);
+    if (first == null) return false;
+    final name = first.stageName;
+    return name == '새끼' ||
+        name == '새끼양' ||
+        name == '송아지' ||
+        name == '병아리';
   }
 
   int get maxStageIndex => growthStages.fold<int>(

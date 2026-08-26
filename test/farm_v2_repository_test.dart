@@ -28,6 +28,11 @@ void main() {
     expect(animals.any((a) => a.animalId == 'animal_sheep_01'), isTrue);
     expect(await repo.listSlotTemplates(), isNotEmpty);
     expect(await repo.listMilestoneDefinitions(), isNotEmpty);
+
+    final chicken = animals.firstWhere((a) => a.animalId == 'animal_chicken_01');
+    expect(chicken.stageAt(0)?.stageName, '계란');
+    expect(chicken.adultFeedThreshold, 120);
+    expect(chicken.growthStages.length, 4);
   });
 
   test('grantSessionResources logs VASA raw + granted values', () async {

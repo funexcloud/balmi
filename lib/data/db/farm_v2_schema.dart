@@ -271,6 +271,79 @@ Future<void> seedFarmV2MasterData(GeneratedDatabase database) async {
   await _seedReactions(database);
 }
 
+/// Narrative fix: chicken starts as egg (not 새끼), adult at 120 feed (not 400).
+/// Idempotent — no-ops when stage 0 is already 「계란」.
+Future<void> patchFarmV2ChickenEggNarrative(GeneratedDatabase db) async {
+  final exists = await db.customSelect(
+    "SELECT COUNT(*) AS c FROM animal_definitions WHERE animal_id = 'animal_chicken_01'",
+  ).getSingle();
+  if ((exists.read<int>('c')) == 0) return;
+
+  final stage0 = await db.customSelect(
+    '''
+SELECT stage_name, feed_threshold FROM animal_stages
+WHERE animal_id = 'animal_chicken_01' AND stage_index = 0
+''',
+  ).getSingleOrNull();
+  final adult = await db.customSelect(
+    '''
+SELECT stage_name, feed_threshold FROM animal_stages
+WHERE animal_id = 'animal_chicken_01'
+ORDER BY stage_index DESC LIMIT 1
+''',
+  ).getSingleOrNull();
+  final already =
+      stage0 != null &&
+      stage0.read<String>('stage_name') == '계란' &&
+      adult != null &&
+      adult.read<String>('stage_name') == '암탉' &&
+      adult.read<int>('feed_threshold') == 120;
+  if (already) return;
+
+  await db.customStatement(
+    "DELETE FROM animal_stages WHERE animal_id = 'animal_chicken_01'",
+  );
+
+  const chickenStages = [
+    (0, '계란', 0, 'animal/chicken/stage_0'),
+    (1, '품는 중', 20, 'animal/chicken/stage_1'),
+    (2, '병아리', 60, 'animal/chicken/stage_2'),
+    (3, '암탉', 120, 'animal/chicken/stage_3'),
+  ];
+  for (final s in chickenStages) {
+    await db.customStatement(
+      '''
+INSERT INTO animal_stages (
+  animal_id, stage_index, stage_name, feed_threshold, sprite_asset_key
+) VALUES ('animal_chicken_01', ?, ?, ?, ?)
+''',
+      [s.$1, s.$2, s.$3, s.$4],
+    );
+  }
+
+  // Remap stored stage from cumulative feed under the new thresholds.
+  final rows = await db.customSelect(
+    '''
+SELECT id, cumulative_feed FROM user_farm_slots
+WHERE animal_id = 'animal_chicken_01' AND occupant_type = 'livestock'
+''',
+  ).get();
+  for (final r in rows) {
+    final feed = r.read<int>('cumulative_feed');
+    final stage = feed >= 120
+        ? 3
+        : feed >= 60
+            ? 2
+            : feed >= 20
+                ? 1
+                : 0;
+    await db.customStatement(
+      'UPDATE user_farm_slots SET current_stage_index = ? WHERE id = ?',
+      [stage, r.read<int>('id')],
+    );
+  }
+}
+
 Future<void> _seedCrops(GeneratedDatabase db, int now) async {
   const crops = [
     (
@@ -494,10 +567,13 @@ INSERT INTO animal_stages (
     );
   }
 
+  // Starter chicken: egg → incubating → chick → hen (not adult-from-day-one).
+  // Adult feed 120 (was 400) — under daily feed cap 300, ~6×20 apply taps.
   const chickenStages = [
-    (0, '새끼', 0, 'animal/chicken/stage_0'),
-    (1, '성장', 150, 'animal/chicken/stage_1'),
-    (2, '성체', 400, 'animal/chicken/stage_2'),
+    (0, '계란', 0, 'animal/chicken/stage_0'),
+    (1, '품는 중', 20, 'animal/chicken/stage_1'),
+    (2, '병아리', 60, 'animal/chicken/stage_2'),
+    (3, '암탉', 120, 'animal/chicken/stage_3'),
   ];
   for (final s in chickenStages) {
     await db.customStatement(

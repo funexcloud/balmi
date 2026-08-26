@@ -1,4 +1,5 @@
 import '../models/farm/animal.dart';
+import '../models/farm/farm_tier.dart';
 
 enum AnimalYieldState {
   growing,
@@ -124,8 +125,10 @@ String animalStatusLine({
   required AnimalStatus status,
 }) {
   return switch (status.state) {
-    AnimalYieldState.growing =>
-      '${animal.nameKr} · 자라는 중이에요 (사료 ${animal.adultFeedThreshold}까지)',
+    AnimalYieldState.growing => animalGrowingStatusLine(
+        animal: animal,
+        stageIndex: status.stageIndex,
+      ),
     AnimalYieldState.readyYield => '${animal.nameKr} · 산출물을 받을 수 있어요',
     AnimalYieldState.cooldown =>
       '${animal.nameKr} · 조금 쉬는 중이에요',
@@ -133,4 +136,87 @@ String animalStatusLine({
     AnimalYieldState.dormant => '${animal.nameKr} · 휴면 중이에요',
     AnimalYieldState.starving => '${animal.nameKr} · 사료를 오래 못 줬어요',
   };
+}
+
+/// Growth copy without opaque feed totals (e.g. old 「사료 400까지」).
+String animalGrowingStatusLine({
+  required AnimalDefinition animal,
+  required int stageIndex,
+}) {
+  final stage = animal.stageAt(stageIndex);
+  final name = stage?.stageName ?? '';
+  if (name == '계란' || name == '품는 중' || name == '알') {
+    return '계란을 품고 있어요';
+  }
+  if (name == '병아리') {
+    return '${animal.nameKr} · 병아리가 자라고 있어요';
+  }
+  if (name == '새끼양' || (animal.animalId.contains('sheep') && name == '새끼')) {
+    return '양 · 새끼양이 자라고 있어요';
+  }
+  if (name == '송아지' || (animal.animalId.contains('cow') && name == '새끼')) {
+    return '소 · 송아지가 자라고 있어요';
+  }
+  if (name == '새끼') {
+    return '${animal.nameKr} · 새끼가 자라고 있어요';
+  }
+  if (name == '성장') {
+    return '${animal.nameKr} · 무럭무럭 자라고 있어요';
+  }
+  return '${animal.nameKr} · 잘 자라고 있어요';
+}
+
+/// Toast / snackbar after adopting into an empty livestock slot.
+String farmAdoptedCopy(AnimalDefinition animal) {
+  if (animal.startsAsEgg) return '계란을 품고 있어요';
+  if (animal.animalId.contains('sheep')) return '새끼양을 입양했어요';
+  if (animal.animalId.contains('cow')) return '송아지를 입양했어요';
+  return '${animal.nameKr} 한 마리를 입양했어요';
+}
+
+/// Empty livestock slot CTA — incubate eggs, otherwise adopt young stock.
+String emptyLivestockSlotLabel(AnimalDefinition? next) {
+  if (next != null && next.startsAsEgg) return '품기';
+  return '입양';
+}
+
+bool animalUnlockedAtLevel(AnimalDefinition animal, int farmLevel) {
+  if (animal.unlockType == UnlockType.level) {
+    return farmLevel >= (animal.unlockValue ?? 1);
+  }
+  return true;
+}
+
+/// Prefer unlocked species not yet on the farm; else least-owned unlocked.
+AnimalDefinition? pickNextAdoptableAnimal({
+  required List<AnimalDefinition> catalog,
+  required Iterable<String> occupiedAnimalIds,
+  required int farmLevel,
+}) {
+  final unlocked = catalog
+      .where((a) => animalUnlockedAtLevel(a, farmLevel))
+      .toList()
+    ..sort((a, b) {
+      final av = a.unlockValue ?? 0;
+      final bv = b.unlockValue ?? 0;
+      if (av != bv) return av.compareTo(bv);
+      return a.animalId.compareTo(b.animalId);
+    });
+  if (unlocked.isEmpty) return null;
+
+  final counts = <String, int>{};
+  for (final id in occupiedAnimalIds) {
+    counts[id] = (counts[id] ?? 0) + 1;
+  }
+
+  final missing = unlocked.where((a) => (counts[a.animalId] ?? 0) == 0);
+  if (missing.isNotEmpty) return missing.first;
+
+  unlocked.sort((a, b) {
+    final ca = counts[a.animalId] ?? 0;
+    final cb = counts[b.animalId] ?? 0;
+    if (ca != cb) return ca.compareTo(cb);
+    return (a.unlockValue ?? 0).compareTo(b.unlockValue ?? 0);
+  });
+  return unlocked.first;
 }
