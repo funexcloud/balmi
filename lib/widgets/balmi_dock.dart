@@ -11,6 +11,21 @@ class BalmiDock extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
+  /// Visible pill height (icons row).
+  static const double barHeight = 52;
+
+  static const double _topPad = 2;
+  static const double _bottomPadExtra = 12;
+  static const double _horizontalPad = 32;
+
+  /// Total vertical space the dock occupies (pads + bar + system nav inset).
+  ///
+  /// Body content and modal sheets must clear this so CTAs are not hidden
+  /// behind the floating dock.
+  static double extent(BuildContext context) {
+    return _topPad + barHeight + systemNavBottomInset(context) + _bottomPadExtra;
+  }
+
   static const items = <(IconData, IconData, String)>[
     (Icons.radio_button_checked, Icons.radio_button_unchecked, BalmiCopy.recordTab),
     (Icons.history, Icons.history_outlined, BalmiCopy.workoutLogTab),
@@ -22,14 +37,19 @@ class BalmiDock extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottom = systemNavBottomInset(context);
     return Padding(
-      padding: EdgeInsets.fromLTRB(32, 2, 32, bottom + 12),
+      padding: EdgeInsets.fromLTRB(
+        _horizontalPad,
+        _topPad,
+        _horizontalPad,
+        bottom + _bottomPadExtra,
+      ),
       child: Material(
         color: BalmiColors.surface,
         elevation: 1,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(28),
         child: SizedBox(
-          height: 52,
+          height: barHeight,
           child: Row(
             children: [
               for (var i = 0; i < items.length; i++) _item(i),
