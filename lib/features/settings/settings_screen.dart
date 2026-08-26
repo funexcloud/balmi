@@ -7,8 +7,8 @@ import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
 import 'brand_story_screen.dart';
 
-/// App settings — OEM battery first, then about / brand story / credits.
-/// Health habits live on [HealthHabitsScreen].
+/// App settings — about (OEM battery nested among app-info tiles),
+/// brand story, credits. Health habits live on [HealthHabitsScreen].
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -52,23 +52,6 @@ class SettingsScreen extends StatelessWidget {
             style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.4),
           ),
           const SizedBox(height: 20),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              BalmiCopy.oemSettings,
-              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-            ),
-            onTap: () => OemBattery.openOemSettings(),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              BalmiCopy.ignoreBattery,
-              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-            ),
-            onTap: () => OemBattery.requestIgnore(),
-          ),
-          const Divider(height: 36, color: BalmiColors.line),
           Text(
             BalmiCopy.about,
             style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
@@ -91,6 +74,24 @@ class SettingsScreen extends StatelessWidget {
               color: BalmiColors.sub,
               height: 1.5,
             ),
+          ),
+          // OEM battery among about / app-info — not above everything, not a bottom dump.
+          const Divider(height: 28, color: BalmiColors.line),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              BalmiCopy.oemSettings,
+              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+            ),
+            onTap: () => OemBattery.openOemSettings(),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              BalmiCopy.ignoreBattery,
+              style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+            ),
+            onTap: () => OemBattery.requestIgnore(),
           ),
           const SizedBox(height: 16),
           Text(

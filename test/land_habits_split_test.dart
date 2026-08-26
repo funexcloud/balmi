@@ -29,20 +29,26 @@ void main() {
     expect(more.split('_MoreGroup').length, greaterThan(3));
   });
 
-  test('settings puts OEM battery tiles above about and credits', () {
+  test('settings nests OEM battery among about/app-info, not top or bottom dump',
+      () {
     final settings =
         File('lib/features/settings/settings_screen.dart').readAsStringSync();
+    final about = settings.indexOf('BalmiCopy.about,');
+    final version = settings.indexOf('BalmiCopy.versionLabel');
     final oem = settings.indexOf('BalmiCopy.oemSettings');
     final ignore = settings.indexOf('BalmiCopy.ignoreBattery');
-    final about = settings.indexOf('BalmiCopy.about,');
     final brand = settings.indexOf('BalmiCopy.brandStoryTitle');
     final map = settings.indexOf('BalmiCopy.mapCredit');
     final vasa = settings.indexOf('BalmiCopy.vasaCredit');
-    expect(oem, greaterThan(-1));
+    expect(about, greaterThan(-1));
+    expect(version, greaterThan(about));
+    // Among about items — after version/about, before brand/credits.
+    expect(oem, greaterThan(version));
     expect(ignore, greaterThan(oem));
-    expect(about, greaterThan(ignore));
-    expect(brand, greaterThan(about));
+    expect(brand, greaterThan(ignore));
     expect(map, greaterThan(brand));
     expect(vasa, greaterThan(map));
+    // Not a trailing dump after credits.
+    expect(oem, lessThan(vasa));
   });
 }
