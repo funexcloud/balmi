@@ -98,10 +98,12 @@ class _ActivityCirclePickerOverlay extends StatelessWidget {
             child: SizedBox(
               width: _tileSize,
               height: _tileSize,
-              child: Icon(
-                ActivityPills.iconOf(kind),
-                size: 22,
-                color: on ? Colors.white : BalmiColors.ink,
+              child: Center(
+                child: ActivityPills.glyphOf(
+                  kind,
+                  size: 22,
+                  color: on ? Colors.white : BalmiColors.ink,
+                ),
               ),
             ),
           ),

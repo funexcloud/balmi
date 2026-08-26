@@ -15,6 +15,7 @@ import '../../widgets/path_spark.dart';
 import '../../widgets/recording_alerts_sheet.dart';
 import '../../widgets/trust_header.dart';
 import '../../domain/engines/meal_walk.dart';
+import '../../domain/models/activity.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
 import '../session_detail/session_detail_screen.dart';
@@ -172,12 +173,18 @@ class _RecordingScreenState extends State<RecordingScreen>
                       const SizedBox(height: 8),
                       Builder(
                         builder: (btnCtx) {
+                          final autoSport = (snap?.sport ?? 'walk') == 'run'
+                              ? ActivityKind.run
+                              : ActivityKind.walk;
+                          final shown = rec.activity.isAuto
+                              ? autoSport
+                              : rec.activity;
                           return CircleAction(
-                            icon: rec.activity.isAuto
-                                ? ((snap?.sport ?? 'walk') == 'run'
-                                    ? Icons.directions_run
-                                    : Icons.directions_walk)
-                                : ActivityPills.iconOf(rec.activity),
+                            glyph: ActivityPills.glyphOf(
+                              shown,
+                              size: 44 * 0.42,
+                              color: BalmiColors.ink,
+                            ),
                             label: rec.activity.isAuto
                                 ? '${BalmiCopy.activityAuto} · ${((snap?.sport ?? 'walk') == 'run') ? BalmiCopy.run : BalmiCopy.walk}'
                                 : rec.activity.label,

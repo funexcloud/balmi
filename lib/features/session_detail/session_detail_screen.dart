@@ -76,9 +76,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Icon(
-                  ActivityPills.iconOf(ActivityKind.fromWire(s.activity)),
-                  color: BalmiColors.ink,
+                Center(
+                  child: ActivityPills.glyphOf(
+                    ActivityKind.fromWire(s.activity),
+                    color: BalmiColors.ink,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(

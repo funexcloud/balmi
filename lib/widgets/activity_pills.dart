@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/copy.dart';
 import '../core/theme.dart';
 import '../domain/models/activity.dart';
+import 'track_icon.dart';
 
 /// Two equal rows of activity icons (not labeled chrome pills).
 class ActivityPills extends StatelessWidget {
@@ -26,14 +27,25 @@ class ActivityPills extends StatelessWidget {
     ActivityKind.track,
   ];
 
+  /// Material [IconData] fallback. Prefer [glyphOf] for UI — track has no
+  /// reliable Material glyph (`Icons.stadium` is blank on many Android builds).
   static IconData iconOf(ActivityKind a) => switch (a) {
         ActivityKind.auto => Icons.auto_mode,
         ActivityKind.walk => Icons.directions_walk,
         ActivityKind.run => Icons.directions_run,
         ActivityKind.hike => Icons.terrain,
         ActivityKind.trail => Icons.hiking,
-        ActivityKind.track => Icons.stadium,
+        // Never use Icons.stadium; callers should use [glyphOf] for track.
+        ActivityKind.track => Icons.sports,
       };
+
+  /// Activity glyph widget. Track uses custom [TrackIcon], not Material icons.
+  static Widget glyphOf(ActivityKind a, {required Color color, double size = 22}) {
+    if (a.isTrack) {
+      return TrackIcon(size: size, color: color);
+    }
+    return Icon(iconOf(a), size: size, color: color);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +83,12 @@ class ActivityPills extends StatelessWidget {
           onTap: () => onChanged(a),
           child: SizedBox(
             height: 48,
-            child: Icon(
-              iconOf(a),
-              size: 22,
-              color: on ? Colors.white : BalmiColors.sub,
+            child: Center(
+              child: glyphOf(
+                a,
+                size: 22,
+                color: on ? Colors.white : BalmiColors.sub,
+              ),
             ),
           ),
         ),

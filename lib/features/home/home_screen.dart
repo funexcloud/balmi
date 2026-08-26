@@ -193,14 +193,43 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           child: Builder(
             builder: (btnCtx) {
-              return CircleAction(
-                icon: rec.isStarting ? Icons.hourglass_empty : Icons.play_arrow,
-                label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
-                filled: true,
-                size: CircleAction.playSize,
-                onTap: rec.isStarting ? () {} : () => _start(rec),
-                onLongPress:
-                    rec.isStarting ? null : () => _onLongPressPlay(btnCtx),
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  CircleAction(
+                    icon: rec.isStarting ? Icons.hourglass_empty : Icons.play_arrow,
+                    label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
+                    filled: true,
+                    size: CircleAction.playSize,
+                    onTap: rec.isStarting ? () {} : () => _start(rec),
+                    onLongPress:
+                        rec.isStarting ? null : () => _onLongPressPlay(btnCtx),
+                  ),
+                  if (!rec.isStarting && !_activity.isAuto)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Semantics(
+                        label: _activity.label,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: BalmiColors.surface,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: BalmiColors.potato, width: 2),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: ActivityPills.glyphOf(
+                              _activity,
+                              size: 16,
+                              color: BalmiColors.potato,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),

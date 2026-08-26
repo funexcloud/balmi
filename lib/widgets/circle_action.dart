@@ -6,15 +6,21 @@ import '../core/theme.dart';
 class CircleAction extends StatelessWidget {
   const CircleAction({
     super.key,
-    required this.icon,
+    this.icon,
+    this.glyph,
     required this.label,
     required this.onTap,
     this.onLongPress,
     this.filled = false,
     this.size = 52,
-  });
+  }) : assert(icon != null || glyph != null, 'Provide icon or glyph');
 
-  final IconData icon;
+  /// Material icon. Ignored when [glyph] is set.
+  final IconData? icon;
+
+  /// Custom glyph (e.g. [TrackIcon]). Preferred over [icon] when both given.
+  final Widget? glyph;
+
   final String label;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -28,6 +34,7 @@ class CircleAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = filled ? BalmiColors.potato : BalmiColors.surface;
     final fg = filled ? Colors.white : BalmiColors.ink;
+    final iconSize = size * 0.42;
     return Semantics(
       button: true,
       label: label,
@@ -43,7 +50,10 @@ class CircleAction extends StatelessWidget {
           child: SizedBox(
             width: size,
             height: size,
-            child: Icon(icon, size: size * 0.42, color: fg),
+            child: Center(
+              child: glyph ??
+                  Icon(icon, size: iconSize, color: fg),
+            ),
           ),
         ),
       ),
