@@ -57,9 +57,8 @@ void main() {
     expect(missions[1].current, closeTo(13, 0.01));
     expect(missions[1].done, isFalse);
     expect(missions[2].current, 10);
-    expect(missions[3].id, 'today_feed_800m');
-    expect(missions[3].current, closeTo(5000, 0.1));
-    expect(missions[3].done, isTrue);
+    expect(missions.length, 3);
+    expect(missions.any((m) => m.id == 'today_feed_800m'), isFalse);
   });
 
   test('exerciseGoalProgress uses session stats not pedometer', () {

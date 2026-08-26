@@ -7,14 +7,16 @@ import 'package:balmi/data/repositories/session_repository.dart';
 import 'package:balmi/data/repositories/step_goal_store.dart';
 import 'package:balmi/features/meal_walk/meal_walk_controller.dart';
 import 'package:balmi/features/recording/recording_controller.dart';
+import 'package:balmi/features/settings/health_habits_screen.dart';
 import 'package:balmi/features/settings/settings_screen.dart';
 import 'package:balmi/features/settings/step_goal_controller.dart';
+import 'package:balmi/features/more/more_screen.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-Widget _settingsApp({
+Widget _habitsApp({
   required StepGoalController stepGoal,
   required MealWalkController mealWalk,
 }) {
@@ -25,13 +27,14 @@ Widget _settingsApp({
         ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
         ChangeNotifierProvider<MealWalkController>.value(value: mealWalk),
       ],
-      child: const SettingsScreen(),
+      child: const HealthHabitsScreen(),
     ),
   );
 }
 
 void main() {
-  testWidgets('settings shows step goal picker under health section', (tester) async {
+  testWidgets('health habits shows step goal picker; settings does not',
+      (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     final db = AppDatabase.executor(NativeDatabase.memory());
     addTearDown(db.close);
@@ -50,10 +53,10 @@ void main() {
     await meal.bootstrap();
     await stepGoal.bootstrap();
 
-    await tester.pumpWidget(_settingsApp(stepGoal: stepGoal, mealWalk: meal));
+    await tester.pumpWidget(_habitsApp(stepGoal: stepGoal, mealWalk: meal));
     await tester.pumpAndSettle();
 
-    expect(find.text(BalmiCopy.mealWalkHealthSection), findsOneWidget);
+    expect(find.text(BalmiCopy.mealWalkHealthSection), findsWidgets);
     expect(find.text(BalmiCopy.dailyGoals), findsOneWidget);
     expect(find.text(BalmiCopy.dailyStepGoal), findsOneWidget);
     expect(find.text(BalmiCopy.exerciseTimeGoal), findsOneWidget);
@@ -67,5 +70,72 @@ void main() {
     await tester.pumpAndSettle();
     expect(stepGoal.goal, 8000);
     expect(find.text('8,000걸음'), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: BalmiTheme.light(),
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
+            ChangeNotifierProvider<MealWalkController>.value(value: meal),
+          ],
+          child: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.settings), findsWidgets);
+    expect(find.text(BalmiCopy.about), findsOneWidget);
+    expect(find.text(BalmiCopy.dailyStepGoal), findsNothing);
+    expect(find.text(BalmiCopy.mealWalkTitle), findsNothing);
+  });
+
+  testWidgets('more screen opens separate health habits and settings',
+      (tester) async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final rec = RecordingController(repo: repo, dbPath: 'mem');
+    addTearDown(rec.dispose);
+    final meal = MealWalkController(
+      store: MealWalkStore(db, newId: () => 'id'),
+      repo: repo,
+      recording: rec,
+      alarms: SilentMealWalkAlarms(),
+    );
+    addTearDown(meal.dispose);
+    final stepGoal = StepGoalController(store: StepGoalStore(db));
+    addTearDown(stepGoal.dispose);
+    await meal.bootstrap();
+    await stepGoal.bootstrap();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: BalmiTheme.light(),
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
+            ChangeNotifierProvider<MealWalkController>.value(value: meal),
+          ],
+          child: const Scaffold(body: MoreScreen()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(BalmiCopy.mealWalkHealthSection));
+    await tester.pumpAndSettle();
+    expect(find.byType(HealthHabitsScreen), findsOneWidget);
+    expect(find.text(BalmiCopy.dailyGoals), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(BalmiCopy.settings));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(find.text(BalmiCopy.about), findsOneWidget);
+    expect(find.text(BalmiCopy.dailyGoals), findsNothing);
   });
 }

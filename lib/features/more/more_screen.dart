@@ -7,6 +7,7 @@ import '../events/events_screen.dart';
 import '../land/farm_preview_screen.dart';
 import '../land/land_map_screen.dart';
 import '../missions/missions_screen.dart';
+import '../settings/health_habits_screen.dart';
 import '../settings/settings_screen.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -49,14 +50,18 @@ class MoreScreen extends StatelessWidget {
         Icons.favorite_outline,
         BalmiCopy.mealWalkHealthSection,
         () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HealthHabitsScreen()),
+          );
         },
       ),
       (
         Icons.settings_outlined,
         BalmiCopy.settings,
         () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          );
         },
       ),
     ];

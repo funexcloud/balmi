@@ -205,7 +205,7 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
   static const about = '이 앱 정보';
-  static const versionLabel = '0.1.10';
+  static const versionLabel = '0.1.13';
 
   static const mealWalkDiscover = '식사 후 15분 걷기, 시작해볼까요?';
   static const mealWalkHealthSection = '건강 습관';
