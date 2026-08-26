@@ -147,6 +147,18 @@ void main() {
     expect(detail, contains('fitToPath: true'));
   });
 
+  test('session detail shows 내 땅 reward instead of 종목 수정', () {
+    final detail =
+        File('lib/features/session_detail/session_detail_screen.dart')
+            .readAsStringSync();
+    expect(detail, isNot(contains('BalmiCopy.overrideSport')));
+    expect(detail, isNot(contains('overrideSegmentSport')));
+    expect(detail, contains('BalmiCopy.sessionLandReward'));
+    expect(detail, contains('SessionLandReward'));
+    expect(BalmiCopy.sessionLandReward, '내 땅');
+    expect(BalmiCopy.overrideSport, '종목 수정');
+  });
+
   test('map OSD has no flutter_map badge; OSM credit lives in settings', () {
     final map = File('lib/widgets/osm_trace_map.dart').readAsStringSync();
     final settings = File('lib/features/settings/settings_screen.dart')
