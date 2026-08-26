@@ -28,4 +28,21 @@ void main() {
     expect(more, contains('_MoreGroup'));
     expect(more.split('_MoreGroup').length, greaterThan(3));
   });
+
+  test('settings puts OEM battery tiles above about and credits', () {
+    final settings =
+        File('lib/features/settings/settings_screen.dart').readAsStringSync();
+    final oem = settings.indexOf('BalmiCopy.oemSettings');
+    final ignore = settings.indexOf('BalmiCopy.ignoreBattery');
+    final about = settings.indexOf('BalmiCopy.about,');
+    final brand = settings.indexOf('BalmiCopy.brandStoryTitle');
+    final map = settings.indexOf('BalmiCopy.mapCredit');
+    final vasa = settings.indexOf('BalmiCopy.vasaCredit');
+    expect(oem, greaterThan(-1));
+    expect(ignore, greaterThan(oem));
+    expect(about, greaterThan(ignore));
+    expect(brand, greaterThan(about));
+    expect(map, greaterThan(brand));
+    expect(vasa, greaterThan(map));
+  });
 }
