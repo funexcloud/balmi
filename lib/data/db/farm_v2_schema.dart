@@ -344,6 +344,86 @@ WHERE animal_id = 'animal_chicken_01' AND occupant_type = 'livestock'
   }
 }
 
+/// Sheep/cow early-stage narrative + rename 젖소→소. Idempotent.
+Future<void> patchFarmV2LivestockSheepCowNarrative(GeneratedDatabase db) async {
+  final sheep = await db.customSelect(
+    "SELECT COUNT(*) AS c FROM animal_definitions WHERE animal_id = 'animal_sheep_01'",
+  ).getSingle();
+  if (sheep.read<int>('c') == 0) return;
+
+  await db.customStatement(
+    "UPDATE animal_definitions SET name_kr = '소' WHERE animal_id = 'animal_cow_01'",
+  );
+  await db.customStatement(
+    "UPDATE farm_level_definitions SET unlock_note = '호박, 소' WHERE farm_level = 8",
+  );
+
+  Future<void> replaceStages({
+    required String animalId,
+    required List<(int, String, int, String)> stages,
+  }) async {
+    final stage0 = await db.customSelect(
+      '''
+SELECT stage_name FROM animal_stages
+WHERE animal_id = ? AND stage_index = 0
+''',
+      variables: [Variable.withString(animalId)],
+    ).getSingleOrNull();
+    if (stage0 != null && stage0.read<String>('stage_name') == stages.first.$2) {
+      return;
+    }
+    await db.customStatement(
+      'DELETE FROM animal_stages WHERE animal_id = ?',
+      [animalId],
+    );
+    for (final s in stages) {
+      await db.customStatement(
+        '''
+INSERT INTO animal_stages (
+  animal_id, stage_index, stage_name, feed_threshold, sprite_asset_key
+) VALUES (?, ?, ?, ?, ?)
+''',
+        [animalId, s.$1, s.$2, s.$3, s.$4],
+      );
+    }
+    final rows = await db.customSelect(
+      '''
+SELECT id, cumulative_feed FROM user_farm_slots
+WHERE animal_id = ? AND occupant_type = 'livestock'
+''',
+      variables: [Variable.withString(animalId)],
+    ).get();
+    for (final r in rows) {
+      final feed = r.read<int>('cumulative_feed');
+      var stage = 0;
+      for (final s in stages) {
+        if (feed >= s.$3) stage = s.$1;
+      }
+      await db.customStatement(
+        'UPDATE user_farm_slots SET current_stage_index = ? WHERE id = ?',
+        [stage, r.read<int>('id')],
+      );
+    }
+  }
+
+  await replaceStages(
+    animalId: 'animal_sheep_01',
+    stages: const [
+      (0, '새끼양', 0, 'animal/sheep/stage_0'),
+      (1, '성장', 300, 'animal/sheep/stage_1'),
+      (2, '성체', 900, 'animal/sheep/stage_2'),
+    ],
+  );
+  await replaceStages(
+    animalId: 'animal_cow_01',
+    stages: const [
+      (0, '송아지', 0, 'animal/cow/stage_0'),
+      (1, '성장', 600, 'animal/cow/stage_1'),
+      (2, '성체', 1800, 'animal/cow/stage_2'),
+    ],
+  );
+}
+
 Future<void> _seedCrops(GeneratedDatabase db, int now) async {
   const crops = [
     (
@@ -510,7 +590,7 @@ Future<void> _seedAnimals(GeneratedDatabase db, int now) async {
     ),
     (
       'animal_cow_01',
-      '젖소',
+      '소',
       'rare',
       'level',
       8,
@@ -551,8 +631,9 @@ INSERT INTO animal_definitions (
     );
   }
 
+  // Sheep: lamb → growing → adult.
   const sheepStages = [
-    (0, '새끼', 0, 'animal/sheep/stage_0'),
+    (0, '새끼양', 0, 'animal/sheep/stage_0'),
     (1, '성장', 300, 'animal/sheep/stage_1'),
     (2, '성체', 900, 'animal/sheep/stage_2'),
   ];
@@ -586,8 +667,9 @@ INSERT INTO animal_stages (
     );
   }
 
+  // Cattle: calf → growing → adult.
   const cowStages = [
-    (0, '새끼', 0, 'animal/cow/stage_0'),
+    (0, '송아지', 0, 'animal/cow/stage_0'),
     (1, '성장', 600, 'animal/cow/stage_1'),
     (2, '성체', 1800, 'animal/cow/stage_2'),
   ];
@@ -649,7 +731,7 @@ Future<void> _seedFarmLevels(GeneratedDatabase db) async {
     (1, 0, '당근, 닭'),
     (3, 500, '토마토'),
     (5, 1500, '딸기, 양'),
-    (8, 4000, '호박, 젖소'),
+    (8, 4000, '호박, 소'),
     (12, 10000, '황금벼(시즌 한정 슬롯)'),
     (15, 20000, '코스메틱·농장 꾸미기'),
   ];

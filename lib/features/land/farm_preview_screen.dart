@@ -7,6 +7,7 @@ import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
 import '../../data/repositories/farm_repository.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../domain/engines/farm_animal.dart';
 import '../../domain/engines/farm_crop.dart';
 import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/farm_scene_ui.dart';
@@ -141,7 +142,12 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
       _busy = false;
     });
     if (result.raised != null) {
-      _toast('들판에 ${result.raised!.giftLabel}');
+      final raised = result.raised!;
+      _toast(switch (raised) {
+        HerdKind.sheep => BalmiCopy.farmFieldSheep,
+        HerdKind.cattle => BalmiCopy.farmFieldCow,
+        _ => '들판에 ${raised.giftLabel}',
+      });
     } else if (result.unlocked != null) {
       _toast('${result.unlocked!.label} · ${BalmiCopy.waterDone}');
     } else {
@@ -230,20 +236,38 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
     }
 
     setState(() => _busy = true);
+    late final String toast;
     if (slot.template.slotType == SlotType.crop) {
-      await _farmRepo.plantCrop(slotId: slot.template.slotId, cropId: 'crop_carrot_01');
+      await _farmRepo.plantCrop(
+        slotId: slot.template.slotId,
+        cropId: 'crop_carrot_01',
+      );
+      toast = BalmiCopy.farmV2Planted;
     } else {
+      final owned = _farm?.slots
+              .map((s) => s.occupant?.animalId)
+              .whereType<String>() ??
+          const <String>[];
+      final next = pickNextAdoptableAnimal(
+        catalog: _animals.values.toList(),
+        occupiedAnimalIds: owned,
+        farmLevel: _farm?.farm.farmLevel ?? 1,
+      );
+      if (next == null) {
+        setState(() => _busy = false);
+        _toast(BalmiCopy.farmV2NoAdoptable);
+        return;
+      }
       await _farmRepo.adoptAnimal(
         slotId: slot.template.slotId,
-        animalId: 'animal_chicken_01',
+        animalId: next.animalId,
       );
+      toast = farmAdoptedCopy(next);
     }
     if (!mounted) return;
     setState(() => _busy = false);
     await _load();
-    _toast(slot.template.slotType == SlotType.crop
-        ? BalmiCopy.farmV2Planted
-        : BalmiCopy.farmV2Adopted);
+    _toast(toast);
   }
 
   void _toast(String text) {

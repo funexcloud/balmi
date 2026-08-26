@@ -158,12 +158,14 @@ String slotDisplayLabel({
   required FarmSlotView slot,
   required CropDefinition? crop,
   required AnimalDefinition? animal,
+  AnimalDefinition? nextAdoptable,
 }) {
   if (!slot.unlocked) return '잠김';
   final occ = slot.occupant;
   if (occ == null || occ.isEmpty) {
-    // Livestock empty slot: incubate eggs, not adopt an adult.
-    return slot.template.slotType == SlotType.crop ? '심기' : '품기';
+    return slot.template.slotType == SlotType.crop
+        ? '심기'
+        : emptyLivestockSlotLabel(nextAdoptable);
   }
   if (occ.occupantType == OccupantType.crop && crop != null) {
     final stage = crop.stageAt(occ.currentStageIndex);
@@ -171,7 +173,11 @@ String slotDisplayLabel({
   }
   if (occ.occupantType == OccupantType.livestock && animal != null) {
     final stage = animal.stageAt(occ.currentStageIndex);
-    final fallback = animal.startsAsEgg ? '계란' : '새끼';
+    final fallback = animal.startsAsEgg
+        ? '계란'
+        : (animal.animalId.contains('cow')
+            ? '송아지'
+            : (animal.animalId.contains('sheep') ? '새끼양' : '새끼'));
     return '${animal.nameKr} · ${stage?.stageName ?? fallback}';
   }
   return '비어 있음';
