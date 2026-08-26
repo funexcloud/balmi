@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('empty farm shows one caption; tap advances to walk hint',
+  setUp(FarmSpeechBubbleSession.clearForTest);
+
+  testWidgets('empty farm shows one caption; tap advances then dismisses',
       (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -28,7 +30,66 @@ void main() {
 
     await tester.tap(find.byType(FarmSpeechBubble));
     await tester.pumpAndSettle();
-    expect(find.text(BalmiCopy.landEmptyField), findsOneWidget);
+    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
+    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
+    expect(find.text('탭'), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
+  });
+
+  testWidgets('dismissed tip set stays hidden when farm is rebuilt',
+      (tester) async {
+    Widget scene() => const MaterialApp(
+          home: Scaffold(
+            body: FarmScene(buildings: [], herds: []),
+          ),
+        );
+
+    await tester.pumpWidget(scene());
+    await tester.tap(find.byType(FarmSpeechBubble));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FarmSpeechBubble));
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
+
+    await tester.pumpWidget(scene());
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
+    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
+    expect(find.text('탭'), findsNothing);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
+  });
+
+  testWidgets('new tip set shows again after farm state changes',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FarmScene(buildings: [], herds: []),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(FarmSpeechBubble));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FarmSpeechBubble));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FarmScene(
+            buildings: [FarmKind.pastureFence],
+            herds: [HerdKind.sheep],
+            caredToday: true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(FarmSpeechBubble), findsOneWidget);
+    expect(find.text(BalmiCopy.herdsFed), findsOneWidget);
+    expect(tester.getSize(find.byType(FarmSpeechBubble)).height, greaterThan(0));
   });
 
   testWidgets('speech bubble tap does not open land; scene tap does',
@@ -53,7 +114,8 @@ void main() {
     expect(find.text(BalmiCopy.landWalkHint), findsOneWidget);
 
     // Tap sky area above the bubble to open land.
-    await tester.tapAt(tester.getTopLeft(find.byType(FarmScene)) + const Offset(40, 24));
+    await tester.tapAt(
+        tester.getTopLeft(find.byType(FarmScene)) + const Offset(40, 24));
     await tester.pumpAndSettle();
     expect(opens, 1);
   });
@@ -74,5 +136,24 @@ void main() {
     expect(find.text(BalmiCopy.landEmptyField), findsNothing);
     expect(find.text(BalmiCopy.herdsFed), findsOneWidget);
     expect(find.bySemanticsLabel('울타리 목장, 양떼 2'), findsOneWidget);
+  });
+
+  testWidgets('single-line bubble dismisses on tap', (tester) async {
+    var dismissed = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FarmSpeechBubble(
+            lines: const ['한 줄만'],
+            onDismissed: () => dismissed += 1,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('한 줄만'), findsOneWidget);
+    await tester.tap(find.byType(FarmSpeechBubble));
+    await tester.pumpAndSettle();
+    expect(find.text('한 줄만'), findsNothing);
+    expect(dismissed, 1);
   });
 }
