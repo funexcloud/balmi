@@ -47,5 +47,5 @@ USER ubuntu
 
 RUN git config --global --add safe.directory "${FLUTTER_HOME}" \
     && flutter config --no-analytics >/dev/null 2>&1 || true \
-    && flutter precache --universal \
+    && flutter precache \
     && flutter --version
