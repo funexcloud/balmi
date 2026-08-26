@@ -20,7 +20,7 @@ import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 
 /// Sentinel so callers can pass an explicit `null` track spec (자유).
-const Object _trackSpecUnset = Object();
+const Object kTrackSpecUnset = Object();
 
 class RecordingController extends ChangeNotifier {
   RecordingController({
@@ -63,11 +63,11 @@ class RecordingController extends ChangeNotifier {
   /// (defaulting to 400 the first time track is chosen).
   void setPreferredActivity(
     ActivityKind next, {
-    Object? trackSpecM = _trackSpecUnset,
+    Object? trackSpecM = kTrackSpecUnset,
   }) {
     preferredActivity = next;
     if (next.isTrack) {
-      if (!identical(trackSpecM, _trackSpecUnset)) {
+      if (!identical(trackSpecM, kTrackSpecUnset)) {
         preferredTrackSpecM = trackSpecM as int?;
       } else {
         preferredTrackSpecM ??= 400;
@@ -82,7 +82,7 @@ class RecordingController extends ChangeNotifier {
   /// dropped between preference write and [start].
   Future<bool> startPreferred(
     ActivityKind activity, {
-    Object? trackSpecM = _trackSpecUnset,
+    Object? trackSpecM = kTrackSpecUnset,
   }) {
     setPreferredActivity(activity, trackSpecM: trackSpecM);
     return start(activity: activity, trackSpecM: trackSpecM);
@@ -203,7 +203,7 @@ class RecordingController extends ChangeNotifier {
   /// Pass [trackSpecM] explicitly (including `null` for 자유). Omitting it
   /// uses [preferredTrackSpecM] when [activity] is track.
   Future<bool> start({
-    Object? trackSpecM = _trackSpecUnset,
+    Object? trackSpecM = kTrackSpecUnset,
     ActivityKind? activity,
   }) async {
     if (_starting) return false;
@@ -234,7 +234,7 @@ class RecordingController extends ChangeNotifier {
       final int? spec;
       if (!chosen.isTrack) {
         spec = null;
-      } else if (!identical(trackSpecM, _trackSpecUnset)) {
+      } else if (!identical(trackSpecM, kTrackSpecUnset)) {
         spec = trackSpecM as int?;
       } else {
         spec = preferredTrackSpecM;

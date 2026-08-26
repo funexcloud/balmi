@@ -39,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<HerdKind> _herds = const [];
   var _wateredToday = false;
 
+  /// Blocks play [onTap] while the long-press picker / start flow is open.
+  var _sportPickOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -110,41 +113,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onLongPressPlay(BuildContext btnCtx) async {
-    final box = btnCtx.findRenderObject() as RenderBox?;
-    final origin = box?.localToGlobal(box.size.center(Offset.zero));
+    if (_sportPickOpen || !mounted) return;
+    setState(() => _sportPickOpen = true);
 
-    // Wait until the long-press pointer-up is done so it cannot dismiss the
-    // picker barrier immediately (classic showDialog-from-onLongPress race).
-    await SchedulerBinding.instance.endOfFrame;
-    await Future<void>.delayed(const Duration(milliseconds: 40));
-    if (!mounted) return;
+    try {
+      final box = btnCtx.findRenderObject() as RenderBox?;
+      final origin = box?.localToGlobal(box.size.center(Offset.zero));
 
-    final rec = context.read<RecordingController>();
-    final picked = await showActivityCirclePicker(
-      context: context,
-      selected: rec.preferredActivity,
-      origin: origin,
-    );
-    if (picked == null || !mounted) return;
-
-    if (picked.isTrack) {
-      // Remember 트랙 so the play badge updates; meters + start happen on chip tap.
-      rec.setPreferredActivity(ActivityKind.track);
-      final choice = await _pickTrackSpec(rec);
+      final rec = context.read<RecordingController>();
+      // CircleAction fires long-press on pointer-up; still wait a frame so a
+      // residual barrier dismiss cannot race the picker open.
+      await SchedulerBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
       if (!mounted) return;
-      if (choice == null) return; // dismissed — preference kept, no auto-start
-      if (rec.isStarting || rec.isRecording) return;
-      final ok = await rec.startPreferred(
-        ActivityKind.track,
-        trackSpecM: choice.specM,
-      );
-      if (!ok) await _reportStartFailure(rec);
-      return;
-    }
 
-    if (rec.isStarting || rec.isRecording) return;
-    final ok = await rec.startPreferred(picked);
-    if (!ok) await _reportStartFailure(rec);
+      final picked = await showActivityCirclePicker(
+        context: context,
+        selected: rec.preferredActivity,
+        origin: origin,
+      );
+      if (picked == null || !mounted) return;
+
+      if (picked.isTrack) {
+        // Remember 트랙 so the play badge updates; meters + start happen on chip tap.
+        rec.setPreferredActivity(ActivityKind.track);
+        final choice = await _pickTrackSpec(rec);
+        if (!mounted) return;
+        if (choice == null) return; // dismissed — preference kept, no auto-start
+        if (rec.isStarting || rec.isRecording) return;
+        final ok = await rec.startPreferred(
+          ActivityKind.track,
+          trackSpecM: choice.specM,
+        );
+        if (!ok) await _reportStartFailure(rec);
+        return;
+      }
+
+      // Selecting a sport starts that mode immediately (explicit activity —
+      // do not rely only on preferred being read later).
+      if (rec.isStarting || rec.isRecording) {
+        rec.setPreferredActivity(picked);
+        return;
+      }
+      final ok = await rec.startPreferred(picked);
+      if (!ok) await _reportStartFailure(rec);
+    } finally {
+      if (mounted) {
+        setState(() => _sportPickOpen = false);
+      } else {
+        _sportPickOpen = false;
+      }
+    }
   }
 
   @override
@@ -286,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           child: Builder(
             builder: (btnCtx) {
+              final busy = rec.isStarting || _sportPickOpen;
               return Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
@@ -295,9 +315,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
                     filled: true,
                     size: CircleAction.playSize,
-                    onTap: rec.isStarting ? () {} : () => _start(rec),
-                    onLongPress:
-                        rec.isStarting ? null : () => _onLongPressPlay(btnCtx),
+                    onTap: busy ? () {} : () => _start(rec),
+                    onLongPress: busy ? null : () => _onLongPressPlay(btnCtx),
                   ),
                   if (!rec.isStarting && !preferred.isAuto)
                     Positioned(

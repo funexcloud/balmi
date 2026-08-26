@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../core/theme.dart';
 import '../domain/models/activity.dart';
@@ -19,7 +20,9 @@ Future<ActivityKind?> showActivityCirclePicker({
 
   return showGeneralDialog<ActivityKind>(
     context: context,
-    barrierDismissible: true,
+    // Custom overlay owns dismiss; keep the route barrier from eating the
+    // long-press pointer-up that opened this dialog.
+    barrierDismissible: false,
     barrierLabel: 'activity picker',
     barrierColor: Colors.black.withValues(alpha: 0.18),
     pageBuilder: (ctx, _, __) {
@@ -34,7 +37,7 @@ Future<ActivityKind?> showActivityCirclePicker({
   );
 }
 
-class _ActivityCirclePickerOverlay extends StatelessWidget {
+class _ActivityCirclePickerOverlay extends StatefulWidget {
   const _ActivityCirclePickerOverlay({
     required this.anchor,
     required this.selected,
@@ -43,8 +46,36 @@ class _ActivityCirclePickerOverlay extends StatelessWidget {
   final Offset anchor;
   final ActivityKind selected;
 
+  @override
+  State<_ActivityCirclePickerOverlay> createState() =>
+      _ActivityCirclePickerOverlayState();
+}
+
+class _ActivityCirclePickerOverlayState
+    extends State<_ActivityCirclePickerOverlay> {
   static const _radius = 92.0;
   static const _tileSize = 48.0;
+
+  /// Ignore barrier taps until the opening gesture has fully cleared.
+  var _dismissArmed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Arm after the frame that presented us + one more frame so any residual
+    // pointer-up from the long-press that opened the picker cannot dismiss it.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _dismissArmed = true);
+      });
+    });
+  }
+
+  void _dismiss() {
+    if (!_dismissArmed) return;
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +89,7 @@ class _ActivityCirclePickerOverlay extends StatelessWidget {
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(context).pop(),
+              onTap: _dismiss,
             ),
           ),
           for (var i = 0; i < kinds.length; i++)
@@ -76,9 +107,9 @@ class _ActivityCirclePickerOverlay extends StatelessWidget {
     double startAngle,
   ) {
     final angle = startAngle + (2 * math.pi * index / count);
-    final dx = anchor.dx + _radius * math.cos(angle) - _tileSize / 2;
-    final dy = anchor.dy + _radius * math.sin(angle) - _tileSize / 2;
-    final on = kind == selected;
+    final dx = widget.anchor.dx + _radius * math.cos(angle) - _tileSize / 2;
+    final dy = widget.anchor.dy + _radius * math.sin(angle) - _tileSize / 2;
+    final on = kind == widget.selected;
 
     return Positioned(
       left: dx,

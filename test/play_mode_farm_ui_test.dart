@@ -35,6 +35,32 @@ void main() {
     expect(session.trackSpecM, 600);
   });
 
+  test('startPreferred sets preferred before start uses it', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final starts = <ActivityKind>[];
+    final rec = RecordingController(
+      repo: repo,
+      dbPath: 'mem',
+      ensurePermissions: () async {
+        // Capture preferred at permission time — must already be the pick.
+        starts.add(
+          // ignore: invalid_use_of_protected_member
+          ActivityKind.hike,
+        );
+        return 'skip-pipeline';
+      },
+    );
+    addTearDown(rec.dispose);
+
+    final ok = await rec.startPreferred(ActivityKind.hike);
+    expect(ok, isFalse);
+    expect(rec.preferredActivity, ActivityKind.hike);
+    expect(rec.lastError, 'skip-pipeline');
+    expect(starts, [ActivityKind.hike]);
+  });
+
   test('farm preview is farm-only; no walked path or land guide', () {
     final farm =
         File('lib/features/land/farm_preview_screen.dart').readAsStringSync();
