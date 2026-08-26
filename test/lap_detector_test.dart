@@ -107,6 +107,117 @@ void main() {
     expect(lastLap.lapDistM, lessThan(750));
     expect(detector.isTrackLikeLoop(lastLap.lapDistM), isTrue);
   });
+
+  test('street approach then stadium loops still auto-count laps', () {
+    // Session starts ~350m north of the track (street → gym), then circles.
+    const streetLat = 35.5355;
+    const streetLon = 129.2593;
+    const trackLat = 35.5324;
+    const trackLon = 129.2593;
+    const trackM = 600.0;
+    const speedMs = 1.5;
+    final radiusM = trackM / (2 * math.pi);
+    final detector = LapDetector();
+    final t0 = DateTime.utc(2026, 8, 26, 11);
+    var t = 0;
+    LapEvent? lastLap;
+
+    // Walk south from street toward track entry (north point of circle).
+    const approachM = 350.0;
+    final approachSec = (approachM / speedMs).round();
+    for (var i = 0; i <= approachSec; i++) {
+      final frac = i / approachSec;
+      final lat = streetLat + (trackLat - streetLat) * frac;
+      final lon = streetLon + (trackLon - streetLon) * frac;
+      final event = detector.ingest(
+        TrackSample(
+          ts: t0.add(Duration(seconds: t++)),
+          lat: lat,
+          lon: lon,
+          hAccM: 6,
+        ),
+      );
+      if (event != null) lastLap = event;
+    }
+
+    // Three full stadium loops starting at the north point.
+    final loopSec = (trackM / speedMs).round();
+    for (var lap = 0; lap < 3; lap++) {
+      for (var i = 1; i <= loopSec; i++) {
+        final dist = speedMs * i;
+        final ang = (dist / trackM) * 2 * math.pi;
+        final north = radiusM * math.cos(ang) - radiusM;
+        final east = radiusM * math.sin(ang);
+        final pos = _offset(trackLat, trackLon, north, east);
+        final event = detector.ingest(
+          TrackSample(
+            ts: t0.add(Duration(seconds: t++)),
+            lat: pos.$1,
+            lon: pos.$2,
+            hAccM: 6,
+          ),
+        );
+        if (event != null) lastLap = event;
+      }
+    }
+
+    expect(detector.calibrating, isFalse);
+    expect(lastLap, isNotNull);
+    expect(lastLap!.lapNo, greaterThanOrEqualTo(2));
+    expect(detector.lapNo, greaterThanOrEqualTo(2));
+  });
+
+  test('out-and-back trail does not invent auto laps', () {
+    const startLat = 37.5;
+    const startLon = 127.0;
+    const speedMs = 1.5;
+    final detector = LapDetector();
+    final t0 = DateTime.utc(2026, 8, 26, 9);
+    var t = 0;
+    // 600m out, 600m back along the same line (opposite heading on return).
+    for (var i = 0; i <= 400; i++) {
+      final signed = i <= 200 ? i * speedMs : (400 - i) * speedMs;
+      final pos = _offset(startLat, startLon, signed, 0);
+      detector.ingest(
+        TrackSample(
+          ts: t0.add(Duration(seconds: t++)),
+          lat: pos.$1,
+          lon: pos.$2,
+          hAccM: 6,
+        ),
+      );
+    }
+    expect(detector.lapNo, 0);
+  });
+
+  test('400m distance-threshold loops count successive laps', () {
+    const startLat = 37.5665;
+    const startLon = 126.978;
+    const trackM = 400.0;
+    const speedMs = 2.0;
+    final radiusM = trackM / (2 * math.pi);
+    final detector = LapDetector();
+    final t0 = DateTime.utc(2026, 8, 26, 14);
+    final seconds = ((trackM * 4) / speedMs).round() + 20;
+
+    for (var i = 0; i <= seconds; i++) {
+      final dist = speedMs * i;
+      final ang = (dist / trackM) * 2 * math.pi;
+      final north = radiusM * math.cos(ang) - radiusM;
+      final east = radiusM * math.sin(ang);
+      final pos = _offset(startLat, startLon, north, east);
+      detector.ingest(
+        TrackSample(
+          ts: t0.add(Duration(seconds: i)),
+          lat: pos.$1,
+          lon: pos.$2,
+          hAccM: 5,
+        ),
+      );
+    }
+
+    expect(detector.lapNo, greaterThanOrEqualTo(3));
+  });
 }
 
 (double, double) _offset(double lat, double lon, double northM, double eastM) {
