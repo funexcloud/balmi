@@ -8,6 +8,8 @@ Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 
 웰니스 확장: **Activity Recovery / 회복 체크** — 스펙 동일 문서의 「Activity Recovery」 절.  
 장기 아키텍처: balmi × VASA **연구근거 기반(Evidence-based)** 방향 — [`docs/EVIDENCE_ARCHITECTURE.md`](docs/EVIDENCE_ARCHITECTURE.md) (명세만; Evidence DB 미구현).
 
+**Balmi Safety** (이상 신호 → 확인 → SOS, Recovery와 분리): [`docs/BALMI_SAFETY.md`](docs/BALMI_SAFETY.md). 워치/모션만으로 저혈당 진단하지 않음.
+
 ## 다운로드
 
 - 저장소: https://github.com/funexcloud/balmi

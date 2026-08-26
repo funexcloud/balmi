@@ -236,6 +236,26 @@ NSLocationWhenInUse, NSLocationAlwaysAndWhenInUse, UIBackgroundModes location.
 
 ---
 
+## Balmi Safety (제품 방향 · docs-first)
+
+운동 맥락의 **이상 신호 → 사용자 확인 → (Recovery) → 긴급 대응** 모듈.  
+정식 명세: [`BALMI_SAFETY.md`](BALMI_SAFETY.md).
+
+| 모듈 | 역할 |
+|------|------|
+| **Activity Recovery** | 음식·물·휴식·회복 프로토콜 (별도 MVP PR `#7` / `cursor/activity-recovery-36aa`) |
+| **Balmi Safety** | 이상 감지 → 확인 → 보호자/SOS (Recovery **위/옆**) |
+
+**교차:** Recovery는 증상 신호를 Safety에 넘길 수 있다. SOS·긴급 에스컬레이션은 **Safety 소유**.
+
+**하드 규칙 (요약):** 워치 HR·떨림·모션만으로 저혈당 진단 금지. `저혈당인가요? → 119` UX 금지.  
+허용: **「이상 신호가 있습니다. 안전을 확인하겠습니다.」** — 측정 CGM/혈당 없이 **「저혈당입니다」** 금지.  
+CGM은 실측 연동 시에만 별도 glucose-aware 로직. 실제 119 자동 다이얼·워치 HR·CGM은 **deferred**.
+
+도메인 스켈레톤: `SafetyScoreLevel` (`정상 → 주의 → 회복 필요 → 안전 확인 → 긴급`) — `lib/domain/engines/balmi_safety.dart`.
+
+---
+
 ## 테스트
 
 분류기, 랩 감지기, 거리 제외, 백오프 유닛 테스트. `flutter test` 녹색 목표.
