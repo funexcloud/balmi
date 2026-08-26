@@ -29,7 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('걷든, 달리든'), findsOneWidget);
-    expect(find.text(BalmiCopy.onboardingStory1Tags.split(' · ').first), findsOneWidget);
+    expect(find.text('걷기'), findsOneWidget);
     expect(find.text('1 / 4'), findsOneWidget);
 
     await tester.tap(find.text(BalmiCopy.continueLabel));
@@ -38,15 +38,19 @@ void main() {
     expect(find.text(BalmiCopy.onboardingStory2Badge), findsOneWidget);
     expect(find.text('2 / 4'), findsOneWidget);
 
-    await tester.tap(find.text(BalmiCopy.continueLabel));
+    // Swipe past recovery → promise without hitting the permission gate on CTA.
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
     await tester.pumpAndSettle();
     expect(find.textContaining('갑자기 종료되어도'), findsOneWidget);
     expect(find.text(BalmiCopy.onboardingStory3Badge), findsOneWidget);
     expect(find.text('3 / 4'), findsOneWidget);
 
-    // Page 3→4 requests permissions; in tests ensure()/Geolocator may fail.
-    // Still assert the story titles exist as copy constants used by the screen.
-    expect(find.text(BalmiCopy.continueLabel), findsOneWidget);
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('단 한 걸음도'), findsWidgets);
+    expect(find.text(BalmiCopy.slogan), findsOneWidget);
+    expect(find.text(BalmiCopy.done), findsOneWidget);
+    expect(find.text('4 / 4'), findsOneWidget);
     expect(done, isFalse);
   });
 }
