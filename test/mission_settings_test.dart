@@ -84,7 +84,8 @@ void main() {
       kMissionWeek15km,
     ]);
 
-    // Cannot disable the last remaining type.
+    await controller.setMissionEnabled(kMissionToday30m, false);
+    // Cannot disable the last remaining enabled type.
     await controller.setMissionEnabled(kMissionWeek15km, false);
     expect(controller.isMissionEnabled(kMissionWeek15km), isTrue);
   });
