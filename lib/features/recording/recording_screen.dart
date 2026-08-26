@@ -21,6 +21,14 @@ import '../meal_walk/meal_walk_controller.dart';
 import '../session_detail/session_detail_screen.dart';
 import 'recording_controller.dart';
 
+/// Semantics label for the live activity control.
+///
+/// Must stay stable while auto walk↔run flips — embedding 걷기/뛰기 causes
+/// Android to toast the new label when sport changes or the UI tears down.
+@visibleForTesting
+String recordingActivitySemanticsLabel(ActivityKind activity) =>
+    activity.isAuto ? BalmiCopy.activityAuto : activity.label;
+
 class RecordingScreen extends StatefulWidget {
   const RecordingScreen({super.key});
 
@@ -74,10 +82,17 @@ class _RecordingScreenState extends State<RecordingScreen>
       await meal.abortWalk();
     }
     if (!mounted) return;
+    // Drop leftover snackbars before leaving — Android may also surface a
+    // Semantics toast when the live 걷기/뛰기 label flips or tears down.
+    ScaffoldMessenger.of(context).clearSnackBars();
+    // Ending the recording UI should not flash meal-walk feedback under the
+    // session detail route when Home remounts beneath it.
+    meal.lastFeedback = null;
     final nav = Navigator.of(context);
     if (!rec.isRecording) return;
     final id = await rec.stop();
     if (id == null) return;
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     await nav.push(
       MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: id)),
     );
@@ -197,9 +212,9 @@ class _RecordingScreenState extends State<RecordingScreen>
                               size: 44 * 0.42,
                               color: BalmiColors.ink,
                             ),
-                            label: rec.activity.isAuto
-                                ? '${BalmiCopy.activityAuto} · ${((snap?.sport ?? 'walk') == 'run') ? BalmiCopy.run : BalmiCopy.walk}'
-                                : rec.activity.label,
+                            // Glyph still reflects auto walk↔run; Semantics
+                            // label stays stable via [recordingActivitySemanticsLabel].
+                            label: recordingActivitySemanticsLabel(rec.activity),
                             size: 44,
                             onTap: () => _tune(rec),
                             onLongPress: () async {
