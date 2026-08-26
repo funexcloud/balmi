@@ -141,6 +141,16 @@ UUID/text id 허용. `sat_count`는 nullable. `judged_sport`는 사용자 수정
 
 브랜드 UI: 부드럽고 친근한 한국어. 의료/장례 톤 아님. 이름 **balmi**. 설정/소개에만 작은 **× VASA** 기술 크레딧(의료 점수가 아님).
 
+### Evidence / VASA 근거 아키텍처 (방향)
+
+제품 장기 방향: **연구근거 기반(Evidence-based) 서비스** — 학술 근거를 **추적**할 수 있는 평가 시스템.  
+「논문으로 검증된 서비스」 등 제품 clinical validation 단정은 **별도 검증 전까지 사용하지 않음**.
+
+3계층: **Balmi = 측정(Data)** · **VASA = 해석·평가(Model)** · **FUNEX Research Repo = 근거(Evidence)**.  
+Research Repo는 PDF 아카이브가 아니라 **Evidence Base**다. 추적 사슬·성숙도 사다리·Research Repo 프로세스·목표 UX는 [`EVIDENCE_ARCHITECTURE.md`](EVIDENCE_ARCHITECTURE.md).
+
+이 스펙 개정은 **문서만**이다. Evidence DB / `faiEvidence` 파이프라인 / 근거 펼침 UI는 구현 범위 밖(후속).
+
 ---
 
 ## 패키지
@@ -168,6 +178,17 @@ NSLocationWhenInUse, NSLocationAlwaysAndWhenInUse, UIBackgroundModes location.
 - 현금 리워드 없음.
 - HealthKit / Health Connect (W1): 스텁만.
 - 유료 `flutter_background_geolocation`: 사용하지 않음. `LocationEngine`에서 교체 가능.
+- **Evidence DB / Research Repo / faiEvidence 파이프라인 / VASA 근거 펼침 UI**: 아키텍처 문서만. 전체 구현하지 않음 → [`EVIDENCE_ARCHITECTURE.md`](EVIDENCE_ARCHITECTURE.md).
+
+---
+
+## 상업화·로드맵 (발췌)
+
+정식 상업화 체크리스트 파일은 아직 없다. B2B·제품화 준비 시 최소 항목:
+
+- [ ] **Evidence Base** 운영(Research Repo COMPLETE · `faiEvidence` · component↔paper) — 상세 [`EVIDENCE_ARCHITECTURE.md`](EVIDENCE_ARCHITECTURE.md)
+- [ ] 카피: Evidence-based / 추적 가능 평가 (「논문으로 검증된 서비스」 금지)
+- [ ] (후속) 결과↔Evidence 역추적 · 실사용 재검증 루프
 
 ---
 
