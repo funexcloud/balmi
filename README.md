@@ -6,6 +6,8 @@
 
 Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).
 
+**Balmi Safety** (이상 신호 → 확인 → SOS, Recovery와 분리): [`docs/BALMI_SAFETY.md`](docs/BALMI_SAFETY.md). 워치/모션만으로 저혈당 진단하지 않음.
+
 ## 다운로드
 
 - 저장소: https://github.com/funexcloud/balmi
