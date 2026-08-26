@@ -10,8 +10,9 @@ import '../../domain/engines/workout_stats.dart';
 import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
 import '../../widgets/session_row.dart';
-import '../../widgets/today_summary_card.dart';
+import '../../widgets/today_exercise_card.dart';
 import '../session_detail/session_detail_screen.dart';
+import '../settings/step_goal_controller.dart';
 
 class MyActivityScreen extends StatefulWidget {
   const MyActivityScreen({super.key});
@@ -42,8 +43,10 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final steps = context.watch<StepService>();
+    final stepGoal = context.watch<StepGoalController>();
     final filtered = _all.where((r) => r.matchesFilter(_filter)).toList();
+    // Full-day exercise summary (home parity); filter applies to period + log below.
+    final todayExercise = summarizePeriod(inLocalDay(_all, now));
     final today = summarizePeriod(inLocalDay(filtered, now));
     final week = summarizePeriod(inLocalWeek(filtered, now));
     final month = summarizePeriod(inLocalMonth(filtered, now));
@@ -64,12 +67,10 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StepLine(label: steps.label, steps: steps.displaySteps),
-              const SizedBox(height: 10),
-              TodaySummaryCard(
-                stats: today,
-                stepLabel: steps.label,
-                steps: today.steps > 0 ? today.steps : steps.displaySteps,
+              TodayExerciseCard(
+                stats: todayExercise,
+                exerciseMinutes: stepGoal.exerciseMinutes,
+                exerciseKm: stepGoal.exerciseKm,
               ),
               const SizedBox(height: 14),
               ActivityPills(
