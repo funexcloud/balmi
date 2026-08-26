@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../core/copy.dart';
+import '../../core/theme.dart';
 import '../../domain/engines/meal_walk.dart';
 
 enum MealWalkAlarmKind { meal, walk }
@@ -179,7 +179,7 @@ class MealWalkAlarms implements MealWalkAlarmPort {
         priority: Priority.high,
         playSound: sound,
         enableVibration: true,
-        color: const Color(0xFFD9774A),
+        color: BalmiColors.potato,
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,

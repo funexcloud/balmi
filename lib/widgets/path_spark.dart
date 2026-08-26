@@ -83,7 +83,8 @@ class _SparkPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = BalmiColors.potato
+        // Path pulse shares Sweet Potato with map GPS tracks / heartbeat.
+        ..color = BalmiColors.trackPath
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round

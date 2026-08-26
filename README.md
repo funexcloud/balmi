@@ -2,9 +2,9 @@
 
 걸음은 멈춰도, 기록은 멈추지 않도록.
 
-단 한 걸음도 잃어버리지 않도록. 인터넷이 끊겨도, 앱이 예기치 않게 종료되어도, 다시 켜면 기록이 이어지도록 설계한 이동 기록 앱.
+단 한 걸음도 잃어버리지 않도록. 인터넷이 끊겨도, 앱이 예기치 않게 종료되어도, 다시 켜면 기록이 이어지도록 설계한 이동 기록 앱. 발걸음에서 혈관까지 — **Balmi × VASA**.
 
-Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).  
+Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md). 브랜드·컬러는 [`docs/BRAND.md`](docs/BRAND.md).
 웰니스 확장: **Activity Recovery / 회복 체크** — 스펙 동일 문서의 「Activity Recovery」 절.  
 장기 아키텍처: balmi × VASA **연구근거 기반(Evidence-based)** 방향 — [`docs/EVIDENCE_ARCHITECTURE.md`](docs/EVIDENCE_ARCHITECTURE.md) (명세만; Evidence DB 미구현).
 

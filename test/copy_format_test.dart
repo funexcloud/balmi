@@ -21,7 +21,9 @@ const _forbidden = [
 void main() {
   test('user-facing copy never uses forbidden terms', () {
     const blob =
-        '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
+        '${BalmiCopy.appName} ${BalmiCopy.slogan} ${BalmiCopy.subcopy} '
+        '${BalmiCopy.healthSlogan} ${BalmiCopy.brandPhilosophy} ${BalmiCopy.heroLine} '
+        '${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
         '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryTitle} ${BalmiCopy.recoveryBody} '
         '${BalmiCopy.vasaCredit} ${BalmiCopy.vasaCreditDetail} ${BalmiCopy.waitingGps} '
         '${BalmiCopy.waitingGpsShort} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied} '
@@ -33,7 +35,11 @@ void main() {
         '${BalmiCopy.mealWalkDiscover} ${BalmiCopy.mealWalkIntro} '
         '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
         '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge} '
-        '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps}';
+        '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps} '
+        '${BalmiCopy.brandStoryTitle} ${BalmiCopy.brandStoryWhyTitle} '
+        '${BalmiCopy.brandStoryHook} ${BalmiCopy.brandStoryBody1} '
+        '${BalmiCopy.brandStoryBody2} ${BalmiCopy.brandStoryBody3} '
+        '${BalmiCopy.brandStoryBridge} ${BalmiCopy.brandStoryCredit}';
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
       expect(
@@ -44,9 +50,19 @@ void main() {
     }
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));
+    expect(blob, isNot(contains('앱이 죽어도')));
+    expect(blob, isNot(contains('누구에게나 심장에 좋다')));
+    expect(blob, isNot(contains('심장을 치료')));
     expect(BalmiCopy.slogan, '걸음은 멈춰도, 기록은 멈추지 않도록.');
     expect(BalmiCopy.subcopy, '단 한 걸음도 잃어버리지 않도록.');
-    expect(BalmiCopy.positioning, '기록을 잃지 않도록 설계했습니다');
+    expect(BalmiCopy.healthSlogan, '발걸음에서 혈관까지.');
+    expect(BalmiCopy.brandPhilosophy, '움직임을 기록하고, 몸의 변화를 이해하다.');
+    expect(BalmiCopy.brandStoryHook, '심장이 좋아하는 고구마색');
+    expect(
+      BalmiCopy.brandStoryBody2,
+      contains('심혈관 건강을 위한 식생활에 잘 어울리는'),
+    );
+    expect(BalmiCopy.positioning, '기록을 잃지 않는 이동 기록');
     expect(BalmiCopy.trustAlways, '인터넷이 끊겨도 기록은 기기에 보존됩니다');
     expect(BalmiCopy.todaySteps, '오늘 걸음');
     expect(BalmiCopy.recordingSteps, '기록 중 걸음');
@@ -75,7 +91,8 @@ void main() {
   test('settings copy does not expose implementation notes', () {
     final settingsCopy =
         '${BalmiCopy.vasaCreditDetail} '
-        '${File('lib/features/settings/settings_screen.dart').readAsStringSync()}';
+        '${File('lib/features/settings/settings_screen.dart').readAsStringSync()} '
+        '${File('lib/features/settings/brand_story_screen.dart').readAsStringSync()}';
 
     for (final term in [
       '건강 점수',
@@ -83,6 +100,7 @@ void main() {
       'HealthKit',
       'Health Connect',
       'Release 1',
+      '누구에게나 심장에 좋다',
     ]) {
       expect(
         settingsCopy,
@@ -90,6 +108,8 @@ void main() {
         reason: 'settings must not expose "$term" as implementation copy',
       );
     }
+    expect(settingsCopy, contains('BalmiCopy.brandStoryTitle'));
+    expect(settingsCopy, contains('BrandStoryScreen'));
   });
 
   test('lap TTS and result line format', () {

@@ -249,13 +249,15 @@ class OsmTraceMapState extends State<OsmTraceMap> {
                 for (final line in widget.traces.lines)
                   Polyline(
                     points: line,
-                    color: BalmiColors.sub,
+                    // Historical traces stay in Sweet Potato family (muted).
+                    color: BalmiColors.trackPathMuted,
                     strokeWidth: 3,
                   ),
                 if (highlight != null && highlight.length >= 2)
                   Polyline(
                     points: highlight,
-                    color: BalmiColors.ink,
+                    // Live / selected GPS track = Balmi Sweet Potato.
+                    color: BalmiColors.trackPath,
                     strokeWidth: 4.5,
                   ),
               ],
@@ -269,7 +271,8 @@ class OsmTraceMapState extends State<OsmTraceMap> {
                     height: 18,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: BalmiColors.potato,
+                        // Current location = Active Orange (movement).
+                        color: BalmiColors.locationPin,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),

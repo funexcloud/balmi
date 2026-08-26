@@ -1,15 +1,31 @@
 /// User-facing Korean copy. Keep this file free of unrelated brand/funeral wording.
+///
+/// Brand message axes (see docs/BRAND.md):
+/// - RECORD [slogan]: 걸음은 멈춰도, 기록은 멈추지 않도록.
+/// - HEALTH [healthSlogan]: 발걸음에서 혈관까지.
+/// - Philosophy [brandPhilosophy]: 움직임을 기록하고, 몸의 변화를 이해하다.
 abstract final class BalmiCopy {
   static const appName = 'balmi';
-  /// Brand slogan — product / store / about.
+
+  /// RECORD axis — product / store / about primary slogan.
   static const slogan = '걸음은 멈춰도, 기록은 멈추지 않도록.';
-  /// Product promise (onboarding screen 4 / about).
+
+  /// Companion line under the RECORD slogan (never lose a step).
   static const subcopy = '단 한 걸음도 잃어버리지 않도록.';
+
+  /// HEALTH axis — Balmi × VASA.
+  static const healthSlogan = '발걸음에서 혈관까지.';
+
+  /// Top-level brand philosophy binding RECORD + HEALTH.
+  static const brandPhilosophy = '움직임을 기록하고, 몸의 변화를 이해하다.';
+
+  static const heroLine = '걷고, 달리고, 길을 기억하세요.';
   static const actionLine = '걷고. 달리고. 기록하다.';
+
   static const oneLiner =
       '걸음은 멈춰도, 기록은 멈추지 않도록. '
       '인터넷이 끊겨도, 앱이 예기치 않게 종료되어도, 다시 켜면 기록이 이어지도록 설계한 이동 기록 앱.';
-  static const positioning = '기록을 잃지 않도록 설계했습니다';
+  static const positioning = '기록을 잃지 않는 이동 기록';
   static const trustAlways = '인터넷이 끊겨도 기록은 기기에 보존됩니다';
 
   static const resumeRecording = '이어서 기록';
@@ -250,7 +266,9 @@ abstract final class BalmiCopy {
   static const e04 = 'E04 면적이 최소 기준에 못 미쳐요';
 
   static const vasaCredit = '× VASA';
-  static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
+  static const vasaCreditDetail =
+      'Balmi는 움직임을 기록하고, VASA는 그 의미를 해석합니다. '
+      '발걸음에서 혈관까지.';
   static const about = '이 앱 정보';
   static const aboutTitle = '기록을 잃지 않도록 설계했습니다';
   static const aboutBody =
@@ -266,6 +284,22 @@ abstract final class BalmiCopy {
   static const aboutStatusSyncHint = '연결 복구 후 필요한 데이터 동기화';
   static const aboutTechLine = 'Local First · Offline Ready · Recovery';
   static const versionLabel = '0.1.13';
+
+  // Brand story (Sweet Potato) — narrative, not a medical claim.
+  // Formal wording: 심혈관 건강을 위한 식생활에 잘 어울리는 식품.
+  // Never absolute: 「고구마는 누구에게나 심장에 좋다」.
+  static const brandStoryTitle = '브랜드 스토리';
+  static const brandStoryWhyTitle = '왜 Balmi는 고구마색일까요?';
+  static const brandStoryHook = '심장이 좋아하는 고구마색';
+  static const brandStoryBody1 = '걷고 달리는 발걸음은 심장을 움직입니다.';
+  static const brandStoryBody2 =
+      '그리고 고구마는 칼륨과 식이섬유를 함유한, '
+      '심혈관 건강을 위한 식생활에 잘 어울리는 식품입니다.';
+  static const brandStoryBody3 = '그래서 Balmi는 심장이 좋아하는 고구마색에서 시작했습니다.';
+  static const brandStoryBridge = '발걸음에서 심장으로, 심장에서 혈관까지.';
+  static const brandStoryCredit = 'Balmi × VASA';
+  static const brandStoryTagline =
+      '발걸음에서 혈관까지. Balmi × VASA';
 
   static const mealWalkDiscover = '식사 후 15분 걷기, 시작해볼까요?';
   static const mealWalkHealthSection = '건강 습관';

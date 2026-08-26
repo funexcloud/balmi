@@ -39,7 +39,12 @@ class StatusChip extends StatelessWidget {
 }
 
 class PulseDot extends StatefulWidget {
-  const PulseDot({super.key, this.color = BalmiColors.sage, this.pulse = true});
+  /// Default Active Orange — movement / live recording status dot.
+  const PulseDot({
+    super.key,
+    this.color = BalmiColors.activeOrange,
+    this.pulse = true,
+  });
 
   final Color color;
   final bool pulse;
@@ -135,7 +140,14 @@ class RecordingStatusChips extends StatelessWidget {
           children: [
             LocateFixedIcon(
               size: 15,
-              color: waitingFix ? BalmiColors.sub : BalmiColors.ink,
+              color: waitingFix
+                  ? BalmiColors.sub
+                  : switch (strength) {
+                      'strong' || 'ok' => BalmiColors.sage,
+                      'weak' => BalmiColors.attention,
+                      'poor' => BalmiColors.critical,
+                      _ => BalmiColors.sub,
+                    },
               strokeWidth: 2,
             ),
             const SizedBox(width: 6),
@@ -167,12 +179,20 @@ class GpsQualityDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = waiting
+        ? BalmiColors.sub
+        : switch (strength) {
+            'strong' || 'ok' => BalmiColors.sage,
+            'weak' => BalmiColors.attention,
+            'poor' => BalmiColors.critical,
+            _ => BalmiColors.sub,
+          };
     return Text(
       BalmiCopy.gpsQualityDots(strength, waiting: waiting),
       style: BalmiTheme.body(
         size: 12,
         weight: FontWeight.w700,
-        color: BalmiColors.ink,
+        color: color,
       ),
     );
   }
@@ -190,7 +210,7 @@ class SportPill extends StatelessWidget {
       child: Icon(
         running ? Icons.directions_run : Icons.directions_walk,
         size: 22,
-        color: BalmiColors.ink,
+        color: running ? BalmiColors.activeOrange : BalmiColors.ink,
       ),
     );
   }
