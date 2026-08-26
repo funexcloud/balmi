@@ -96,9 +96,10 @@ class _CircleActionState extends State<CircleAction> {
 
 /// Modal sheet that sits **above** the floating [BalmiDock].
 ///
-/// Default [showModalBottomSheet] anchors to the screen bottom, so the sheet
-/// (and its CTAs) end up behind the dock. We clear [BalmiDock.extent] under a
-/// transparent sheet chrome so content paints above the dock.
+/// Default [showModalBottomSheet] anchors to the screen bottom. Content must
+/// clear [BalmiDock.extent], but the sheet chrome itself stays **opaque to the
+/// bottom edge** so the dock is covered (not visible through a transparent
+/// gap under the floating pill).
 ///
 /// Returns the value passed to [Navigator.pop], or `null` if dismissed.
 Future<T?> showBalmiSheet<T>({
@@ -108,37 +109,42 @@ Future<T?> showBalmiSheet<T>({
   final dockClearance = BalmiDock.extent(context);
   return showModalBottomSheet<T>(
     context: context,
+    // Transparent route chrome so the rounded Material corners show;
+    // the Material itself is opaque through the dock band.
     backgroundColor: Colors.transparent,
     elevation: 0,
     barrierColor: Colors.black54,
     builder: (ctx) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: dockClearance),
-        child: Material(
-          color: BalmiColors.surface,
-          elevation: 8,
-          shadowColor: Colors.black.withValues(alpha: 0.12),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: BalmiColors.line,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+      return Material(
+        key: const ValueKey('balmi-sheet-chrome'),
+        color: BalmiColors.surface,
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: BalmiColors.line,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              builder(ctx),
-            ],
-          ),
+            ),
+            builder(ctx),
+            // Opaque dock cover — solid surface, not a transparent pad.
+            SizedBox(
+              key: const ValueKey('balmi-sheet-dock-cover'),
+              height: dockClearance,
+            ),
+          ],
         ),
       );
     },

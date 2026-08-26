@@ -55,7 +55,11 @@ void main() {
     final sheet = File('lib/widgets/circle_action.dart').readAsStringSync();
     expect(sheet, contains('BalmiDock.extent'));
     expect(sheet, contains('dockClearance'));
+    expect(sheet, contains('balmi-sheet-dock-cover'));
+    expect(sheet, contains('balmi-sheet-chrome'));
+    // Route chrome is transparent for rounded corners; dock cover is opaque.
     expect(sheet, contains('Colors.transparent'));
+    expect(sheet, isNot(contains('padding: EdgeInsets.only(bottom: dockClearance)')));
     final home = File('lib/features/home/home_screen.dart').readAsStringSync();
     expect(home, contains('_pickTrackSpec'));
     expect(home, contains('TrackSpecPills'));
