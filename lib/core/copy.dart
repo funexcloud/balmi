@@ -273,18 +273,22 @@ abstract final class BalmiCopy {
   static const farmV2Hint =
       '걸으면 사료·물·영양제를 받아요. 아래에서 나눠 주면 작물과 가축이 자라요.';
   static const farmV2NeedResource = '자원이 부족해요. 오늘 걸으면 더 받을 수 있어요';
-  static const farmV2NoSlot = '나눠 줄 작물이나 가축이 없어요. 빈 슬롯을 눌러 심거나 품으세요';
+  static const farmV2NoSlot =
+      '나눠 줄 작물이나 가축이 없어요. 빈 슬롯을 눌러 심거나 입양·품으세요';
   static const farmV2ApplyFailed = '자원을 나누지 못했어요';
   static const farmV2Applied = '잘 자라고 있어요';
   static const farmV2Planted = '씨앗을 뿌렸어요!';
   /// Chicken start toast — egg first, then hatch through feed stages.
-  static const farmV2Adopted = '계란을 품고 있어요';
+  static const farmV2Adopted = '계란을 품고 있어요!';
   static const farmV2NoAdoptable =
       '아직 들일 수 있는 가축이 없어요. 농장 레벨을 올려 보세요';
+  /// Sheep/cow start beat — birth before grow stages.
   static const farmBirthSheep = '양이 태어났어요!';
   static const farmBirthCow = '송아지가 태어났어요!';
   static const farmBirthChickenEgg = farmV2Adopted;
   static const farmBirthCropSeed = farmV2Planted;
+  static const farmFieldSheep = farmBirthSheep;
+  static const farmFieldCow = farmBirthCow;
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
+import '../domain/engines/farm_animal.dart';
 import '../domain/engines/farm_life.dart';
 import '../domain/engines/farm_scene_ui.dart';
 import '../domain/engines/land_city.dart';
@@ -56,16 +57,27 @@ class FarmSceneV2 extends StatelessWidget {
               // Land preview keeps its own status line below the scene.
               showSpeechCaptions: false,
             ),
-            ...snapshot.slots.map((slot) => _SlotAnchor(
-                  slot: slot,
-                  crop: slot.occupant?.cropId != null
-                      ? crops[slot.occupant!.cropId!]
-                      : null,
-                  animal: slot.occupant?.animalId != null
-                      ? animals[slot.occupant!.animalId!]
-                      : null,
-                  onTap: onSlotTap == null ? null : () => onSlotTap!(slot),
-                )),
+            ...snapshot.slots.map((slot) {
+              final owned = snapshot.slots
+                  .map((s) => s.occupant?.animalId)
+                  .whereType<String>();
+              final next = pickNextAdoptableAnimal(
+                catalog: animals.values.toList(),
+                occupiedAnimalIds: owned,
+                farmLevel: snapshot.farm.farmLevel,
+              );
+              return _SlotAnchor(
+                slot: slot,
+                crop: slot.occupant?.cropId != null
+                    ? crops[slot.occupant!.cropId!]
+                    : null,
+                animal: slot.occupant?.animalId != null
+                    ? animals[slot.occupant!.animalId!]
+                    : null,
+                nextAdoptable: next,
+                onTap: onSlotTap == null ? null : () => onSlotTap!(slot),
+              );
+            }),
             Positioned(
               left: 12,
               top: 10,
@@ -105,18 +117,25 @@ class _SlotAnchor extends StatelessWidget {
     required this.slot,
     required this.crop,
     required this.animal,
+    this.nextAdoptable,
     this.onTap,
   });
 
   final FarmSlotView slot;
   final CropDefinition? crop;
   final AnimalDefinition? animal;
+  final AnimalDefinition? nextAdoptable;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = slot.template;
-    final label = slotDisplayLabel(slot: slot, crop: crop, animal: animal);
+    final label = slotDisplayLabel(
+      slot: slot,
+      crop: crop,
+      animal: animal,
+      nextAdoptable: nextAdoptable,
+    );
     final icon = slotIcon(slot: slot, crop: crop, animal: animal);
     final empty = slot.occupant == null || slot.occupant!.isEmpty;
     final alpha = slot.unlocked ? 1.0 : 0.35;
