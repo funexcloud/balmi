@@ -74,12 +74,19 @@ class _RecordingScreenState extends State<RecordingScreen>
       await meal.abortWalk();
     }
     if (!mounted) return;
+    // Drop any leftover snackbars (e.g. stray 「뛰기」) before leaving the UI.
+    ScaffoldMessenger.of(context).clearSnackBars();
     final nav = Navigator.of(context);
     if (!rec.isRecording) return;
     final id = await rec.stop();
     if (id == null) return;
     await nav.push(
-      MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: id)),
+      MaterialPageRoute(
+        builder: (_) => SessionDetailScreen(
+          sessionId: id,
+          autoOpenRecovery: true,
+        ),
+      ),
     );
   }
 
@@ -197,8 +204,11 @@ class _RecordingScreenState extends State<RecordingScreen>
                               size: 44 * 0.42,
                               color: BalmiColors.ink,
                             ),
+                            // Keep Semantics stable — appending live 걷기/뛰기
+                            // announces as a stray Android toast when sport flips
+                            // or when the recording UI tears down after end.
                             label: rec.activity.isAuto
-                                ? '${BalmiCopy.activityAuto} · ${((snap?.sport ?? 'walk') == 'run') ? BalmiCopy.run : BalmiCopy.walk}'
+                                ? BalmiCopy.activityAuto
                                 : rec.activity.label,
                             size: 44,
                             onTap: () => _tune(rec),

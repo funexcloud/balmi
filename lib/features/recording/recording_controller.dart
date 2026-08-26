@@ -582,6 +582,9 @@ class RecordingController extends ChangeNotifier {
   }
 
   Future<String?> stop() async {
+    try {
+      await _tts.stop();
+    } catch (_) {}
     FlutterForegroundTask.sendDataToTask(kFgStopCommand);
     await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
     await _writeCheckpoint(CheckpointReason.stop);

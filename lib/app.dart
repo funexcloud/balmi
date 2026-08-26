@@ -181,10 +181,14 @@ class _RecoveryGateState extends State<_RecoveryGate> {
       } else {
         await rec.endRecovered(open.id);
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           widget.onReady();
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => SessionDetailScreen(sessionId: open.id),
+              builder: (_) => SessionDetailScreen(
+                sessionId: open.id,
+                autoOpenRecovery: true,
+              ),
             ),
           );
           return;

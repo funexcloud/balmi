@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -22,9 +24,16 @@ import '../activity_recovery/activity_recovery_flow.dart';
 import '../share/activity_share_sheet.dart';
 
 class SessionDetailScreen extends StatefulWidget {
-  const SessionDetailScreen({super.key, required this.sessionId});
+  const SessionDetailScreen({
+    super.key,
+    required this.sessionId,
+    this.autoOpenRecovery = false,
+  });
 
   final String sessionId;
+
+  /// After ending a live recording, open 회복 체크 once the detail loads.
+  final bool autoOpenRecovery;
 
   @override
   State<SessionDetailScreen> createState() => _SessionDetailScreenState();
@@ -40,6 +49,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Duration _run = Duration.zero;
   ActivityRecoveryRecord? _recovery;
   SessionLandReward _land = SessionLandReward.none;
+  var _autoRecoveryScheduled = false;
 
   @override
   void initState() {
@@ -81,6 +91,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _run = durs[Sport.run] ?? Duration.zero;
       _recovery = recoveryRow;
       _land = land;
+    });
+    _maybeAutoOpenRecovery();
+  }
+
+  void _maybeAutoOpenRecovery() {
+    if (!widget.autoOpenRecovery || _autoRecoveryScheduled) return;
+    final s = _session;
+    if (s == null || s.endedAt == null) return;
+    final status = _recovery?.status;
+    if (status != null && status.isTerminal) return;
+    _autoRecoveryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_openRecovery());
     });
   }
 
