@@ -51,14 +51,30 @@ void main() {
 
   test('mission presets update from closed sessions', () {
     final missions = missionPresets(rows, day);
-    expect(missions[0].id, 'today_30m');
+    expect(missions.map((m) => m.id).toList(), [
+      'today_30m',
+      'week_15km',
+      'track_10',
+    ]);
     expect(missions[0].current, 35);
     expect(missions[0].done, isTrue);
     expect(missions[1].current, closeTo(13, 0.01));
     expect(missions[1].done, isFalse);
     expect(missions[2].current, 10);
     expect(missions.length, 3);
+  });
+
+  test('mission presets never include pasture-feed 800m mission', () {
+    final missions = missionPresets(rows, day);
     expect(missions.any((m) => m.id == 'today_feed_800m'), isFalse);
+    expect(
+      missions.any((m) => m.title.contains('목장 먹이') || m.title.contains('800m')),
+      isFalse,
+    );
+    for (final m in missions) {
+      expect(m.id, isNot(equals('today_feed_800m')));
+      expect(m.title, isNot(contains('목장 먹이')));
+    }
   });
 
   test('exerciseGoalProgress uses session stats not pedometer', () {
