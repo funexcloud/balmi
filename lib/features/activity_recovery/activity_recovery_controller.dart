@@ -10,8 +10,8 @@ import '../../data/repositories/activity_recovery_store.dart';
 class ActivityRecoveryController extends ChangeNotifier {
   ActivityRecoveryController({
     required this.store,
-    required ActivityRecoveryAlarmPort alarms,
-  }) : _alarms = alarms;
+    required ActivityRecoveryAlarmPort this._alarms,
+  });
 
   final ActivityRecoveryStore store;
   final ActivityRecoveryAlarmPort _alarms;

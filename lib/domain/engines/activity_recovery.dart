@@ -189,7 +189,7 @@ RecoveryGuidance guidanceFor({
         key: 'normal',
         title: '몸이 괜찮다면 가볍게 정리해 보세요',
         contextNote:
-            '${effortHint}무리하지 않는 선에서 스트레칭과 수분 보충이면 충분할 때가 많아요.',
+            '$effortHint무리하지 않는 선에서 스트레칭과 수분 보충이면 충분할 때가 많아요.',
         steps: const [
           '편한 자세로 호흡을 고르세요',
           '물을 천천히 마시세요',
@@ -205,7 +205,7 @@ RecoveryGuidance guidanceFor({
         key: 'very_tired',
         title: '많이 지침 — 잠시 쉬어 보세요',
         contextNote:
-            '${effortHint}운동 후 에너지가 떨어져 나타날 수 있는 느낌입니다. '
+            '$effortHint운동 후 에너지가 떨어져 나타날 수 있는 느낌입니다. '
             '여러 원인이 있을 수 있어요.',
         steps: const [
           '앉거나 기대어 5–10분 쉬세요',
@@ -222,7 +222,7 @@ RecoveryGuidance guidanceFor({
         key: 'tremor',
         title: '몸이 떨릴 때 — 우선 안전하게',
         contextNote:
-            '${effortHint}운동 후 에너지 부족 등 여러 원인에서 나타날 수 있는 증상입니다. '
+            '$effortHint운동 후 에너지 부족 등 여러 원인에서 나타날 수 있는 증상입니다. '
             '진단이 아니라 당장 몸을 돌보는 안내예요.',
         steps: const [
           '앉거나 누워서 쉬세요',
@@ -240,7 +240,7 @@ RecoveryGuidance guidanceFor({
         key: 'dizziness',
         title: '어지러울 때 — 넘어지지 않게',
         contextNote:
-            '${effortHint}운동 후 탈수·피로 등 여러 원인에서 나타날 수 있는 증상입니다.',
+            '$effortHint운동 후 탈수·피로 등 여러 원인에서 나타날 수 있는 증상입니다.',
         steps: const [
           '앉거나 누워서 머리를 낮추세요',
           '갑자기 일어서지 마세요',
@@ -257,7 +257,7 @@ RecoveryGuidance guidanceFor({
         key: 'nausea',
         title: '메스꺼움이 있을 때',
         contextNote:
-            '${effortHint}운동 직후 속이 불편할 수 있어요. 무리한 섭취는 피하세요.',
+            '$effortHint운동 직후 속이 불편할 수 있어요. 무리한 섭취는 피하세요.',
         steps: const [
           '앉아서 천천히 호흡하세요',
           '차가운 물을 소량만 마시세요',
@@ -274,7 +274,7 @@ RecoveryGuidance guidanceFor({
         key: 'muscle_pain',
         title: '근육통·통증이 있을 때',
         contextNote:
-            '${effortHint}운동 후 근육 피로로 느껴질 때가 많아요. '
+            '$effortHint운동 후 근육 피로로 느껴질 때가 많아요. '
             '날카롭거나 붓는 통증은 더 주의가 필요해요.',
         steps: const [
           '통증 부위를 무리하게 쓰지 마세요',
