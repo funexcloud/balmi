@@ -102,6 +102,15 @@ abstract final class BalmiCopy {
   static const todaySummary = '오늘의 운동 요약';
   static const todayExercise = '오늘의 운동';
   static const todayEmpty = '오늘 아직 기록이 없습니다';
+  static const periodToday = '오늘';
+  static const periodWeek = '이번 주';
+  static const periodMonth = '이번 달';
+  static const weekSummary = '이번 주 요약';
+  static const monthSummary = '이번 달 요약';
+  static const weekEmpty = '이번 주 기록이 없습니다';
+  static const monthEmpty = '이번 달 기록이 없습니다';
+  static const activityFilterEmpty = '이 종목의 기록이 없습니다';
+  static const activityFilterSection = '종목';
   static const todaySteps = '오늘 걸음';
   static const dailyGoals = '일일 목표';
   static const dailyGoalsHint =
