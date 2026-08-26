@@ -25,6 +25,10 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
 
+    // Floating dock overlays the bottom; pad the body by [BalmiDock.extent]
+    // so recording sheets / CTAs lay out above it instead of under it.
+    final dockExtent = BalmiDock.extent(context);
+
     return Scaffold(
       backgroundColor: BalmiColors.paper,
       body: SafeArea(
@@ -38,8 +42,27 @@ class _AppShellState extends State<AppShell> {
                 child: BalmiWordmark(height: 38),
               ),
             ),
-            Expanded(child: _body(rec)),
-            BalmiDock(index: _tab, onChanged: (i) => setState(() => _tab = i)),
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: dockExtent),
+                      child: _body(rec),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: BalmiDock(
+                      index: _tab,
+                      onChanged: (i) => setState(() => _tab = i),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -248,9 +248,6 @@ class _RecordingScreenState extends State<RecordingScreen>
           lapCount: snap?.lapCount ?? 0,
           trackMode: snap?.trackMode ?? false,
           showLaps: rec.activity.isAuto || rec.activity.isTrack,
-          liveSport: rec.activity.isAuto
-              ? ((snap?.sport ?? 'walk') == 'run' ? BalmiCopy.run : BalmiCopy.walk)
-              : null,
           lastLapTimeS: snap?.lastLapTimeS,
           movingDuration: Duration(milliseconds: snap?.movingDurationMs ?? 0),
           onPause: rec.pause,
