@@ -5,10 +5,23 @@ abstract final class BalmiCopy {
   static const positioning = '잃어버리지 않는 기록';
   static const trustAlways = '통신이 끊겨도 기록은 기기에 전부 저장됩니다';
 
-  static const resumeRecording = '이어서 기록';
-  static const endHere = '여기서 종료';
-  static const recoveryTitle = '기록이 끝나지 않았어요';
-  static const recoveryBody = '이전에 시작했던 걷기가 기기에 그대로 남아 있습니다. 이어서 기록할까요, 여기서 종료할까요? 종료해도 저장된 점은 사라지지 않습니다.';
+  static const resumeRecording = '기록 이어가기';
+  static const endHere = '여기까지 저장';
+  static const recoveryTitle = '진행 중이던 기록이 있습니다';
+  static const recoveryBody =
+      '기기에 저장된 기록을 복구했습니다. 이어서 기록하거나 여기까지 저장할 수 있어요.';
+  static const recoveryLastLabel = '마지막 기록';
+  static const recoverySavedHint = '종료해도 저장된 기록은 사라지지 않습니다.';
+
+  static const deviceSaving = '기기에 안전하게 저장 중';
+  static const offlineRecording = '오프라인 기록 중';
+  static const syncingNow = '연결됨 · 동기화 중';
+  static const recoveryDone = '기록 복구 완료';
+  static const gpsSearching = 'GPS 찾는 중';
+  static const gpsExcellent = 'GPS 우수';
+  static const gpsGood = 'GPS 양호';
+  static const gpsWeak = 'GPS 약함';
+  static const gpsLost = 'GPS 신호를 찾는 중';
 
   static const start = '기록 시작';
   static const starting = '기록 준비 중…';
@@ -103,7 +116,7 @@ abstract final class BalmiCopy {
   static const lastLap = '최근 랩';
   static const deviceSaved = '기기 저장';
   static const syncWaiting = '동기화 대기';
-  static const syncComplete = '✓ 서버 동기화 완료';
+  static const syncComplete = '기록 동기화 완료';
 
   static const gps = 'GPS';
   static const localPoints = '로컬';

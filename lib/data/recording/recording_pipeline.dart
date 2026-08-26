@@ -5,6 +5,7 @@ import '../../domain/config/sport_params.dart';
 import '../../domain/engines/distance.dart';
 import '../../domain/engines/lap_detector.dart';
 import '../../domain/engines/motion_filter.dart';
+import '../../domain/engines/session_checkpoint.dart';
 import '../../domain/engines/sport_classifier.dart';
 import '../../domain/engines/step_distance.dart';
 import '../../domain/models/activity.dart';
@@ -61,6 +62,9 @@ class RecordingPipeline {
   int recordingSteps = 0;
   int movingMs = 0;
   DateTime? _lastSampleAt;
+  DateTime? _lastCheckpointAt;
+  bool _gpsLost = false;
+  static const _gpsLostAfter = Duration(seconds: 20);
 
   double walkDistM = 0;
   double runDistM = 0;
@@ -81,6 +85,19 @@ class RecordingPipeline {
       trackMode = session.trackMode || activity.isTrack;
       trackSpecM = session.trackSpecM ?? trackSpecM;
       recordingSteps = session.steps;
+    }
+    final checkpoint = await repo.loadCheckpoint(sessionId);
+    if (checkpoint != null) {
+      movingMs = checkpoint.movingMs;
+      if (checkpoint.steps > recordingSteps) {
+        recordingSteps = checkpoint.steps;
+      }
+      if (checkpoint.distanceM > distance.meters) {
+        distance.meters = checkpoint.distanceM;
+      }
+      if (checkpoint.lapCount > laps.lapNo) {
+        // Lap detector restored below from stored laps.
+      }
     }
     final storedPts = await repo.pointsForSession(sessionId);
     trail
@@ -156,6 +173,11 @@ class RecordingPipeline {
         at: now,
       );
     }
+    await checkpoint(
+      reason: CheckpointReason.activity,
+      now: now,
+      elapsedMs: now.difference(startedAt).inMilliseconds,
+    );
   }
 
   Future<void> setTrackSpec(int? spec) async {
@@ -163,7 +185,12 @@ class RecordingPipeline {
     await repo.updateTrackSpec(sessionId, spec);
   }
 
-  Future<RecordingSnapshot> sampleNow(DateTime now) async {
+  Future<RecordingSnapshot> sampleNow(
+    DateTime now, {
+    int? elapsedMs,
+    int pausedTotalMs = 0,
+    bool paused = false,
+  }) async {
     lastLapTts = null;
     final fix = lastFix;
     var usedGps = false;
@@ -320,8 +347,104 @@ class RecordingPipeline {
       }
     }
 
+    await _maybeGpsGapCheckpoint(
+      now,
+      elapsedMs: elapsedMs ?? now.difference(startedAt).inMilliseconds,
+      pausedTotalMs: pausedTotalMs,
+      paused: paused,
+    );
+    final wroteLap = lastLapTts != null;
+    final elapsed = elapsedMs ?? now.difference(startedAt).inMilliseconds;
+    if (wroteLap) {
+      await checkpoint(
+        reason: CheckpointReason.lap,
+        now: now,
+        elapsedMs: elapsed,
+        pausedTotalMs: pausedTotalMs,
+        paused: paused,
+      );
+    } else if (CheckpointPolicy.shouldPeriodicWrite(
+      now: now,
+      lastWriteAt: _lastCheckpointAt,
+    )) {
+      await checkpoint(
+        reason: CheckpointReason.periodic,
+        now: now,
+        elapsedMs: elapsed,
+        pausedTotalMs: pausedTotalMs,
+        paused: paused,
+      );
+    }
+
     _lastSampleAt = now;
     return snapshot(now);
+  }
+
+  Future<void> _maybeGpsGapCheckpoint(
+    DateTime now, {
+    required int elapsedMs,
+    int pausedTotalMs = 0,
+    bool paused = false,
+  }) async {
+    final fix = lastFix;
+    // Searching before the first fix is not a mid-session GPS gap.
+    if (fix == null) return;
+    final stale = now.difference(fix.ts) >= _gpsLostAfter ||
+        (fix.hAccM != null && fix.hAccM! > 50);
+    if (stale && !_gpsLost) {
+      _gpsLost = true;
+      await checkpoint(
+        reason: CheckpointReason.gpsLost,
+        now: now,
+        elapsedMs: elapsedMs,
+        pausedTotalMs: pausedTotalMs,
+        paused: paused,
+      );
+    } else if (!stale && _gpsLost) {
+      _gpsLost = false;
+      await checkpoint(
+        reason: CheckpointReason.gpsRestored,
+        now: now,
+        elapsedMs: elapsedMs,
+        pausedTotalMs: pausedTotalMs,
+        paused: paused,
+      );
+    }
+  }
+
+  Future<void> checkpoint({
+    required CheckpointReason reason,
+    required DateTime now,
+    required int elapsedMs,
+    int pausedTotalMs = 0,
+    bool paused = false,
+  }) async {
+    final fix = lastFix;
+    final snap = SessionCheckpoint(
+      sessionId: sessionId,
+      elapsedMs: elapsedMs < 0 ? 0 : elapsedMs,
+      movingMs: movingMs,
+      pausedTotalMs: pausedTotalMs,
+      distanceM: distance.meters,
+      steps: recordingSteps,
+      activity: activity.wire,
+      lapCount: laps.lapNo,
+      paused: paused,
+      reason: reason,
+      updatedAt: now,
+      lastLatitude: fix?.lat,
+      lastLongitude: fix?.lng,
+      lastGpsTimestampMs: fix?.ts.millisecondsSinceEpoch,
+    );
+    await repo.saveCheckpoint(snap);
+    await repo.updateSteps(sessionId, recordingSteps);
+    await repo.updateDistances(
+      sessionId: sessionId,
+      totalDistM: distance.meters,
+      walkDistM: walkDistM,
+      runDistM: runDistM,
+    );
+    _lastCheckpointAt = now;
   }
 
   int _elapsedTickMs(DateTime now) {

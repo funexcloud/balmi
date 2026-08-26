@@ -13,6 +13,7 @@ import 'data/repositories/step_goal_store.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sensors/step_service.dart';
 import 'data/sync/sync_worker.dart';
+import 'domain/engines/recovery.dart';
 import 'features/activity_recovery/activity_recovery_controller.dart';
 import 'features/activity_recovery/activity_recovery_flow.dart';
 import 'features/meal_walk/meal_walk_controller.dart';
@@ -158,9 +159,9 @@ class _RecoveryGateState extends State<_RecoveryGate> {
     if (widget.ready) return;
     final repo = context.read<SessionRepository>();
     final rec = context.read<RecordingController>();
-    final open = await repo.findRecording();
+    final open = await repo.loadRecoverableRecording();
     if (!mounted) return;
-    if (open != null) {
+    if (open != null && SessionRecovery.needsRecovery(open)) {
       final resume = await showRecoveryDialog(context, open);
       if (resume == true) {
         final ok = await rec.resume(open.id);
@@ -168,6 +169,10 @@ class _RecoveryGateState extends State<_RecoveryGate> {
           if (!ok && rec.lastError != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(rec.lastError!)),
+            );
+          } else if (ok) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(BalmiCopy.recoveryDone)),
             );
           }
           widget.onReady();

@@ -16,6 +16,8 @@ import '../../data/recording/recording_snapshot.dart';
 import '../../data/recording/recording_task.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../data/sensors/cadence_engine.dart';
+import '../../domain/engines/record_status.dart';
+import '../../domain/engines/session_checkpoint.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 
@@ -44,6 +46,9 @@ class RecordingController extends ChangeNotifier {
   bool paused = false;
   Duration _pausedTotal = Duration.zero;
   DateTime? _pauseStarted;
+  bool justRecovered = false;
+  /// Injectable for tests; defaults to online so recording never blocks.
+  RecordLink networkLink = RecordLink.unknown;
 
   /// Home play long-press selection. Survives HomeScreen dispose (tab switch).
   ActivityKind preferredActivity = ActivityKind.auto;
@@ -91,6 +96,40 @@ class RecordingController extends ChangeNotifier {
     if (!isRecording) return lastError;
     if ((snapshot?.pointCount ?? 0) > 0) return lastError;
     return lastError ?? BalmiCopy.waitingGps;
+  }
+
+  RecordSurvivalStatus get survivalStatus {
+    final snap = snapshot;
+    final pending = snap?.pendingChunks ?? 0;
+    final pendingPts = snap?.pendingPoints ?? 0;
+    final hasFix = (snap?.pointCount ?? 0) > 0;
+    return RecordSurvivalStatus(
+      recording: isRecording,
+      paused: paused,
+      justRecovered: justRecovered,
+      gps: RecordSurvivalStatus.gpsFromAccuracy(
+        snap?.hAccM,
+        hasRecentFix: hasFix && snap?.gpsStrength != 'none',
+      ),
+      network: networkLink,
+      sync: RecordSurvivalStatus.syncFromQueue(
+        pendingChunks: pending,
+        pendingPoints: pendingPts,
+      ),
+      hAccM: snap?.hAccM,
+    );
+  }
+
+  void clearRecoveredBanner() {
+    if (!justRecovered) return;
+    justRecovered = false;
+    notifyListeners();
+  }
+
+  void setNetworkLink(RecordLink link) {
+    if (networkLink == link) return;
+    networkLink = link;
+    notifyListeners();
   }
 
   void attachTaskListener() {
@@ -185,7 +224,7 @@ class RecordingController extends ChangeNotifier {
       }
       final open = await repo.findRecording();
       if (open != null) {
-        _resetPauseClock();
+        await _restorePauseFromCheckpoint(open.id, open.startedAt);
         this.activity = ActivityKind.fromWire(open.activity);
         this.trackSpecM = open.trackSpecM;
         await _begin(
@@ -193,6 +232,7 @@ class RecordingController extends ChangeNotifier {
           trackMode: open.trackMode || this.activity.isTrack,
           trackSpecM: open.trackSpecM,
           activity: this.activity,
+          checkpointReason: CheckpointReason.resume,
         );
         return true;
       }
@@ -238,7 +278,8 @@ class RecordingController extends ChangeNotifier {
     }
     final session = await repo.sessionById(sessionId);
     if (session == null) return false;
-    _resetPauseClock();
+    justRecovered = true;
+    await _restorePauseFromCheckpoint(sessionId, session.startedAt);
     activity = ActivityKind.fromWire(session.activity);
     trackSpecM = session.trackSpecM;
     await _begin(
@@ -246,8 +287,34 @@ class RecordingController extends ChangeNotifier {
       trackMode: session.trackMode || activity.isTrack,
       trackSpecM: session.trackSpecM,
       activity: activity,
+      checkpointReason: CheckpointReason.resume,
     );
     return true;
+  }
+
+  Future<void> _restorePauseFromCheckpoint(
+    String sessionId,
+    DateTime startedAt,
+  ) async {
+    final cp = await repo.loadCheckpoint(sessionId);
+    if (cp == null) {
+      _resetPauseClock();
+      // Absorb crash gap so wall-clock elapsed does not jump.
+      final wall = DateTime.now().difference(startedAt);
+      if (wall.inMilliseconds > 0) {
+        _pausedTotal = wall;
+      }
+      return;
+    }
+    paused = false;
+    _pauseStarted = null;
+    final saved = Duration(milliseconds: cp.elapsedMs);
+    final wall = DateTime.now().difference(startedAt);
+    if (wall > saved) {
+      _pausedTotal = wall - saved;
+    } else {
+      _pausedTotal = Duration(milliseconds: cp.pausedTotalMs);
+    }
   }
 
   Future<void> _begin(
@@ -255,6 +322,7 @@ class RecordingController extends ChangeNotifier {
     required bool trackMode,
     int? trackSpecM,
     ActivityKind activity = ActivityKind.auto,
+    CheckpointReason checkpointReason = CheckpointReason.start,
   }) async {
     // The proven UI-isolate pipeline stays primary. The foreground task uses
     // these values to take over after the main-isolate heartbeat expires.
@@ -305,6 +373,7 @@ class RecordingController extends ChangeNotifier {
       trackMode: trackMode,
       trackSpecM: trackSpecM,
       activity: activity,
+      checkpointReason: checkpointReason,
     );
   }
 
@@ -338,6 +407,7 @@ class RecordingController extends ChangeNotifier {
     required bool trackMode,
     int? trackSpecM,
     ActivityKind activity = ActivityKind.auto,
+    CheckpointReason checkpointReason = CheckpointReason.start,
   }) async {
     await _stopLocal();
     final session = await repo.sessionById(sessionId);
@@ -354,6 +424,7 @@ class RecordingController extends ChangeNotifier {
     this.activity = pipeline.activity;
     this.trackSpecM = pipeline.trackSpecM;
     snapshot = await pipeline.snapshot(DateTime.now());
+    await _writeCheckpoint(checkpointReason);
     notifyListeners();
     _localLocation = GeolocatorLocationEngine();
     _localCadence = CadenceEngine();
@@ -367,12 +438,33 @@ class RecordingController extends ChangeNotifier {
     });
   }
 
+  Future<void> _writeCheckpoint(CheckpointReason reason) async {
+    final pipe = _pipeline;
+    if (pipe == null) return;
+    await pipe.checkpoint(
+      reason: reason,
+      now: DateTime.now(),
+      elapsedMs: elapsed.inMilliseconds,
+      pausedTotalMs: _pausedTotal.inMilliseconds +
+          (paused && _pauseStarted != null
+              ? DateTime.now().difference(_pauseStarted!).inMilliseconds
+              : 0),
+      paused: paused,
+    );
+  }
+
+  Future<void> onAppBackground() async {
+    if (!isRecording) return;
+    await _writeCheckpoint(CheckpointReason.background);
+  }
+
   void pause() {
     if (!isRecording || paused) return;
     paused = true;
     _pauseStarted = DateTime.now();
     unawaited(FlutterForegroundTask.saveData(key: kFgPausedKey, value: true));
     _sendMainHeartbeat();
+    unawaited(_writeCheckpoint(CheckpointReason.pause));
     notifyListeners();
   }
 
@@ -385,6 +477,8 @@ class RecordingController extends ChangeNotifier {
     paused = false;
     unawaited(FlutterForegroundTask.saveData(key: kFgPausedKey, value: false));
     _sendMainHeartbeat();
+    unawaited(_writeCheckpoint(CheckpointReason.resume));
+    clearRecoveredBanner();
     notifyListeners();
   }
 
@@ -419,7 +513,12 @@ class RecordingController extends ChangeNotifier {
           !lastError!.startsWith(BalmiCopy.keepAliveFailed)) {
         lastError = null;
       }
-      final snap = await pipeline.sampleNow(DateTime.now());
+      final snap = await pipeline.sampleNow(
+        DateTime.now(),
+        elapsedMs: elapsed.inMilliseconds,
+        pausedTotalMs: _pausedTotal.inMilliseconds,
+        paused: paused,
+      );
       snapshot = snap;
       notifyListeners();
       unawaited(
@@ -446,6 +545,7 @@ class RecordingController extends ChangeNotifier {
   Future<String?> stop() async {
     FlutterForegroundTask.sendDataToTask(kFgStopCommand);
     await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
+    await _writeCheckpoint(CheckpointReason.stop);
     await _stopLocal();
     final id = snapshot?.sessionId;
     final steps = _pipeline?.recordingSteps ?? _localCadence?.totalSteps ?? 0;
@@ -460,6 +560,7 @@ class RecordingController extends ChangeNotifier {
     snapshot = null;
     lastError = null;
     mealWalkSessionId = null;
+    justRecovered = false;
     _resetPauseClock();
     notifyListeners();
     return id;
@@ -468,6 +569,10 @@ class RecordingController extends ChangeNotifier {
   Future<void> endRecovered(String sessionId) async {
     FlutterForegroundTask.sendDataToTask(kFgStopCommand);
     await FlutterForegroundTask.saveData(key: kFgPausedKey, value: false);
+    final pipe = _pipeline;
+    if (pipe != null && pipe.sessionId == sessionId) {
+      await _writeCheckpoint(CheckpointReason.stop);
+    }
     await repo.closeSession(sessionId, status: SessionStatus.recovered);
     if (await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();

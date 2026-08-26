@@ -52,9 +52,16 @@ class _RecordingScreenState extends State<RecordingScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final rec = context.read<RecordingController>();
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      unawaited(rec.onAppBackground());
+    }
     if (state == AppLifecycleState.resumed) {
-      context.read<RecordingController>().nudgeGps();
+      rec.nudgeGps();
       context.read<MealWalkController>().catchUp();
+      rec.clearRecoveredBanner();
     }
   }
 
@@ -138,7 +145,11 @@ class _RecordingScreenState extends State<RecordingScreen>
                 Positioned(
                   top: 10,
                   left: 10,
-                  child: TrustHeader(snapshot: snap, waiting: waiting),
+                  child: TrustHeader(
+                    snapshot: snap,
+                    waiting: waiting,
+                    status: rec.survivalStatus,
+                  ),
                 ),
                 Positioned(
                   top: 10,
@@ -168,6 +179,7 @@ class _RecordingScreenState extends State<RecordingScreen>
                           paused: rec.paused,
                           waitingGps: waiting,
                           lastError: rec.lastError,
+                          status: rec.survivalStatus,
                         ),
                       ),
                       const SizedBox(height: 8),
