@@ -16,7 +16,7 @@ Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 
 - **ZIP**: GitHub 페이지의 **Code → Download ZIP**, 또는  
   https://github.com/funexcloud/balmi/archive/refs/heads/main.zip
 - **클론**: `git clone https://github.com/funexcloud/balmi.git`
-- **Android APK** (사이드로드): [Releases](https://github.com/funexcloud/balmi/releases)에서 최신 **`balmi-0.1.12.apk`**(32/64비트 통합)를 받아 설치합니다. 휴대폰에서 **알 수 없는 출처** 설치를 허용해야 합니다.
+- **Android APK** (사이드로드): [Releases](https://github.com/funexcloud/balmi/releases)에서 최신 **`balmi-0.1.13.apk`**(32/64비트 통합)를 받아 설치합니다. 휴대폰에서 **알 수 없는 출처** 설치를 허용해야 합니다.
 - **소스 ZIP은 APK가 아닙니다.** GitHub의 **Code → Download ZIP** 또는 `Source code (zip)`을 설치하면 「패키지를 파싱하는 중 문제가 발생했습니다」가 납니다. 반드시 Releases의 `.apk`만 설치하세요.
 - **업그레이드 (0.1.11 이하 → 0.1.12+)**: `im.balmi.app`이 이미 설치되어 있으면 서명이 달라 **덮어쓰기 설치가 안 됩니다** (「기존 패키지와 충돌」). **설정 → 앱 → balmi → 삭제** 후 새 APK를 설치하세요. **0.1.12부터** GitHub APK는 동일 업로드 키로 서명되므로, 한 번 0.1.12를 설치한 뒤에는 이후 버전은 덮어쓰기 업그레이드가 됩니다.
 - 이 Windows 빌드에는 **iOS IPA가 없습니다.** iOS는 macOS에서 `flutter build ipa`가 필요합니다.
