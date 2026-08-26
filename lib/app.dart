@@ -5,12 +5,16 @@ import 'package:provider/provider.dart';
 import 'core/copy.dart';
 import 'core/theme.dart';
 import 'data/db/app_database.dart';
+import 'data/notifications/activity_recovery_alarms.dart';
 import 'data/notifications/meal_walk_alarms.dart';
+import 'data/repositories/activity_recovery_store.dart';
 import 'data/repositories/meal_walk_store.dart';
 import 'data/repositories/step_goal_store.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sensors/step_service.dart';
 import 'data/sync/sync_worker.dart';
+import 'features/activity_recovery/activity_recovery_controller.dart';
+import 'features/activity_recovery/activity_recovery_flow.dart';
 import 'features/meal_walk/meal_walk_controller.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/step_goal_controller.dart';
@@ -37,6 +41,7 @@ class _BalmiAppState extends State<BalmiApp> {
   late final SessionRepository _repo;
   late final RecordingController _recording;
   late final MealWalkController _mealWalk;
+  late final ActivityRecoveryController _activityRecovery;
   late final StepGoalController _stepGoal;
   late final StepService _steps;
   late final SyncWorker _sync;
@@ -55,6 +60,10 @@ class _BalmiAppState extends State<BalmiApp> {
       recording: _recording,
       alarms: MealWalkAlarms(),
     );
+    _activityRecovery = ActivityRecoveryController(
+      store: ActivityRecoveryStore(widget.db, newId: _repo.newId),
+      alarms: ActivityRecoveryAlarms(),
+    );
     _stepGoal = StepGoalController(store: StepGoalStore(widget.db));
     _steps = StepService(repo: _repo)..start();
     _sync = SyncWorker(_repo)..start();
@@ -65,6 +74,7 @@ class _BalmiAppState extends State<BalmiApp> {
     await _recording.initForeground();
     await Future.wait([
       _mealWalk.bootstrap(),
+      _activityRecovery.bootstrap(),
       _stepGoal.bootstrap(),
     ]);
     final done = await isOnboardingDone(_repo);
@@ -76,6 +86,7 @@ class _BalmiAppState extends State<BalmiApp> {
   void dispose() {
     _sync.stop();
     _mealWalk.dispose();
+    _activityRecovery.dispose();
     _stepGoal.dispose();
     _recording.dispose();
     _steps.dispose();
@@ -90,6 +101,9 @@ class _BalmiAppState extends State<BalmiApp> {
         Provider<SessionRepository>.value(value: _repo),
         ChangeNotifierProvider<RecordingController>.value(value: _recording),
         ChangeNotifierProvider<MealWalkController>.value(value: _mealWalk),
+        ChangeNotifierProvider<ActivityRecoveryController>.value(
+          value: _activityRecovery,
+        ),
         ChangeNotifierProvider<StepGoalController>.value(value: _stepGoal),
         ChangeNotifierProvider<StepService>.value(value: _steps),
       ],
@@ -172,7 +186,32 @@ class _RecoveryGateState extends State<_RecoveryGate> {
         }
       }
     }
-    if (mounted) widget.onReady();
+    if (mounted) {
+      widget.onReady();
+      await _maybeOpenActivityRecheck();
+    }
+  }
+
+  Future<void> _maybeOpenActivityRecheck() async {
+    final recovery = context.read<ActivityRecoveryController>();
+    await recovery.refreshPending();
+    final pending = recovery.pendingPrompt;
+    final focusId = recovery.focusCheckId;
+    final id = focusId ?? pending?.id;
+    if (id == null || !mounted) return;
+    final record = await recovery.store.byId(id);
+    if (record == null || !mounted) return;
+    await openActivityRecoveryFlow(
+      context,
+      workoutSessionId: record.workoutSessionId,
+      activity: record.activity,
+      distanceM: record.distanceM,
+      duration: Duration(seconds: record.durationSec),
+      avgSpeedKmh: record.avgSpeedKmh,
+      resumeCheckId: record.id,
+    );
+    recovery.clearFocus();
+    await recovery.refreshPending();
   }
 
   @override

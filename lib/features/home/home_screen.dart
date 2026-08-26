@@ -17,6 +17,8 @@ import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
 import '../../widgets/today_exercise_card.dart';
 import '../../widgets/today_summary_card.dart';
+import '../activity_recovery/activity_recovery_controller.dart';
+import '../activity_recovery/activity_recovery_flow.dart';
 import '../land/farm_preview_screen.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
@@ -138,6 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
         meal.open == null;
     final showGo = meal.enabled && meal.open?.status == MealWalkStatus.prompted;
     final preferred = rec.preferredActivity;
+    final recovery = context.watch<ActivityRecoveryController>();
+    final recoveryDue = recovery.pendingPrompt;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       if (meal.lastFeedback != null) snackMealWalk(context, meal);
@@ -178,6 +182,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 caredToday: _wateredToday,
                 onOpen: () => openFarmPreview(context),
               ),
+              if (recoveryDue != null) ...[
+                const SizedBox(height: 12),
+                Material(
+                  color: BalmiColors.mist,
+                  borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+                    onTap: () async {
+                      await openActivityRecoveryFlow(
+                        context,
+                        workoutSessionId: recoveryDue.workoutSessionId,
+                        activity: recoveryDue.activity,
+                        distanceM: recoveryDue.distanceM,
+                        duration: Duration(seconds: recoveryDue.durationSec),
+                        avgSpeedKmh: recoveryDue.avgSpeedKmh,
+                        resumeCheckId: recoveryDue.id,
+                      );
+                      if (!context.mounted) return;
+                      await recovery.refreshPending();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.favorite_outline,
+                            color: BalmiColors.potato,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              BalmiCopy.activityRecoveryPending,
+                              style: BalmiTheme.body(
+                                size: 15,
+                                weight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: BalmiColors.potato,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               if (showDiscover) ...[
                 const SizedBox(height: 12),
                 MealWalkDiscoverCard(

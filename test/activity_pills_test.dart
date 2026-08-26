@@ -1,11 +1,14 @@
 import 'package:balmi/core/theme.dart';
 import 'package:balmi/data/db/app_database.dart';
+import 'package:balmi/data/notifications/activity_recovery_alarms.dart';
 import 'package:balmi/data/notifications/meal_walk_alarms.dart';
+import 'package:balmi/data/repositories/activity_recovery_store.dart';
 import 'package:balmi/data/repositories/meal_walk_store.dart';
 import 'package:balmi/data/repositories/session_repository.dart';
 import 'package:balmi/data/repositories/step_goal_store.dart';
 import 'package:balmi/data/sensors/step_service.dart';
 import 'package:balmi/domain/models/activity.dart';
+import 'package:balmi/features/activity_recovery/activity_recovery_controller.dart';
 import 'package:balmi/features/home/home_screen.dart';
 import 'package:balmi/features/meal_walk/meal_walk_controller.dart';
 import 'package:balmi/features/recording/recording_controller.dart';
@@ -78,11 +81,17 @@ void main() {
       alarms: SilentMealWalkAlarms(),
     );
     addTearDown(meal.dispose);
+    final recovery = ActivityRecoveryController(
+      store: ActivityRecoveryStore(db, newId: () => 'rec'),
+      alarms: SilentActivityRecoveryAlarms(),
+    );
+    addTearDown(recovery.dispose);
     final stepGoal = StepGoalController(store: StepGoalStore(db));
     addTearDown(stepGoal.dispose);
     final steps = StepService(repo: repo);
     addTearDown(steps.dispose);
     await meal.bootstrap();
+    await recovery.bootstrap();
     await stepGoal.bootstrap();
 
     await tester.pumpWidget(
@@ -93,6 +102,9 @@ void main() {
             Provider<SessionRepository>.value(value: repo),
             ChangeNotifierProvider<RecordingController>.value(value: rec),
             ChangeNotifierProvider<MealWalkController>.value(value: meal),
+            ChangeNotifierProvider<ActivityRecoveryController>.value(
+              value: recovery,
+            ),
             ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
             ChangeNotifierProvider<StepService>.value(value: steps),
           ],

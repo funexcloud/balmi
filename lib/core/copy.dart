@@ -240,6 +240,28 @@ abstract final class BalmiCopy {
   static const lunch = '점심';
   static const dinner = '저녁';
 
+  // Activity Recovery / 회복 체크 (wellness tips — not medical diagnosis)
+  static const activityRecoveryTitle = '회복 체크';
+  static const activityRecoveryCardHint = '운동 후 몸 상태를 짧게 확인해 볼까요?';
+  static const activityRecoveryStart = '회복 체크 시작';
+  static const activityRecoveryHowFeel = '현재 몸 상태는 어떤가요?';
+  static const activityRecoveryFoodAsk = '지금 먹을 수 있는 음식은?';
+  static const activityRecoveryFoodSkip = '음식은 나중에';
+  static const activityRecoveryNext = '다음';
+  static const activityRecoveryDone = '완료';
+  static const activityRecoveryOk = '괜찮아졌어요';
+  static const activityRecoveryStillBad = '아직 안 좋아요';
+  static const activityRecoveryComplete = '회복 완료';
+  static const activityRecoveryScheduled =
+      '10–15분 뒤에 다시 여쭤볼게요. 알림이 오면 확인해 주세요.';
+  static const activityRecoveryPending = '회복 재확인이 기다리고 있어요';
+  static const activityRecoveryMedical =
+      '증상이 심하거나 계속되면 가까운 의료기관을 이용해 주세요. 응급이면 119에 연락하세요.';
+  static const activityRecoveryDisclaimer =
+      '이 안내는 운동 후 몸을 돌보는 생활 팁이며, 의학적 진단·처방을 대신하지 않습니다.';
+  static const activityRecoveryDoneHint = '이미 이 기록의 회복 체크를 마쳤어요';
+  static const activityRecoveryInProgress = '회복 체크를 이어갈까요?';
+
   /// Accuracy-based quality labels for the live GPS pill.
   /// 수신 중 / 약함 / 양호 / 우수
   static String gpsQuality(String code, {bool waiting = false}) {
