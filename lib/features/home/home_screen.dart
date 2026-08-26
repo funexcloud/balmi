@@ -121,11 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final origin = box?.localToGlobal(box.size.center(Offset.zero));
 
       final rec = context.read<RecordingController>();
-      // CircleAction fires long-press on pointer-up; still wait a frame so a
-      // residual barrier dismiss cannot race the picker open.
-      await SchedulerBinding.instance.endOfFrame;
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-      if (!mounted) return;
+      // CircleAction already invokes onLongPress on pointer-up.
 
       final picked = await showActivityCirclePicker(
         context: context,
