@@ -170,6 +170,8 @@ List<WorkoutRow> inLocalMonth(List<WorkoutRow> rows, DateTime day) {
       .toList();
 }
 
+/// Built-in mission cards for 미션. Do **not** re-add `today_feed_800m`
+/// (`오늘 800m — 목장 먹이`) — removed for 0.1.13; farm feed is not a mission.
 List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
   final today = summarizePeriod(inLocalDay(closed, now));
   final week = summarizePeriod(inLocalWeek(closed, now));
