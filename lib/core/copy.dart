@@ -277,7 +277,14 @@ abstract final class BalmiCopy {
   static const farmV2ApplyFailed = '자원을 나누지 못했어요';
   static const farmV2Applied = '잘 자라고 있어요';
   static const farmV2Planted = '씨앗을 뿌렸어요!';
+  /// Chicken start toast — egg first, then hatch through feed stages.
   static const farmV2Adopted = '계란을 품고 있어요';
+  static const farmV2NoAdoptable =
+      '아직 들일 수 있는 가축이 없어요. 농장 레벨을 올려 보세요';
+  static const farmBirthSheep = '양이 태어났어요!';
+  static const farmBirthCow = '송아지가 태어났어요!';
+  static const farmBirthChickenEgg = farmV2Adopted;
+  static const farmBirthCropSeed = farmV2Planted;
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';

@@ -168,15 +168,18 @@ String animalGrowingStatusLine({
 
 /// Toast / snackbar after adopting into an empty livestock slot.
 String farmAdoptedCopy(AnimalDefinition animal) {
-  if (animal.startsAsEgg) return '계란을 품고 있어요';
-  if (animal.animalId.contains('sheep')) return '새끼양을 입양했어요';
-  if (animal.animalId.contains('cow')) return '송아지를 입양했어요';
+  if (animal.startsAsEgg || animal.animalId.contains('chicken')) {
+    return '계란을 품고 있어요';
+  }
+  if (animal.animalId.contains('sheep')) return '양이 태어났어요!';
+  if (animal.animalId.contains('cow')) return '송아지가 태어났어요!';
   return '${animal.nameKr} 한 마리를 입양했어요';
 }
 
 /// Empty livestock slot CTA — incubate eggs, otherwise adopt young stock.
+/// Null [next] defaults to 품기 (starter chicken egg narrative).
 String emptyLivestockSlotLabel(AnimalDefinition? next) {
-  if (next != null && next.startsAsEgg) return '품기';
+  if (next == null || next.startsAsEgg) return '품기';
   return '입양';
 }
 

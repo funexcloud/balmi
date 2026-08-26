@@ -1,5 +1,7 @@
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/domain/engines/farm_animal.dart';
+import 'package:balmi/domain/engines/farm_birth.dart';
+import 'package:balmi/domain/engines/farm_life.dart';
 import 'package:balmi/domain/engines/farm_crop.dart';
 import 'package:balmi/domain/engines/farm_scene_ui.dart';
 import 'package:balmi/domain/models/farm/animal.dart';
@@ -185,6 +187,108 @@ void main() {
     test('toast / BalmiCopy adopt + plant match story beats', () {
       expect(BalmiCopy.farmV2Adopted, '계란을 품고 있어요');
       expect(BalmiCopy.farmV2Planted, '씨앗을 뿌렸어요!');
+      expect(BalmiCopy.farmBirthSheep, '양이 태어났어요!');
+      expect(BalmiCopy.farmBirthCow, '송아지가 태어났어요!');
+      expect(BalmiCopy.farmBirthChickenEgg, '계란을 품고 있어요');
+      expect(BalmiCopy.farmBirthCropSeed, '씨앗을 뿌렸어요!');
+    });
+  });
+
+  group('birth toasts for sheep / cow / chicken / crop', () {
+    test('herd water-raise toasts', () {
+      expect(farmBirthToastForHerd(HerdKind.sheep), '양이 태어났어요!');
+      expect(farmBirthToastForHerd(HerdKind.cattle), '송아지가 태어났어요!');
+      expect(farmBirthToastForHerd(HerdKind.chicken), '계란을 품고 있어요');
+      expect(farmBirthToastForHerd(HerdKind.garden), '씨앗을 뿌렸어요!');
+    });
+
+    test('v2 animal id toasts', () {
+      expect(farmBirthToastForAnimalId('animal_sheep_01'), '양이 태어났어요!');
+      expect(farmBirthToastForAnimalId('animal_cow_01'), '송아지가 태어났어요!');
+      expect(
+        farmBirthToastForAnimalId('animal_chicken_01'),
+        '계란을 품고 있어요',
+      );
+      expect(farmBirthToastForCrop(), '씨앗을 뿌렸어요!');
+    });
+
+    test('livestock adopt prefers chicken then sheep then cow', () {
+      expect(
+        pickLivestockAnimalId(ownedAnimalIds: const []),
+        'animal_chicken_01',
+      );
+      expect(
+        pickLivestockAnimalId(ownedAnimalIds: const ['animal_chicken_01']),
+        'animal_sheep_01',
+      );
+      expect(
+        pickLivestockAnimalId(
+          ownedAnimalIds: const ['animal_chicken_01', 'animal_sheep_01'],
+        ),
+        'animal_cow_01',
+      );
+    });
+
+    test('after all kinds present, prefer sheep/cow livestock', () {
+      final id = pickLivestockAnimalId(
+        ownedAnimalIds: const [
+          'animal_chicken_01',
+          'animal_sheep_01',
+          'animal_cow_01',
+        ],
+      );
+      expect(id, isNot(equals('animal_chicken_01')));
+      expect(id == 'animal_sheep_01' || id == 'animal_cow_01', isTrue);
+    });
+
+    test('farmAdoptedCopy matches birth story beats', () {
+      final sheep = AnimalDefinition(
+        animalId: 'animal_sheep_01',
+        nameKr: '양',
+        tier: FarmTier.common,
+        unlockType: UnlockType.level,
+        unlockValue: 5,
+        hexTileRequirement: 2,
+        yieldType: YieldType.wool,
+        feedPerCycle: 100,
+        cooldownHours: 24,
+        starvationGraceDays: 3,
+        rewardCoin: 60,
+        rewardXp: 40,
+        growthStages: const [
+          AnimalStage(
+            stageIndex: 0,
+            stageName: '새끼',
+            feedThreshold: 0,
+            spriteAssetKey: 'animal/sheep/stage_0',
+          ),
+        ],
+      );
+      final cow = AnimalDefinition(
+        animalId: 'animal_cow_01',
+        nameKr: '젖소',
+        tier: FarmTier.rare,
+        unlockType: UnlockType.level,
+        unlockValue: 8,
+        hexTileRequirement: 3,
+        yieldType: YieldType.milk,
+        feedPerCycle: 150,
+        cooldownHours: 24,
+        starvationGraceDays: 3,
+        rewardCoin: 120,
+        rewardXp: 70,
+        growthStages: const [
+          AnimalStage(
+            stageIndex: 0,
+            stageName: '새끼',
+            feedThreshold: 0,
+            spriteAssetKey: 'animal/cow/stage_0',
+          ),
+        ],
+      );
+      expect(farmAdoptedCopy(sheep), '양이 태어났어요!');
+      expect(farmAdoptedCopy(cow), '송아지가 태어났어요!');
+      expect(farmAdoptedCopy(starterChicken()), '계란을 품고 있어요');
     });
   });
 
