@@ -216,7 +216,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 ),
                 const HeartbeatDivider(),
                 ..._segments.map(_segmentTile),
-                // Reward summary only — no 「내 땅 보기」 CTA / land-map link.
+                // Reward summary only — no land-map CTA on this end surface.
                 _landRewardSummary(),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 16),
