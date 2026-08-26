@@ -32,7 +32,27 @@ class LapEvent {
   final double lapDistM;
 }
 
+class _PathWaypoint {
+  const _PathWaypoint({
+    required this.lat,
+    required this.lon,
+    required this.pathM,
+    required this.headingDeg,
+    required this.ts,
+  });
+
+  final double lat;
+  final double lon;
+  final double pathM;
+  final double headingDeg;
+  final DateTime ts;
+}
+
 /// School/park track laps from GPS. First 200m defines virtual finish.
+///
+/// Auto mode also detects stadium-like loops that never return to the session
+/// start (e.g. street → gym track) by revisiting earlier path waypoints after
+/// ~250–850m with a matching heading.
 class LapDetector {
   LapDetector({
     this.startRadiusM = 22,
@@ -42,6 +62,7 @@ class LapDetector {
     this.maxHorizontalAccuracyM = 30,
     this.autoLoopMinM = 250,
     this.autoLoopMaxM = 850,
+    this.waypointSpacingM = 25,
   });
 
   final double startRadiusM;
@@ -51,6 +72,7 @@ class LapDetector {
   final double maxHorizontalAccuracyM;
   final double autoLoopMinM;
   final double autoLoopMaxM;
+  final double waypointSpacingM;
 
   static const trackSpecsM = [200, 300, 400, 500, 600];
 
@@ -69,6 +91,8 @@ class LapDetector {
   double? _lastLon;
   bool _insideRadius = true;
   bool _exitedOnce = false;
+  final List<_PathWaypoint> _waypoints = [];
+  double _lastWaypointPathM = -1e9;
 
   void reset() {
     startLat = null;
@@ -85,6 +109,8 @@ class LapDetector {
     _lastLon = null;
     _insideRadius = true;
     _exitedOnce = false;
+    _waypoints.clear();
+    _lastWaypointPathM = -1e9;
   }
 
   void restore({
@@ -103,6 +129,8 @@ class LapDetector {
     this.calibrating = calibrating;
     _insideRadius = true;
     _exitedOnce = !calibrating;
+    _waypoints.clear();
+    _lastWaypointPathM = -1e9;
   }
 
   /// Distance = laps × spec when a spec is selected and at least one lap exists.
@@ -173,6 +201,7 @@ class LapDetector {
           calibrating = false;
           lastLapAt ??= sample.ts;
         }
+        _recordWaypoint(sample);
       }
       _lastLat = sample.lat;
       _lastLon = sample.lon;
@@ -185,13 +214,6 @@ class LapDetector {
       return null;
     }
 
-    final distToStart = haversineMeters(
-      lat1: startLat!,
-      lon1: startLon!,
-      lat2: sample.lat,
-      lon2: sample.lon,
-    );
-    final nowInside = distToStart <= startRadiusM;
     final heading = sample.headingDeg ??
         (_lastLat != null
             ? bearingDegrees(
@@ -201,11 +223,50 @@ class LapDetector {
                 lon2: sample.lon,
               )
             : firstPassHeading ?? 0);
-    final headingOk = firstPassHeading == null ||
-        headingDeltaDeg(heading, firstPassHeading!) <= headingToleranceDeg;
     final last = lastLapAt ?? _sessionStart!;
     final timeOk = !sample.ts.difference(last).isNegative &&
         sample.ts.difference(last) >= minGap;
+
+    LapEvent? event = _tryFinishLineCrossing(
+      sample: sample,
+      heading: heading,
+      timeOk: timeOk,
+      countAnyLoop: countAnyLoop,
+      last: last,
+    );
+
+    event ??= _tryWaypointRevisit(
+      sample: sample,
+      heading: heading,
+      timeOk: timeOk,
+      countAnyLoop: countAnyLoop,
+      last: last,
+    );
+
+    _recordWaypoint(sample, headingDeg: heading);
+    _pruneWaypoints();
+
+    _lastLat = sample.lat;
+    _lastLon = sample.lon;
+    return event;
+  }
+
+  LapEvent? _tryFinishLineCrossing({
+    required TrackSample sample,
+    required double heading,
+    required bool timeOk,
+    required bool countAnyLoop,
+    required DateTime last,
+  }) {
+    final distToStart = haversineMeters(
+      lat1: startLat!,
+      lon1: startLon!,
+      lat2: sample.lat,
+      lon2: sample.lon,
+    );
+    final nowInside = distToStart <= startRadiusM;
+    final headingOk = firstPassHeading == null ||
+        headingDeltaDeg(heading, firstPassHeading!) <= headingToleranceDeg;
 
     LapEvent? event;
     if (!_insideRadius && nowInside && headingOk && timeOk) {
@@ -214,22 +275,126 @@ class LapDetector {
           : 0.0;
       final accept = countAnyLoop || isTrackLikeLoop(loopM);
       if (accept) {
-        lapNo += 1;
-        final lapTimeS = sample.ts.difference(last).inMilliseconds / 1000.0;
-        lastLapAt = sample.ts;
-        _metersAtLastLap = _path.meters;
-        event = LapEvent(
-          lapNo: lapNo,
-          crossedAt: sample.ts,
-          lapTimeS: lapTimeS,
-          lapDistM: loopM,
+        event = _commitLap(
+          sample: sample,
+          last: last,
+          loopM: loopM,
+          finishLat: startLat!,
+          finishLon: startLon!,
+          finishHeading: firstPassHeading ?? heading,
         );
       }
     }
 
     _insideRadius = nowInside;
-    _lastLat = sample.lat;
-    _lastLon = sample.lon;
     return event;
+  }
+
+  /// When the session start is off-track (street → stadium), finish-line
+  /// crossing never fires. Count a lap when GPS revisits an earlier waypoint
+  /// after a stadium-like path length with a matching heading.
+  LapEvent? _tryWaypointRevisit({
+    required TrackSample sample,
+    required double heading,
+    required bool timeOk,
+    required bool countAnyLoop,
+    required DateTime last,
+  }) {
+    if (!timeOk || _waypoints.isEmpty) return null;
+
+    _PathWaypoint? hit;
+    var hitAlong = 0.0;
+    for (final w in _waypoints) {
+      final along = _path.meters - w.pathM;
+      if (along < autoLoopMinM) continue;
+      if (!countAnyLoop && along > autoLoopMaxM) continue;
+      if (countAnyLoop && along > autoLoopMaxM * 2) continue;
+      final d = haversineMeters(
+        lat1: w.lat,
+        lon1: w.lon,
+        lat2: sample.lat,
+        lon2: sample.lon,
+      );
+      if (d > startRadiusM) continue;
+      if (headingDeltaDeg(heading, w.headingDeg) > headingToleranceDeg) {
+        continue;
+      }
+      if (sample.ts.difference(w.ts) < minGap) continue;
+      hit = w;
+      hitAlong = along;
+      break;
+    }
+    if (hit == null) return null;
+
+    // Accept auto only for track-like loop lengths; locked track is looser.
+    final accept = countAnyLoop || isTrackLikeLoop(hitAlong);
+    if (!accept) return null;
+
+    return _commitLap(
+      sample: sample,
+      last: last,
+      loopM: hitAlong,
+      finishLat: hit.lat,
+      finishLon: hit.lon,
+      finishHeading: hit.headingDeg,
+    );
+  }
+
+  LapEvent _commitLap({
+    required TrackSample sample,
+    required DateTime last,
+    required double loopM,
+    required double finishLat,
+    required double finishLon,
+    required double finishHeading,
+  }) {
+    lapNo += 1;
+    final lapTimeS = sample.ts.difference(last).inMilliseconds / 1000.0;
+    lastLapAt = sample.ts;
+    _metersAtLastLap = _path.meters;
+    startLat = finishLat;
+    startLon = finishLon;
+    firstPassHeading = finishHeading;
+    _insideRadius = true;
+    _exitedOnce = true;
+    // Drop waypoints from before this finish so the next lap must travel again.
+    _waypoints.removeWhere((w) => w.pathM < _path.meters - 5);
+    _lastWaypointPathM = _path.meters;
+    return LapEvent(
+      lapNo: lapNo,
+      crossedAt: sample.ts,
+      lapTimeS: lapTimeS,
+      lapDistM: loopM,
+    );
+  }
+
+  void _recordWaypoint(TrackSample sample, {double? headingDeg}) {
+    if (_path.meters - _lastWaypointPathM < waypointSpacingM) return;
+    final heading = headingDeg ??
+        sample.headingDeg ??
+        (_lastLat != null
+            ? bearingDegrees(
+                lat1: _lastLat!,
+                lon1: _lastLon!,
+                lat2: sample.lat,
+                lon2: sample.lon,
+              )
+            : firstPassHeading ?? 0);
+    _waypoints.add(
+      _PathWaypoint(
+        lat: sample.lat,
+        lon: sample.lon,
+        pathM: _path.meters,
+        headingDeg: heading,
+        ts: sample.ts,
+      ),
+    );
+    _lastWaypointPathM = _path.meters;
+  }
+
+  void _pruneWaypoints() {
+    final minPath = _path.meters - autoLoopMaxM * 2;
+    if (minPath <= 0) return;
+    _waypoints.removeWhere((w) => w.pathM < minPath);
   }
 }
