@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/copy.dart';
 import '../core/theme.dart';
 import '../domain/engines/farm_life.dart';
+import '../domain/engines/farm_time_of_day.dart';
 import '../domain/engines/land_city.dart';
 
 const farmWaterDuration = Duration(milliseconds: 900);
@@ -19,6 +21,8 @@ class FarmScene extends StatefulWidget {
     this.height = 268,
     this.watering = false,
     this.onWateringComplete,
+    this.nowOverride,
+    this.latitude,
   });
 
   final List<FarmKind> buildings;
@@ -28,12 +32,20 @@ class FarmScene extends StatefulWidget {
   final bool watering;
   final VoidCallback? onWateringComplete;
 
+  /// When set, sky phase is frozen for tests; no periodic refresh.
+  final DateTime? nowOverride;
+
+  /// Optional latitude from last GPS fix; defaults to central Korea.
+  final double? latitude;
+
   @override
   State<FarmScene> createState() => _FarmSceneState();
 }
 
 class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMixin {
   late final AnimationController _water;
+  Timer? _skyTimer;
+  late FarmSkyAppearance _sky;
   var _armed = false;
   var _notified = false;
 
@@ -54,12 +66,30 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _sky = _resolveSky();
+    _armSkyTimer();
     _water = AnimationController(vsync: this, duration: farmWaterDuration)
       ..addStatusListener(_onStatus);
     if (widget.watering) {
       _armed = true;
       _water.forward();
     }
+  }
+
+  FarmSkyAppearance _resolveSky() {
+    return resolveFarmSky(
+      now: widget.nowOverride ?? DateTime.now(),
+      latitudeDeg: widget.latitude ?? kFarmDefaultLatitude,
+    );
+  }
+
+  void _armSkyTimer() {
+    _skyTimer?.cancel();
+    if (widget.nowOverride != null) return;
+    _skyTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (!mounted) return;
+      setState(() => _sky = _resolveSky());
+    });
   }
 
   @override
@@ -73,6 +103,11 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
   @override
   void didUpdateWidget(covariant FarmScene old) {
     super.didUpdateWidget(old);
+    if (widget.nowOverride != old.nowOverride ||
+        widget.latitude != old.latitude) {
+      setState(() => _sky = _resolveSky());
+      _armSkyTimer();
+    }
     if (widget.watering && !old.watering) {
       _armed = false;
       _notified = false;
@@ -113,6 +148,7 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _skyTimer?.cancel();
     _water
       ..removeStatusListener(_onStatus)
       ..dispose();
@@ -139,6 +175,7 @@ class _FarmSceneState extends State<FarmScene> with SingleTickerProviderStateMix
                       herds: widget.herds,
                       caredToday: widget.caredToday,
                       waterT: _water.value,
+                      sky: _sky,
                     ),
                   );
                 },
@@ -183,13 +220,17 @@ class FarmScenePainter extends CustomPainter {
     required this.buildings,
     required this.herds,
     required this.caredToday,
+    required this.sky,
     this.waterT = 0,
   });
 
   final List<FarmKind> buildings;
   final List<HerdKind> herds;
   final bool caredToday;
+  final FarmSkyAppearance sky;
   final double waterT;
+
+  FarmSkyPalette get _palette => sky.palette;
 
   double get _flash => math.sin(math.pi * waterT.clamp(0.0, 1.0));
   double get _bob => -_flash * 5;
@@ -204,8 +245,10 @@ class FarmScenePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     _sky(canvas, w, h);
-    _sun(canvas, w, h);
-    _clouds(canvas, w, h);
+    if (_palette.sunOpacity > 0.01) _sun(canvas, w, h);
+    if (_palette.moonOpacity > 0.01) _moon(canvas, w, h);
+    if (_palette.starOpacity > 0.01) _stars(canvas, w, h);
+    if (_palette.cloudOpacity > 0.01) _clouds(canvas, w, h);
     _hills(canvas, w, h);
     _bands(canvas, w, h);
     _path(canvas, w, h);
@@ -227,6 +270,12 @@ class FarmScenePainter extends CustomPainter {
     _gardens(canvas, w, h, _shown(HerdKind.garden), life);
     _cattle(canvas, w, h, _shown(HerdKind.cattle), life);
     if (waterT > 0) _watering(canvas, w, h);
+    if (_palette.nightOverlay > 0.01) _nightOverlay(canvas, w, h);
+  }
+
+  Color _dim(Color c) {
+    final d = _palette.groundDim.clamp(0.0, 1.0);
+    return Color.lerp(const Color(0xFF0A1030), c, d)!;
   }
 
   void _sky(Canvas canvas, double w, double h) {
@@ -234,29 +283,68 @@ class FarmScenePainter extends CustomPainter {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF7EFE3), Color(0xFFFAF6EF), Color(0xFFE8D5C2)],
+          colors: [_palette.top, _palette.mid, _palette.bottom],
         ).createShader(rect),
     );
   }
 
   void _sun(Canvas canvas, double w, double h) {
+    final a = _palette.sunOpacity.clamp(0.0, 1.0);
     canvas.drawCircle(
       Offset(w * 0.84, h * 0.12),
       h * 0.07,
-      Paint()..color = BalmiColors.amber.withValues(alpha: 0.45),
+      Paint()..color = BalmiColors.amber.withValues(alpha: 0.45 * a),
     );
     canvas.drawCircle(
       Offset(w * 0.84, h * 0.12),
       h * 0.042,
-      Paint()..color = BalmiColors.amber.withValues(alpha: 0.8),
+      Paint()..color = BalmiColors.amber.withValues(alpha: 0.8 * a),
     );
   }
 
+  void _moon(Canvas canvas, double w, double h) {
+    final a = _palette.moonOpacity.clamp(0.0, 1.0);
+    final center = Offset(w * 0.84, h * 0.12);
+    canvas.drawCircle(
+      center,
+      h * 0.055,
+      Paint()..color = const Color(0xFFA9B8D9).withValues(alpha: 0.4 * a),
+    );
+    canvas.drawCircle(
+      center,
+      h * 0.038,
+      Paint()..color = const Color(0xFFF0EDE5).withValues(alpha: a),
+    );
+    canvas.drawCircle(
+      Offset(center.dx - h * 0.012, center.dy - h * 0.008),
+      h * 0.008,
+      Paint()..color = const Color(0xFFD8D5CC).withValues(alpha: 0.55 * a),
+    );
+  }
+
+  void _stars(Canvas canvas, double w, double h) {
+    final a = _palette.starOpacity.clamp(0.0, 1.0);
+    for (var i = 0; i < 32; i++) {
+      final x = w * (0.08 + ((i * 47) % 100) / 100 * 0.84);
+      final y = h * (0.04 + ((i * 19) % 100) / 100 * 0.22);
+      final warm = i % 10 == 0;
+      final r = warm ? 1.2 : 0.9;
+      canvas.drawCircle(
+        Offset(x, y),
+        r,
+        Paint()
+          ..color = (warm ? const Color(0xFFFFF6D9) : const Color(0xFFFFFFFF))
+              .withValues(alpha: (0.35 + (i % 5) * 0.12) * a),
+      );
+    }
+  }
+
   void _clouds(Canvas canvas, double w, double h) {
-    final puff = Paint()..color = BalmiColors.paper.withValues(alpha: 0.85);
+    final a = _palette.cloudOpacity.clamp(0.0, 1.0);
+    final puff = Paint()..color = BalmiColors.paper.withValues(alpha: 0.85 * a);
     void cloud(double x, double y, double s) {
       canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: s * 2.2, height: s), puff);
       canvas.drawCircle(Offset(x - s * 0.55, y + 1), s * 0.55, puff);
@@ -267,6 +355,13 @@ class FarmScenePainter extends CustomPainter {
     cloud(w * 0.48, h * 0.1, 12);
   }
 
+  void _nightOverlay(Canvas canvas, double w, double h) {
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()..color = const Color(0xFF0A1030).withValues(alpha: _palette.nightOverlay),
+    );
+  }
+
   void _hills(Canvas canvas, double w, double h) {
     final far = Path()
       ..moveTo(0, h * 0.4)
@@ -275,7 +370,7 @@ class FarmScenePainter extends CustomPainter {
       ..lineTo(w, h * 0.5)
       ..lineTo(0, h * 0.5)
       ..close();
-    canvas.drawPath(far, Paint()..color = const Color(0xFFC4CDB6));
+    canvas.drawPath(far, Paint()..color = _dim(const Color(0xFFC4CDB6)));
     final near = Path()
       ..moveTo(0, h * 0.46)
       ..quadraticBezierTo(w * 0.38, h * 0.38, w * 0.7, h * 0.47)
@@ -283,21 +378,18 @@ class FarmScenePainter extends CustomPainter {
       ..lineTo(w, h * 0.5)
       ..lineTo(0, h * 0.5)
       ..close();
-    canvas.drawPath(near, Paint()..color = const Color(0xFFA7B592));
+    canvas.drawPath(near, Paint()..color = _dim(const Color(0xFFA7B592)));
   }
 
   void _bands(Canvas canvas, double w, double h) {
     final lush = caredToday || _flash > 0.2;
+    final farColor = Color.lerp(
+      _dim(const Color(0xFF8A9B76)),
+      _dim(const Color(0xFFA8C48A)),
+      lush ? (0.65 + 0.35 * _flash) : 0,
+    )!;
     final far = Rect.fromLTWH(0, h * 0.48, w, h * 0.14);
-    canvas.drawRect(
-      far,
-      Paint()
-        ..color = Color.lerp(
-          const Color(0xFF8A9B76),
-          const Color(0xFFA8C48A),
-          lush ? (0.65 + 0.35 * _flash) : 0,
-        )!,
-    );
+    canvas.drawRect(far, Paint()..color = farColor);
     final mid = Rect.fromLTWH(0, h * 0.6, w, h * 0.22);
     canvas.drawRect(
       mid,
@@ -306,14 +398,17 @@ class FarmScenePainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: lush
-              ? [const Color(0xFF8FA37A), Color.lerp(BalmiColors.sage, const Color(0xFFA8C48A), _flash)!]
-              : const [BalmiColors.sage, Color(0xFF667856)],
+              ? [
+                  _dim(const Color(0xFF8FA37A)),
+                  _dim(Color.lerp(BalmiColors.sage, const Color(0xFFA8C48A), _flash)!),
+                ]
+              : [_dim(BalmiColors.sage), _dim(const Color(0xFF667856))],
         ).createShader(mid),
     );
     final near = Rect.fromLTWH(0, h * 0.8, w, h * 0.2);
     canvas.drawRect(
       near,
-      Paint()..color = lush ? const Color(0xFF738562) : const Color(0xFF5E6C4F),
+      Paint()..color = lush ? _dim(const Color(0xFF738562)) : _dim(const Color(0xFF5E6C4F)),
     );
     final tuft = Paint()
       ..color = const Color(0xFF5C6B4A).withValues(alpha: lush ? 0.7 : 0.45)
@@ -400,7 +495,16 @@ class FarmScenePainter extends CustomPainter {
       ),
       Paint()..color = BalmiColors.amber,
     );
-    canvas.drawCircle(Offset(c.dx, body.center.dy - 2), 4, Paint()..color = BalmiColors.paper);
+    final windowGlow = _palette.moonOpacity > 0.45 ? 0.75 : 0.0;
+    if (windowGlow > 0) {
+      canvas.drawCircle(
+        Offset(c.dx, body.center.dy - 2),
+        4,
+        Paint()..color = BalmiColors.amber.withValues(alpha: windowGlow),
+      );
+    } else {
+      canvas.drawCircle(Offset(c.dx, body.center.dy - 2), 4, Paint()..color = BalmiColors.paper);
+    }
   }
 
   void _house(Canvas canvas, Offset c, double span) {
@@ -425,7 +529,10 @@ class FarmScenePainter extends CustomPainter {
         Rect.fromLTWH(body.left + 10, body.center.dy - 4, 11, 9),
         const Radius.circular(1),
       ),
-      Paint()..color = BalmiColors.amber,
+      Paint()
+        ..color = _palette.moonOpacity > 0.45
+            ? BalmiColors.amber.withValues(alpha: 0.7)
+            : BalmiColors.amber,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -682,6 +789,10 @@ class FarmScenePainter extends CustomPainter {
   bool shouldRepaint(covariant FarmScenePainter old) {
     return old.caredToday != caredToday ||
         old.waterT != waterT ||
+        old.sky.phase != sky.phase ||
+        old.sky.palette.top != sky.palette.top ||
+        old.sky.palette.sunOpacity != sky.palette.sunOpacity ||
+        old.sky.palette.moonOpacity != sky.palette.moonOpacity ||
         !_same(old.buildings, buildings) ||
         !_same(old.herds, herds);
   }
