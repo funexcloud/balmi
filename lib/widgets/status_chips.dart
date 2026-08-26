@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/copy.dart';
 import '../core/theme.dart';
 import '../data/recording/recording_snapshot.dart';
+import 'locate_fixed_icon.dart';
 
 class StatusChip extends StatelessWidget {
   const StatusChip({
@@ -110,15 +111,19 @@ class RecordingStatusChips extends StatelessWidget {
     final s = snapshot;
     final points = s?.pointCount ?? 0;
     final strength = s?.gpsStrength ?? 'none';
-    final pulse = points == 0 || strength == 'strong' || strength == 'ok';
+    final waitingFix = waiting && points == 0;
     final acc = s?.hAccM;
+    final line = BalmiCopy.gpsLiveLine(
+      strength: strength,
+      hAccM: waitingFix ? null : acc,
+      waiting: waitingFix,
+    );
+    final quality = BalmiCopy.gpsQuality(strength, waiting: waitingFix);
 
     return Semantics(
-      label: waiting && points == 0
+      label: waitingFix
           ? '${BalmiCopy.gps} ${BalmiCopy.waitingGpsShort}'
-          : acc == null
-              ? '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(strength)}'
-              : '${BalmiCopy.gps} ${BalmiCopy.gpsStrength(strength)} ±${acc.round()}m',
+          : '${BalmiCopy.gps} $quality${acc == null ? '' : ' ±${acc.round()}m'}',
       child: Container(
         padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
         decoration: BoxDecoration(
@@ -128,9 +133,19 @@ class RecordingStatusChips extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PulseDot(pulse: pulse),
-            GpsSignalBars(
-              strength: waiting && points == 0 ? 'none' : strength,
+            LocateFixedIcon(
+              size: 15,
+              color: waitingFix ? BalmiColors.sub : BalmiColors.ink,
+              strokeWidth: 2,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              line,
+              style: BalmiTheme.body(
+                size: 12,
+                weight: FontWeight.w700,
+                color: BalmiColors.ink,
+              ),
             ),
           ],
         ),
@@ -139,59 +154,28 @@ class RecordingStatusChips extends StatelessWidget {
   }
 }
 
-/// Wifi-style GPS strength. Accuracy stays in semantics, not chrome text.
-class GpsSignalBars extends StatelessWidget {
-  const GpsSignalBars({super.key, required this.strength});
+/// Quality dots (●/○) for GPS accuracy — not cellular signal bars.
+class GpsQualityDots extends StatelessWidget {
+  const GpsQualityDots({
+    super.key,
+    required this.strength,
+    this.waiting = false,
+  });
 
   final String strength;
-
-  int get _filled => switch (strength) {
-        'strong' => 4,
-        'ok' => 3,
-        'weak' => 2,
-        'poor' => 1,
-        _ => 0,
-      };
+  final bool waiting;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 16,
-      child: CustomPaint(
-        painter: _GpsBarsPainter(filled: _filled),
+    return Text(
+      BalmiCopy.gpsQualityDots(strength, waiting: waiting),
+      style: BalmiTheme.body(
+        size: 12,
+        weight: FontWeight.w700,
+        color: BalmiColors.ink,
       ),
     );
   }
-}
-
-class _GpsBarsPainter extends CustomPainter {
-  const _GpsBarsPainter({required this.filled});
-
-  final int filled;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const n = 4;
-    final gap = size.width * 0.12;
-    final w = (size.width - gap * (n - 1)) / n;
-    for (var i = 0; i < n; i++) {
-      final h = size.height * ((i + 1) / n);
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(i * (w + gap), size.height - h, w, h),
-        const Radius.circular(1.6),
-      );
-      canvas.drawRRect(
-        rect,
-        Paint()
-          ..color = i < filled ? BalmiColors.ink : BalmiColors.line
-          ..style = PaintingStyle.fill,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GpsBarsPainter old) => old.filled != filled;
 }
 
 class SportPill extends StatelessWidget {

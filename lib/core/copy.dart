@@ -240,33 +240,63 @@ abstract final class BalmiCopy {
   static const lunch = '점심';
   static const dinner = '저녁';
 
-  static String gpsStrength(String code) {
+  /// Accuracy-based quality labels for the live GPS pill.
+  /// 수신 중 / 약함 / 양호 / 우수
+  static String gpsQuality(String code, {bool waiting = false}) {
+    if (waiting || code == 'none') return '수신 중';
     switch (code) {
       case 'strong':
-        return '강함';
+        return '우수';
       case 'ok':
-        return '보통';
+        return '양호';
       case 'weak':
-        return '약함';
       case 'poor':
-        return '불량';
+        return '약함';
       default:
-        return '없음';
+        return '수신 중';
     }
   }
+
+  /// Filled quality dots (0–3) from [RecordingSnapshot.gpsStrength].
+  static int gpsQualityDotCount(String code, {bool waiting = false}) {
+    if (waiting || code == 'none') return 0;
+    return switch (code) {
+      'strong' => 3,
+      'ok' => 2,
+      'weak' || 'poor' => 1,
+      _ => 0,
+    };
+  }
+
+  static String gpsQualityDots(String code, {bool waiting = false, int total = 3}) {
+    final filled = gpsQualityDotCount(code, waiting: waiting);
+    return List.generate(total, (i) => i < filled ? '●' : '○').join();
+  }
+
+  /// Visible live line, e.g. `GPS ●●● ±3m`.
+  static String gpsLiveLine({
+    required String strength,
+    double? hAccM,
+    bool waiting = false,
+  }) {
+    final dots = gpsQualityDots(strength, waiting: waiting);
+    if (waiting || hAccM == null) return '$gps $dots';
+    return '$gps $dots ±${hAccM.round()}m';
+  }
+
+  static String gpsStrength(String code) => gpsQuality(code);
 
   static String gpsChip(String code) {
     switch (code) {
       case 'strong':
-        return 'GPS 강';
+        return 'GPS 우수';
       case 'ok':
-        return 'GPS 보통';
+        return 'GPS 양호';
       case 'weak':
-        return 'GPS 약';
       case 'poor':
-        return 'GPS 불량';
+        return 'GPS 약함';
       default:
-        return 'GPS 없음';
+        return 'GPS 수신 중';
     }
   }
 }
