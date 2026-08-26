@@ -21,15 +21,22 @@ const _forbidden = [
 void main() {
   test('user-facing copy never uses forbidden terms', () {
     const blob =
-        '${BalmiCopy.appName} ${BalmiCopy.oneLiner} ${BalmiCopy.positioning} '
+        '${BalmiCopy.appName} ${BalmiCopy.slogan} ${BalmiCopy.subcopy} '
+        '${BalmiCopy.oneLiner} ${BalmiCopy.positioning} ${BalmiCopy.heroLine} '
         '${BalmiCopy.trustAlways} ${BalmiCopy.recoveryTitle} ${BalmiCopy.recoveryBody} '
         '${BalmiCopy.vasaCredit} ${BalmiCopy.vasaCreditDetail} ${BalmiCopy.waitingGps} '
         '${BalmiCopy.waitingGpsShort} ${BalmiCopy.locationOff} ${BalmiCopy.locationDenied} '
         '${BalmiCopy.locationDeniedForever} ${BalmiCopy.onboardingWelcome} '
+        '${BalmiCopy.onboardingStory1Title} ${BalmiCopy.onboardingStory1Body} '
+        '${BalmiCopy.onboardingStory2Title} ${BalmiCopy.onboardingStory2Body} '
+        '${BalmiCopy.onboardingStory3Title} ${BalmiCopy.onboardingStory3Body} '
+        '${BalmiCopy.onboardingStory4Title} ${BalmiCopy.onboardingStory4Body} '
         '${BalmiCopy.onboardingTrustTitle} ${BalmiCopy.onboardingPermsTitle} '
         '${BalmiCopy.onboardingBatteryTitle} ${BalmiCopy.onboardingBatteryBody} '
         '${BalmiCopy.landTitle} ${BalmiCopy.landPreview} ${BalmiCopy.landFoot} '
-        '${BalmiCopy.about} ${BalmiCopy.versionLabel} '
+        '${BalmiCopy.about} ${BalmiCopy.aboutTitle} ${BalmiCopy.aboutClosing} '
+        '${BalmiCopy.aboutBulletOffline} ${BalmiCopy.aboutBulletRecovery} '
+        '${BalmiCopy.aboutBulletModes} ${BalmiCopy.versionLabel} '
         '${BalmiCopy.mealWalkDiscover} ${BalmiCopy.mealWalkIntro} '
         '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
         '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge} '
@@ -44,8 +51,12 @@ void main() {
     }
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));
-    expect(BalmiCopy.positioning, '잃어버리지 않는 기록');
-    expect(BalmiCopy.trustAlways, '통신이 끊겨도 기록은 기기에 전부 저장됩니다');
+    expect(blob, isNot(contains('앱이 죽어도')));
+    expect(BalmiCopy.slogan, '걸음은 멈춰도, 기록은 멈추지 않도록.');
+    expect(BalmiCopy.subcopy, '단 한 걸음도 잃어버리지 않도록.');
+    expect(BalmiCopy.positioning, '기록을 잃지 않는 이동 기록');
+    expect(BalmiCopy.trustAlways, '인터넷이 끊겨도 기록은 기기에 보존됩니다');
+    expect(BalmiCopy.onboardingPageCount, 4);
     expect(BalmiCopy.todaySteps, '오늘 걸음');
     expect(BalmiCopy.recordingSteps, '기록 중 걸음');
   });

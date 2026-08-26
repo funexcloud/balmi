@@ -1,9 +1,15 @@
 /// User-facing Korean copy. Keep this file free of unrelated brand/funeral wording.
 abstract final class BalmiCopy {
   static const appName = 'balmi';
-  static const oneLiner = '통신이 끊겨도, 앱이 죽어도, 단 한 걸음도 잃어버리지 않는 걷기·달리기 기록 앱.';
-  static const positioning = '잃어버리지 않는 기록';
-  static const trustAlways = '통신이 끊겨도 기록은 기기에 전부 저장됩니다';
+  /// Brand slogan — product / store / about (no harsh crash wording).
+  static const slogan = '걸음은 멈춰도, 기록은 멈추지 않도록.';
+  static const subcopy = '단 한 걸음도 잃어버리지 않도록.';
+  static const heroLine = '걷고, 달리고, 길을 기억하세요.';
+  static const oneLiner =
+      '걸음은 멈춰도, 기록은 멈추지 않도록. '
+      '인터넷이 끊겨도, 앱이 예기치 않게 종료되어도, 다시 켜면 기록이 이어지도록 설계한 이동 기록 앱.';
+  static const positioning = '기록을 잃지 않는 이동 기록';
+  static const trustAlways = '인터넷이 끊겨도 기록은 기기에 보존됩니다';
 
   static const resumeRecording = '이어서 기록';
   static const endHere = '여기서 종료';
@@ -123,12 +129,34 @@ abstract final class BalmiCopy {
   static const sessionLandPathBand = '밟은 띠';
   static const sessionLandLoop = '닫힌 루프';
 
-  static const onboardingWelcome = '안녕하세요, balmi예요';
-  static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';
+  // Onboarding — one 4-beat story (move → offline → exit → record remains)
+  static const onboardingPageCount = 4;
+  static const onboardingStory1Title = '걷든, 달리든.\n시작부터 끝까지 기억합니다.';
+  static const onboardingStory1Body =
+      '걷기, 달리기, 트랙 러닝까지. Balmi는 당신의 움직임을 기록합니다.';
+  static const onboardingStory1Tags = '걷기 · 달리기 · 트랙 · 경로 기록';
+  static const onboardingStory2Title = '인터넷이 끊겨도\n기록은 계속됩니다.';
+  static const onboardingStory2Body =
+      '산길에서도, 외진 길에서도, 통신이 불안정한 순간에도. '
+      '네트워크에 의존하지 않고 가능한 범위에서 이동 기록을 기기에 보존합니다.';
+  static const onboardingStory2Badge = 'OFFLINE RECORDING';
+  static const onboardingStory3Title = '앱이 갑자기 종료되어도\n기록을 되찾을 수 있도록.';
+  static const onboardingStory3Body =
+      '예기치 않은 앱 종료나 중단 상황에 대비해 진행 중 운동 기록을 보존하고 '
+      '다시 이어갈 수 있도록 설계했습니다.';
+  static const onboardingStory3Badge = 'RECOVERY READY';
+  static const onboardingStory4Title = '단 한 걸음도\n잃어버리지 않도록.';
+  static const onboardingStory4Body =
+      '빠르게·멀리보다 Balmi가 지키는 것은 당신이 지나온 기록. '
+      '걷고, 달리고, 기록하세요.';
+
+  /// Legacy aliases kept for older call sites / tests that still name welcome/trust.
+  static const onboardingWelcome = slogan;
+  static const onboardingTrustTitle = onboardingStory2Title;
   static const onboardingPermsTitle = '기록이 끊기지 않게 권한을 켜 주세요';
   static const onboardingBatteryTitle = '배터리 최적화만 꺼 주세요';
   static const onboardingBatteryBody =
-      '일부 휴대폰은 절전 때문에 백그라운드 기록을 멈춥니다. 아래 제조사 설정에서 balmi를 예외로 두세요.';
+      '일부 휴대폰은 절전 때문에 백그라운드 기록을 멈춥니다. 설정에서 balmi를 예외로 두세요.';
   static const continueLabel = '계속';
   static const done = '시작하기';
   static const locationPermission = '정확한 위치';
@@ -209,6 +237,11 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
   static const about = '이 앱 정보';
+  static const aboutTitle = 'Balmi — 걷기·달리기·경로 기록';
+  static const aboutBulletOffline = '인터넷이 끊겨도 기기에서 기록 보존';
+  static const aboutBulletRecovery = '예기치 않은 종료 후에도 이어가기 설계';
+  static const aboutBulletModes = '걷기 · 달리기 · 트랙 · 경로 기록';
+  static const aboutClosing = '걷고. 달리고. 기록하다.';
   static const versionLabel = '0.1.13';
 
   static const mealWalkDiscover = '식사 후 15분 걷기, 시작해볼까요?';

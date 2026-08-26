@@ -10,6 +10,7 @@ import '../../data/repositories/session_repository.dart';
 import '../../widgets/balmi_wordmark.dart';
 import '../../widgets/safe_cta.dart';
 
+/// First-run onboarding: one 4-beat durability story, then permission gate.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onDone});
 
@@ -22,9 +23,10 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _page = PageController();
   int _index = 0;
-  String _oem = '';
   bool _ignoring = false;
   String? _permHint;
+
+  static const _lastIndex = BalmiCopy.onboardingPageCount - 1;
 
   @override
   void initState() {
@@ -32,14 +34,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _loadOem();
   }
 
+  @override
+  void dispose() {
+    _page.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadOem() async {
-    final m = await OemBattery.manufacturer();
     final ignoring = await OemBattery.isIgnoringOptimizations();
     if (!mounted) return;
-    setState(() {
-      _oem = OemBattery.familyLabel(m);
-      _ignoring = ignoring;
-    });
+    setState(() => _ignoring = ignoring);
   }
 
   Future<bool> _locationReady() async {
@@ -51,35 +55,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         p == LocationPermission.whileInUse;
   }
 
+  Future<void> _requestRecordingPerms() async {
+    final denied = await RecordingPermissions.ensure();
+    if (denied != null) {
+      if (!mounted) return;
+      setState(() => _permHint = denied);
+      return;
+    }
+    final whenInUse = await Permission.locationWhenInUse.status;
+    if (!whenInUse.isGranted) {
+      if (!mounted) return;
+      setState(() => _permHint = BalmiCopy.locationDenied);
+      return;
+    }
+    await Permission.locationAlways.request();
+    await Permission.notification.request();
+  }
+
   Future<void> _next() async {
     setState(() => _permHint = null);
-    if (_index == 2) {
-      final denied = await RecordingPermissions.ensure();
-      if (denied != null) {
-        if (!mounted) return;
-        setState(() => _permHint = denied);
-        return;
+    if (_index < _lastIndex) {
+      // Request location before the final promise screen so "시작하기" can finish.
+      if (_index == _lastIndex - 1) {
+        await _requestRecordingPerms();
+        if (_permHint != null) return;
       }
-      final whenInUse = await Permission.locationWhenInUse.status;
-      if (!whenInUse.isGranted) {
-        if (!mounted) return;
-        setState(() => _permHint = BalmiCopy.locationDenied);
-        return;
-      }
-      await Permission.locationAlways.request();
-      await Permission.notification.request();
-    }
-    if (_index < 3) {
       await _page.nextPage(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutCubic,
       );
       return;
     }
     if (!await _locationReady()) {
-      if (!mounted) return;
-      setState(() => _permHint = BalmiCopy.permsRequired);
-      return;
+      await _requestRecordingPerms();
+      if (!await _locationReady()) {
+        if (!mounted) return;
+        setState(() => _permHint = BalmiCopy.permsRequired);
+        return;
+      }
     }
     if (!_ignoring) {
       await OemBattery.requestIgnore();
@@ -92,146 +105,339 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: BalmiColors.paper,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: BalmiWordmark(height: 28),
-              ),
-            ),
-            Expanded(
-              child: PageView(
-                controller: _page,
-                onPageChanged: (i) => setState(() {
-                  _index = i;
-                  _permHint = null;
-                }),
-                children: [
-                  _pageBody(
-                    title: BalmiCopy.onboardingWelcome,
-                    body: '${BalmiCopy.oneLiner}\n\n${BalmiCopy.positioning}',
-                  ),
-                  _pageBody(
-                    title: BalmiCopy.onboardingTrustTitle,
-                    body: BalmiCopy.trustAlways,
-                  ),
-                  _permsPage(),
-                  _batteryPage(),
-                ],
-              ),
-            ),
-            if (_permHint != null)
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFFF8F3),
+              BalmiColors.paper,
+              Color(0xFFF7F3EF),
+            ],
+            stops: [0, 0.45, 1],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                child: Text(
-                  _permHint!,
-                  style: BalmiTheme.body(
-                    size: 13,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                child: Row(
+                  children: [
+                    const BalmiWordmark(height: 28),
+                    const Spacer(),
+                    Text(
+                      '${_index + 1} / ${BalmiCopy.onboardingPageCount}',
+                      style: BalmiTheme.tracked(
+                        size: 11,
+                        color: BalmiColors.sub,
+                        trackingEm: 0.12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            SafePrimaryButton(
-              label: _index < 3 ? BalmiCopy.continueLabel : BalmiCopy.done,
-              onPressed: _next,
+              Expanded(
+                child: PageView(
+                  controller: _page,
+                  onPageChanged: (i) => setState(() {
+                    _index = i;
+                    _permHint = null;
+                  }),
+                  children: const [
+                    _StoryPage(
+                      kicker: '기록의 시작',
+                      title: BalmiCopy.onboardingStory1Title,
+                      body: BalmiCopy.onboardingStory1Body,
+                      tags: BalmiCopy.onboardingStory1Tags,
+                    ),
+                    _StoryPage(
+                      kicker: '오프라인 기록',
+                      title: BalmiCopy.onboardingStory2Title,
+                      body: BalmiCopy.onboardingStory2Body,
+                      badge: BalmiCopy.onboardingStory2Badge,
+                    ),
+                    _StoryPage(
+                      kicker: '기록 복구',
+                      title: BalmiCopy.onboardingStory3Title,
+                      body: BalmiCopy.onboardingStory3Body,
+                      badge: BalmiCopy.onboardingStory3Badge,
+                    ),
+                    _PromisePage(),
+                  ],
+                ),
+              ),
+              _PageDots(index: _index, count: BalmiCopy.onboardingPageCount),
+              if (_permHint != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: Text(
+                    _permHint!,
+                    style: BalmiTheme.body(
+                      size: 13,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              SafePrimaryButton(
+                label: _index < _lastIndex
+                    ? BalmiCopy.continueLabel
+                    : BalmiCopy.done,
+                onPressed: _next,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PageDots extends StatelessWidget {
+  const _PageDots({required this.index, required this.count});
+
+  final int index;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (i) {
+          final active = i == index;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            height: 6,
+            width: active ? 18 : 6,
+            decoration: BoxDecoration(
+              color: active ? BalmiColors.potato : BalmiColors.line,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _StoryPage extends StatelessWidget {
+  const _StoryPage({
+    required this.kicker,
+    required this.title,
+    required this.body,
+    this.badge,
+    this.tags,
+  });
+
+  final String kicker;
+  final String title;
+  final String body;
+  final String? badge;
+  final String? tags;
+
+  @override
+  Widget build(BuildContext context) {
+    return _AnimatedStoryPane(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              kicker,
+              style: BalmiTheme.tracked(
+                size: 11,
+                color: BalmiColors.potatoDk,
+                trackingEm: 0.14,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: BalmiTheme.body(size: 26, weight: FontWeight.w800, height: 1.28),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              body,
+              style: BalmiTheme.body(
+                size: 15,
+                weight: FontWeight.w600,
+                height: 1.55,
+                color: BalmiColors.ink.withValues(alpha: 0.88),
+              ),
+            ),
+            if (badge != null) ...[
+              const SizedBox(height: 28),
+              _Badge(label: badge!),
+            ],
+            if (tags != null) ...[
+              const SizedBox(height: 28),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tags!
+                    .split(' · ')
+                    .map((t) => _TagChip(label: t.trim()))
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PromisePage extends StatelessWidget {
+  const _PromisePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return _AnimatedStoryPane(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Balmi의 약속',
+              style: BalmiTheme.tracked(
+                size: 11,
+                color: BalmiColors.potatoDk,
+                trackingEm: 0.14,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const BalmiWordmark(height: 40),
+            const SizedBox(height: 20),
+            Text(
+              BalmiCopy.onboardingStory4Title,
+              style: BalmiTheme.body(size: 26, weight: FontWeight.w800, height: 1.28),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              BalmiCopy.onboardingStory4Body,
+              style: BalmiTheme.body(
+                size: 15,
+                weight: FontWeight.w600,
+                height: 1.55,
+                color: BalmiColors.ink.withValues(alpha: 0.88),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              BalmiCopy.slogan,
+              style: BalmiTheme.body(
+                size: 14,
+                weight: FontWeight.w700,
+                height: 1.45,
+                color: BalmiColors.potatoDk,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              BalmiCopy.heroLine,
+              style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.4),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _pageBody({required String title, required String body}) {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          Text(title, style: BalmiTheme.body(size: 26, weight: FontWeight.w800)),
-          const SizedBox(height: 16),
-          Text(body, style: BalmiTheme.body(size: 16, height: 1.5)),
-        ],
+/// Fade + slight upward slide when a story page enters the viewport.
+class _AnimatedStoryPane extends StatefulWidget {
+  const _AnimatedStoryPane({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AnimatedStoryPane> createState() => _AnimatedStoryPaneState();
+}
+
+class _AnimatedStoryPaneState extends State<_AnimatedStoryPane>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  late final Animation<double> _fade =
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+  late final Animation<Offset> _slide = Tween<Offset>(
+    begin: const Offset(0, 0.04),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: BalmiColors.potato.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: BalmiColors.potato.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: BalmiTheme.tracked(
+          size: 11,
+          color: BalmiColors.potatoDk,
+          trackingEm: 0.16,
+        ),
       ),
     );
   }
+}
 
-  Widget _permsPage() {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            BalmiCopy.onboardingPermsTitle,
-            style: BalmiTheme.body(size: 22, weight: FontWeight.w800),
-          ),
-          const SizedBox(height: 12),
-          Text(BalmiCopy.trustAlways, style: BalmiTheme.body(size: 14)),
-          const SizedBox(height: 8),
-          Text(BalmiCopy.permsRequired, style: BalmiTheme.body(size: 12, color: BalmiColors.sub)),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: () => Permission.locationWhenInUse.request(),
-            child: const Text(BalmiCopy.locationPermission),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () async {
-              final whenInUse = await Permission.locationWhenInUse.request();
-              if (!whenInUse.isGranted) return;
-              await Permission.locationAlways.request();
-            },
-            child: const Text(BalmiCopy.alwaysLocation),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => Permission.notification.request(),
-            child: const Text(BalmiCopy.notificationPermission),
-          ),
-        ],
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: BalmiColors.mist,
+        borderRadius: BorderRadius.circular(999),
       ),
-    );
-  }
-
-  Widget _batteryPage() {
-    return Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            BalmiCopy.onboardingBatteryTitle,
-            style: BalmiTheme.body(size: 22, weight: FontWeight.w800),
-          ),
-          const SizedBox(height: 12),
-          Text(BalmiCopy.onboardingBatteryBody, style: BalmiTheme.body(size: 15, height: 1.5)),
-          const SizedBox(height: 8),
-          Text(
-            '감지된 기기: ${_oem.isEmpty ? '…' : _oem} · 최적화 제외 ${_ignoring ? '완료' : '필요'}',
-            style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: () async {
-              await OemBattery.requestIgnore();
-              await _loadOem();
-            },
-            child: const Text(BalmiCopy.ignoreBattery),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () async {
-              await OemBattery.openOemSettings();
-              await _loadOem();
-            },
-            child: Text('${BalmiCopy.oemSettings} ($_oem)'),
-          ),
-        ],
+      child: Text(
+        label,
+        style: BalmiTheme.body(size: 12, weight: FontWeight.w700),
       ),
     );
   }

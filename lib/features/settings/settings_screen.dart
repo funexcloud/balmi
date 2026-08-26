@@ -20,23 +20,55 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           const BalmiWordmark(height: 34),
-          const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              BalmiCopy.about,
-              style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
-            ),
-            subtitle: Text(
-              '${BalmiCopy.appName} ${BalmiCopy.versionLabel}\n${BalmiCopy.oneLiner}',
-              style: BalmiTheme.body(
-                size: 13,
-                color: BalmiColors.sub,
-                height: 1.45,
-              ),
+          const SizedBox(height: 10),
+          Text(
+            BalmiCopy.slogan,
+            style: BalmiTheme.body(
+              size: 15,
+              weight: FontWeight.w800,
+              height: 1.4,
+              color: BalmiColors.potatoDk,
             ),
           ),
-          const Divider(color: BalmiColors.line),
+          const SizedBox(height: 4),
+          Text(
+            BalmiCopy.heroLine,
+            style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.4),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            BalmiCopy.about,
+            style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${BalmiCopy.aboutTitle}  ·  ${BalmiCopy.versionLabel}',
+            style: BalmiTheme.body(size: 13, weight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            BalmiCopy.oneLiner,
+            style: BalmiTheme.body(
+              size: 13,
+              color: BalmiColors.sub,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const _AboutBullet(BalmiCopy.aboutBulletModes),
+          const _AboutBullet(BalmiCopy.aboutBulletOffline),
+          const _AboutBullet(BalmiCopy.aboutBulletRecovery),
+          const SizedBox(height: 16),
+          Text(
+            BalmiCopy.aboutClosing,
+            style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            BalmiCopy.subcopy,
+            style: BalmiTheme.body(size: 13, color: BalmiColors.potatoDk),
+          ),
+          const Divider(height: 36, color: BalmiColors.line),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
@@ -76,6 +108,39 @@ class SettingsScreen extends StatelessWidget {
               style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
             ),
             onTap: () => OemBattery.requestIgnore(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AboutBullet extends StatelessWidget {
+  const _AboutBullet(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '·',
+            style: BalmiTheme.body(
+              size: 14,
+              weight: FontWeight.w800,
+              color: BalmiColors.potato,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: BalmiTheme.body(size: 13, height: 1.4),
+            ),
           ),
         ],
       ),
