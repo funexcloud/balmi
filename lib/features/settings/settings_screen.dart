@@ -20,23 +20,86 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           const BalmiWordmark(height: 34),
-          const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              BalmiCopy.about,
-              style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
-            ),
-            subtitle: Text(
-              '${BalmiCopy.appName} ${BalmiCopy.versionLabel}\n${BalmiCopy.oneLiner}',
-              style: BalmiTheme.body(
-                size: 13,
-                color: BalmiColors.sub,
-                height: 1.45,
-              ),
+          const SizedBox(height: 10),
+          Text(
+            BalmiCopy.slogan,
+            style: BalmiTheme.body(
+              size: 15,
+              weight: FontWeight.w800,
+              height: 1.4,
+              color: BalmiColors.potatoDk,
             ),
           ),
-          const Divider(color: BalmiColors.line),
+          const SizedBox(height: 4),
+          Text(
+            BalmiCopy.subcopy,
+            style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.4),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            BalmiCopy.about,
+            style: BalmiTheme.body(size: 16, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${BalmiCopy.appName}  ·  ${BalmiCopy.versionLabel}',
+            style: BalmiTheme.body(size: 13, weight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            BalmiCopy.aboutTitle,
+            style: BalmiTheme.body(size: 14, weight: FontWeight.w800, height: 1.4),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            BalmiCopy.aboutBody,
+            style: BalmiTheme.body(
+              size: 13,
+              color: BalmiColors.sub,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'RECORDING STATUS',
+            style: BalmiTheme.tracked(
+              size: 10,
+              color: BalmiColors.sub,
+              trackingEm: 0.14,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const _StatusRow(
+            title: BalmiCopy.aboutStatusLocal,
+            hint: BalmiCopy.aboutStatusLocalHint,
+          ),
+          const _StatusRow(
+            title: BalmiCopy.aboutStatusOffline,
+            hint: BalmiCopy.aboutStatusOfflineHint,
+          ),
+          const _StatusRow(
+            title: BalmiCopy.aboutStatusRecovery,
+            hint: BalmiCopy.aboutStatusRecoveryHint,
+          ),
+          const _StatusRow(
+            title: BalmiCopy.aboutStatusSync,
+            hint: BalmiCopy.aboutStatusSyncHint,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            BalmiCopy.aboutTechLine,
+            style: BalmiTheme.body(size: 13, weight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            BalmiCopy.actionLine,
+            style: BalmiTheme.body(
+              size: 14,
+              weight: FontWeight.w800,
+              color: BalmiColors.potatoDk,
+            ),
+          ),
+          const Divider(height: 36, color: BalmiColors.line),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
@@ -76,6 +139,38 @@ class SettingsScreen extends StatelessWidget {
               style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
             ),
             onTap: () => OemBattery.requestIgnore(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({required this.title, required this.hint});
+
+  final String title;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 118,
+            child: Text(
+              title,
+              style: BalmiTheme.body(size: 13, weight: FontWeight.w800),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              hint,
+              style: BalmiTheme.body(size: 13, color: BalmiColors.sub, height: 1.35),
+            ),
           ),
         ],
       ),
