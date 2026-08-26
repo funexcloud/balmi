@@ -227,12 +227,22 @@ void main() {
     final sheetBox = tester.renderObject<RenderBox>(find.text(sheetLabel));
     final sheetBottom =
         sheetBox.localToGlobal(Offset(0, sheetBox.size.height)).dy;
-    // Sheet bottom must clear the dock band (screenH - dockExtent).
+    // Sheet content must clear the dock band (screenH - dockExtent).
     expect(sheetBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
-    expect(
-      find.byKey(const ValueKey('balmi-sheet-dock-cover')),
-      findsOneWidget,
+
+    // Opaque chrome covers the dock — no transparent peek-under gap.
+    final chrome = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-chrome')),
     );
+    final chromeBottom = chrome.localToGlobal(Offset(0, chrome.size.height)).dy;
+    expect(chromeBottom, closeTo(844, 0.5));
+
+    final cover = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-dock-cover')),
+    );
+    expect(cover.size.height, dockExtent);
+    final coverTop = cover.localToGlobal(Offset.zero).dy;
+    expect(coverTop, greaterThanOrEqualTo(sheetBottom - 0.5));
   });
 
   testWidgets('track spec pills in Balmi sheet clear the dock', (tester) async {
@@ -287,6 +297,12 @@ void main() {
     final pillBottom =
         pillBox.localToGlobal(Offset(0, pillBox.size.height)).dy;
     expect(pillBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
+
+    final chrome = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('balmi-sheet-chrome')),
+    );
+    final chromeBottom = chrome.localToGlobal(Offset(0, chrome.size.height)).dy;
+    expect(chromeBottom, closeTo(844, 0.5));
   });
 }
 
