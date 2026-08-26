@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import '../../domain/engines/activity_recovery.dart';
 import '../../domain/models/activity.dart';
-import '../data/notifications/activity_recovery_alarms.dart';
-import '../data/repositories/activity_recovery_store.dart';
+import '../../data/notifications/activity_recovery_alarms.dart';
+import '../../data/repositories/activity_recovery_store.dart';
 
 class ActivityRecoveryController extends ChangeNotifier {
   ActivityRecoveryController({
