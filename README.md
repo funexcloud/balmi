@@ -4,7 +4,8 @@
 
 기록이 끊기거나 앱이 죽어도 걸음은 기기에 남습니다.
 
-Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).
+Release 1 = F1–F4 (무손실 기록, 걷기↔뛰기, 트랙 랩, 신뢰 UI). 제품 스펙은 [`docs/SPEC.md`](docs/SPEC.md).  
+장기 아키텍처: balmi × VASA **연구근거 기반(Evidence-based)** 방향 — [`docs/EVIDENCE_ARCHITECTURE.md`](docs/EVIDENCE_ARCHITECTURE.md) (명세만; Evidence DB 미구현).
 
 ## 다운로드
 
