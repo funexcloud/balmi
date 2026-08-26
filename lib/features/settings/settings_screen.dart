@@ -9,6 +9,8 @@ import '../../widgets/balmi_app_bar.dart';
 import '../../widgets/balmi_wordmark.dart';
 import '../meal_walk/meal_walk_controller.dart';
 import '../meal_walk/meal_walk_onboarding.dart';
+import 'daily_goals_picker.dart';
+import 'step_goal_controller.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -95,6 +97,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
+          const DailyGoalsPicker(),
           const Divider(color: BalmiColors.line),
           ListTile(
             contentPadding: EdgeInsets.zero,

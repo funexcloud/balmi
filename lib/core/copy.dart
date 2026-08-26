@@ -64,9 +64,21 @@ abstract final class BalmiCopy {
   static const missions = '미션';
   static const events = '대회';
   static const todaySummary = '오늘의 운동 요약';
+  static const todayExercise = '오늘의 운동';
   static const todayEmpty = '오늘 아직 기록이 없습니다';
   static const todaySteps = '오늘 걸음';
+  static const dailyGoals = '일일 목표';
+  static const dailyGoalsHint =
+      '걸음·운동 시간·거리 목표를 맞춰 주세요. 홈 오늘의 운동은 balmi 기록만 집계합니다.';
+  static const stepGoal = '걸음 목표';
+  static const exerciseTimeGoal = '운동 시간 목표';
+  static const exerciseDistanceGoal = '운동 거리 목표';
+  static const goalStepsUnit = '걸음';
+  static const goalMinutesUnit = '분';
+  static const goalKmUnit = 'km';
   static const recordingSteps = '기록 중 걸음';
+  static const dailyStepGoal = '목표 걸음수';
+  static const dailyStepGoalHint = '하루에 걷고 싶은 걸음 수예요. 홈에서 오늘 진행을 보여 줍니다.';
   static const crewLater = '크루 랭킹은 나중에';
   static const landOnMapHint = '등기(내 땅)는 2차 기능입니다';
   static const mapEmpty = '아직 기기에 저장된 경로가 없어요';

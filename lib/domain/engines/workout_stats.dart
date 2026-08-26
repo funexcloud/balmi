@@ -206,6 +206,42 @@ List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
   ];
 }
 
+class ExerciseGoalProgress {
+  const ExerciseGoalProgress({
+    required this.minutesCurrent,
+    required this.minutesTarget,
+    required this.kmCurrent,
+    required this.kmTarget,
+  });
+
+  final double minutesCurrent;
+  final int minutesTarget;
+  final double kmCurrent;
+  final double kmTarget;
+
+  double get minutesRatio =>
+      minutesTarget <= 0 ? 0 : (minutesCurrent / minutesTarget).clamp(0, 1);
+
+  double get kmRatio => kmTarget <= 0 ? 0 : (kmCurrent / kmTarget).clamp(0, 1);
+
+  bool get minutesDone => minutesCurrent + 1e-6 >= minutesTarget;
+
+  bool get kmDone => kmCurrent + 1e-6 >= kmTarget;
+}
+
+ExerciseGoalProgress exerciseGoalProgress({
+  required PeriodStats stats,
+  required int exerciseMinutes,
+  required double exerciseKm,
+}) {
+  return ExerciseGoalProgress(
+    minutesCurrent: stats.duration.inMinutes.toDouble(),
+    minutesTarget: exerciseMinutes,
+    kmCurrent: stats.distM / 1000,
+    kmTarget: exerciseKm,
+  );
+}
+
 double eventProgress(EventSpec event, List<WorkoutRow> closed) {
   final rows = closed.where((r) {
     if (r.startedAt.isBefore(event.startsAt)) return false;
