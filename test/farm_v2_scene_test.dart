@@ -63,9 +63,9 @@ void main() {
     final twoCrops = FarmSnapshot(
       farm: snapshot.farm,
       resources: snapshot.resources,
-      slots: const [
+      slots: [
         FarmSlotView(
-          template: SlotTemplate(
+          template: const SlotTemplate(
             slotId: 'garden_1',
             slotType: SlotType.crop,
             xPct: 30,
@@ -87,7 +87,7 @@ void main() {
           ),
           unlocked: true,
         ),
-        FarmSlotView(
+        const FarmSlotView(
           template: SlotTemplate(
             slotId: 'garden_2',
             slotType: SlotType.crop,
