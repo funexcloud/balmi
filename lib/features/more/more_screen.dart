@@ -74,18 +74,22 @@ class MoreScreen extends StatelessWidget {
             color: BalmiColors.mist,
             borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
           ),
-          child: Column(
-            children: [
-              for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) const Divider(height: 1, color: BalmiColors.line),
-                ListTile(
-                  leading: Icon(rows[i].$1, color: BalmiColors.ink),
-                  title: Text(rows[i].$2, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
-                  trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
-                  onTap: rows[i].$3,
-                ),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              children: [
+                for (var i = 0; i < rows.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, color: BalmiColors.line),
+                  ListTile(
+                    leading: Icon(rows[i].$1, color: BalmiColors.ink),
+                    title: Text(rows[i].$2, style: BalmiTheme.body(size: 15, weight: FontWeight.w800)),
+                    trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
+                    onTap: rows[i].$3,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 16),

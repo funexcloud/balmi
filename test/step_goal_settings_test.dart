@@ -111,14 +111,14 @@ void main() {
     await stepGoal.bootstrap();
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: BalmiTheme.light(),
-        home: MultiProvider(
-          providers: [
-            ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
-            ChangeNotifierProvider<MealWalkController>.value(value: meal),
-          ],
-          child: const Scaffold(body: MoreScreen()),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<StepGoalController>.value(value: stepGoal),
+          ChangeNotifierProvider<MealWalkController>.value(value: meal),
+        ],
+        child: MaterialApp(
+          theme: BalmiTheme.light(),
+          home: const Scaffold(body: MoreScreen()),
         ),
       ),
     );
