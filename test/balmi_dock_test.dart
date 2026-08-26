@@ -28,4 +28,30 @@ void main() {
     await tester.tap(find.bySemanticsLabel(BalmiCopy.mapTab));
     expect(index, 2);
   });
+
+  testWidgets('dock extent includes bar, pads, and system inset', (tester) async {
+    late double extent;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 34),
+            viewPadding: EdgeInsets.only(bottom: 34),
+          ),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) {
+                extent = BalmiDock.extent(context);
+                return BalmiDock(index: 0, onChanged: (_) {});
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // 2 top + 52 bar + 34 inset + 12 bottom pad
+    expect(extent, 2 + BalmiDock.barHeight + 34 + 12);
+  });
 }

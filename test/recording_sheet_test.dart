@@ -1,5 +1,7 @@
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/domain/engines/land_city.dart';
+import 'package:balmi/widgets/balmi_dock.dart';
+import 'package:balmi/widgets/circle_action.dart';
 import 'package:balmi/widgets/end_recording_dialog.dart';
 import 'package:balmi/widgets/live_stats_sheet.dart';
 import 'package:flutter/material.dart';
@@ -174,6 +176,58 @@ void main() {
     );
     expect(find.text(BalmiCopy.statLaps), findsOneWidget);
     expect(find.text('3바퀴'), findsOneWidget);
+  });
+
+  testWidgets('balmi sheet content sits above dock clearance', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    const sheetLabel = 'activity-sheet-body';
+    late double dockExtent;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 48),
+            viewPadding: EdgeInsets.only(bottom: 48),
+          ),
+          child: Scaffold(
+            body: Builder(
+              builder: (context) {
+                dockExtent = BalmiDock.extent(context);
+                return Center(
+                  child: TextButton(
+                    onPressed: () {
+                      showBalmiSheet(
+                        context: context,
+                        builder: (_) => const SizedBox(
+                          height: 80,
+                          child: Center(child: Text(sheetLabel)),
+                        ),
+                      );
+                    },
+                    child: const Text('open'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // 2 + 52 + 48 inset + 12
+    expect(dockExtent, 114);
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    final sheetBox = tester.renderObject<RenderBox>(find.text(sheetLabel));
+    final sheetBottom =
+        sheetBox.localToGlobal(Offset(0, sheetBox.size.height)).dy;
+    // Sheet bottom must clear the dock band (screenH - dockExtent).
+    expect(sheetBottom, lessThanOrEqualTo(844 - dockExtent + 0.5));
   });
 }
 
