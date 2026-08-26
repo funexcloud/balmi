@@ -19,14 +19,21 @@ import '../../data/sensors/cadence_engine.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 
+/// Sentinel so callers can pass an explicit `null` track spec (자유).
+const Object _trackSpecUnset = Object();
+
 class RecordingController extends ChangeNotifier {
   RecordingController({
     required this.repo,
     required this.dbPath,
-  });
+    Future<String?> Function()? ensurePermissions,
+  }) : _ensurePermissions = ensurePermissions ?? RecordingPermissions.ensure;
 
   final SessionRepository repo;
   final String dbPath;
+
+  /// Injectable for tests; defaults to [RecordingPermissions.ensure].
+  final Future<String?> Function() _ensurePermissions;
 
   final FlutterTts _tts = FlutterTts();
   Timer? _localTimer;
@@ -49,12 +56,36 @@ class RecordingController extends ChangeNotifier {
   ActivityKind preferredActivity = ActivityKind.auto;
   int? preferredTrackSpecM = 400;
 
-  void setPreferredActivity(ActivityKind next, {int? trackSpecM}) {
+  /// Updates the home play preference.
+  ///
+  /// Pass [trackSpecM] explicitly (including `null` for 자유) when the user
+  /// picks a track length. Omitting it keeps the previous preferred meters
+  /// (defaulting to 400 the first time track is chosen).
+  void setPreferredActivity(
+    ActivityKind next, {
+    Object? trackSpecM = _trackSpecUnset,
+  }) {
     preferredActivity = next;
     if (next.isTrack) {
-      preferredTrackSpecM = trackSpecM ?? preferredTrackSpecM ?? 400;
+      if (!identical(trackSpecM, _trackSpecUnset)) {
+        preferredTrackSpecM = trackSpecM as int?;
+      } else {
+        preferredTrackSpecM ??= 400;
+      }
     }
     notifyListeners();
+  }
+
+  /// Persist [activity] (and optional track meters) then start recording.
+  ///
+  /// Used by the home play long-press flow so meter selection cannot be
+  /// dropped between preference write and [start].
+  Future<bool> startPreferred(
+    ActivityKind activity, {
+    Object? trackSpecM = _trackSpecUnset,
+  }) {
+    setPreferredActivity(activity, trackSpecM: trackSpecM);
+    return start(activity: activity, trackSpecM: trackSpecM);
   }
 
   bool get isRecording => snapshot != null;
@@ -168,8 +199,11 @@ class RecordingController extends ChangeNotifier {
   ///
   /// When [activity] is omitted, uses [preferredActivity] from the home
   /// long-press sport picker so play starts in the selected mode.
+  ///
+  /// Pass [trackSpecM] explicitly (including `null` for 자유). Omitting it
+  /// uses [preferredTrackSpecM] when [activity] is track.
   Future<bool> start({
-    int? trackSpecM,
+    Object? trackSpecM = _trackSpecUnset,
     ActivityKind? activity,
   }) async {
     if (_starting) return false;
@@ -177,7 +211,7 @@ class RecordingController extends ChangeNotifier {
     lastError = null;
     notifyListeners();
     try {
-      final denied = await RecordingPermissions.ensure();
+      final denied = await _ensurePermissions();
       if (denied != null) {
         lastError = denied;
         notifyListeners();
@@ -197,9 +231,14 @@ class RecordingController extends ChangeNotifier {
         return true;
       }
       final chosen = activity ?? preferredActivity;
-      final spec = chosen.isTrack
-          ? (trackSpecM ?? preferredTrackSpecM)
-          : null;
+      final int? spec;
+      if (!chosen.isTrack) {
+        spec = null;
+      } else if (!identical(trackSpecM, _trackSpecUnset)) {
+        spec = trackSpecM as int?;
+      } else {
+        spec = preferredTrackSpecM;
+      }
       this.activity = chosen;
       this.trackSpecM = spec;
       preferredActivity = chosen;
@@ -230,7 +269,7 @@ class RecordingController extends ChangeNotifier {
 
   Future<bool> resume(String sessionId) async {
     lastError = null;
-    final denied = await RecordingPermissions.ensure();
+    final denied = await _ensurePermissions();
     if (denied != null) {
       lastError = denied;
       notifyListeners();

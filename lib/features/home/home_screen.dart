@@ -75,8 +75,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _pickTrackSpec(RecordingController rec) async {
-    await showBalmiSheet(
+  Future<void> _reportStartFailure(RecordingController rec) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(rec.lastError ?? BalmiCopy.startFailed)),
+    );
+  }
+
+  /// Track meters sheet. Returns a selection when the user taps a chip;
+  /// `null` means the sheet was dismissed without choosing.
+  Future<_TrackSpecChoice?> _pickTrackSpec(RecordingController rec) async {
+    // Let the sport-picker route finish closing so its pointer-up cannot
+    // immediately dismiss this sheet (same race as long-press → picker).
+    await SchedulerBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    if (!mounted) return null;
+
+    return showBalmiSheet<_TrackSpecChoice>(
       context: context,
       builder: (ctx) {
         return Padding(
@@ -84,8 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: TrackSpecPills(
             value: rec.preferredTrackSpecM,
             onChanged: (v) {
-              rec.setPreferredActivity(ActivityKind.track, trackSpecM: v);
-              Navigator.of(ctx).pop();
+              Navigator.of(ctx).pop(_TrackSpecChoice(v));
             },
           ),
         );
@@ -111,17 +125,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (picked == null || !mounted) return;
 
-    rec.setPreferredActivity(
-      picked,
-      trackSpecM: picked.isTrack ? rec.preferredTrackSpecM : null,
-    );
-    if (picked.isTrack) await _pickTrackSpec(rec);
-    if (!mounted) return;
-
-    // Selecting a sport from the play picker starts that mode immediately.
-    if (!rec.isStarting && !rec.isRecording) {
-      await _start(rec);
+    if (picked.isTrack) {
+      // Remember 트랙 so the play badge updates; meters + start happen on chip tap.
+      rec.setPreferredActivity(ActivityKind.track);
+      final choice = await _pickTrackSpec(rec);
+      if (!mounted) return;
+      if (choice == null) return; // dismissed — preference kept, no auto-start
+      if (rec.isStarting || rec.isRecording) return;
+      final ok = await rec.startPreferred(
+        ActivityKind.track,
+        trackSpecM: choice.specM,
+      );
+      if (!ok) await _reportStartFailure(rec);
+      return;
     }
+
+    if (rec.isStarting || rec.isRecording) return;
+    final ok = await rec.startPreferred(picked);
+    if (!ok) await _reportStartFailure(rec);
   }
 
   @override
@@ -258,4 +279,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
+
+/// Explicit track-meter chip selection ( [specM] may be null for 자유 ).
+class _TrackSpecChoice {
+  const _TrackSpecChoice(this.specM);
+  final int? specM;
 }

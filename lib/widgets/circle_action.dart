@@ -67,12 +67,14 @@ class CircleAction extends StatelessWidget {
 /// Default [showModalBottomSheet] anchors to the screen bottom, so the sheet
 /// (and its CTAs) end up behind the dock. We clear [BalmiDock.extent] under a
 /// transparent sheet chrome so content paints above the dock.
-Future<void> showBalmiSheet({
+///
+/// Returns the value passed to [Navigator.pop], or `null` if dismissed.
+Future<T?> showBalmiSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
 }) {
   final dockClearance = BalmiDock.extent(context);
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<T>(
     context: context,
     backgroundColor: Colors.transparent,
     elevation: 0,
