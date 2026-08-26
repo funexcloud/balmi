@@ -33,7 +33,9 @@ void main() {
         '${BalmiCopy.mealWalkDiscover} ${BalmiCopy.mealWalkIntro} '
         '${BalmiCopy.mealWalkDisclaimer} ${BalmiCopy.mealWalkStartPrompt} '
         '${BalmiCopy.mealWalkGo} ${BalmiCopy.mealWalkSkip} ${BalmiCopy.mealWalkBadge} '
-        '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps}';
+        '${BalmiCopy.todaySteps} ${BalmiCopy.recordingSteps} '
+        '${BalmiCopy.shareTitle} ${BalmiCopy.shareSubtitle} ${BalmiCopy.shareAction} '
+        '${BalmiCopy.shareHideStartEnd} ${BalmiCopy.recordedToday}';
     final lower = blob.toLowerCase();
     for (final term in _forbidden) {
       expect(
