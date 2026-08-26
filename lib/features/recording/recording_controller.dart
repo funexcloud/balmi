@@ -45,6 +45,18 @@ class RecordingController extends ChangeNotifier {
   Duration _pausedTotal = Duration.zero;
   DateTime? _pauseStarted;
 
+  /// Home play long-press selection. Survives HomeScreen dispose (tab switch).
+  ActivityKind preferredActivity = ActivityKind.auto;
+  int? preferredTrackSpecM = 400;
+
+  void setPreferredActivity(ActivityKind next, {int? trackSpecM}) {
+    preferredActivity = next;
+    if (next.isTrack) {
+      preferredTrackSpecM = trackSpecM ?? preferredTrackSpecM ?? 400;
+    }
+    notifyListeners();
+  }
+
   bool get isRecording => snapshot != null;
   bool get isStarting => _starting;
   String? lastError;
@@ -153,9 +165,12 @@ class RecordingController extends ChangeNotifier {
   }
 
   /// Returns false when recording cannot start (permissions / GPS off).
+  ///
+  /// When [activity] is omitted, uses [preferredActivity] from the home
+  /// long-press sport picker so play starts in the selected mode.
   Future<bool> start({
     int? trackSpecM,
-    ActivityKind activity = ActivityKind.auto,
+    ActivityKind? activity,
   }) async {
     if (_starting) return false;
     _starting = true;
@@ -181,20 +196,26 @@ class RecordingController extends ChangeNotifier {
         );
         return true;
       }
-      this.activity = activity;
-      this.trackSpecM = activity.isTrack ? trackSpecM : null;
-      final trackMode = activity.isTrack;
+      final chosen = activity ?? preferredActivity;
+      final spec = chosen.isTrack
+          ? (trackSpecM ?? preferredTrackSpecM)
+          : null;
+      this.activity = chosen;
+      this.trackSpecM = spec;
+      preferredActivity = chosen;
+      if (chosen.isTrack) preferredTrackSpecM = spec;
+      final trackMode = chosen.isTrack;
       final session = await repo.createSession(
         trackMode: trackMode,
         trackSpecM: this.trackSpecM,
-        activity: activity,
+        activity: chosen,
       );
       _resetPauseClock();
       await _begin(
         session.id,
         trackMode: trackMode,
         trackSpecM: this.trackSpecM,
-        activity: activity,
+        activity: chosen,
       );
       return true;
     } catch (error) {

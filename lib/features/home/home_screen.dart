@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
@@ -16,7 +17,7 @@ import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
 import '../../widgets/today_exercise_card.dart';
 import '../../widgets/today_summary_card.dart';
-import '../land/land_preview_screen.dart';
+import '../land/farm_preview_screen.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
 import '../meal_walk/meal_walk_onboarding.dart';
@@ -31,8 +32,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int? _specM = 400;
-  ActivityKind _activity = ActivityKind.auto;
   PeriodStats _today = summarizePeriod(const []);
   List<FarmKind> _buildings = const [];
   List<HerdKind> _herds = const [];
@@ -64,8 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _start(RecordingController rec) async {
     final ok = await rec.start(
-      trackSpecM: _activity.isTrack ? _specM : null,
-      activity: _activity,
+      trackSpecM:
+          rec.preferredActivity.isTrack ? rec.preferredTrackSpecM : null,
+      activity: rec.preferredActivity,
     );
     if (!mounted) return;
     if (!ok) {
@@ -75,16 +75,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _pickTrackSpec() async {
+  Future<void> _pickTrackSpec(RecordingController rec) async {
     await showBalmiSheet(
       context: context,
       builder: (ctx) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
           child: TrackSpecPills(
-            value: _specM,
+            value: rec.preferredTrackSpecM,
             onChanged: (v) {
-              setState(() => _specM = v);
+              rec.setPreferredActivity(ActivityKind.track, trackSpecM: v);
               Navigator.of(ctx).pop();
             },
           ),
@@ -96,14 +96,32 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _onLongPressPlay(BuildContext btnCtx) async {
     final box = btnCtx.findRenderObject() as RenderBox?;
     final origin = box?.localToGlobal(box.size.center(Offset.zero));
+
+    // Wait until the long-press pointer-up is done so it cannot dismiss the
+    // picker barrier immediately (classic showDialog-from-onLongPress race).
+    await SchedulerBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    if (!mounted) return;
+
+    final rec = context.read<RecordingController>();
     final picked = await showActivityCirclePicker(
       context: context,
-      selected: _activity,
+      selected: rec.preferredActivity,
       origin: origin,
     );
     if (picked == null || !mounted) return;
-    setState(() => _activity = picked);
-    if (picked.isTrack) await _pickTrackSpec();
+
+    rec.setPreferredActivity(
+      picked,
+      trackSpecM: picked.isTrack ? rec.preferredTrackSpecM : null,
+    );
+    if (picked.isTrack) await _pickTrackSpec(rec);
+    if (!mounted) return;
+
+    // Selecting a sport from the play picker starts that mode immediately.
+    if (!rec.isStarting && !rec.isRecording) {
+      await _start(rec);
+    }
   }
 
   @override
@@ -119,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
         !meal.mealsToday.contains(due) &&
         meal.open == null;
     final showGo = meal.enabled && meal.open?.status == MealWalkStatus.prompted;
+    final preferred = rec.preferredActivity;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       if (meal.lastFeedback != null) snackMealWalk(context, meal);
@@ -157,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 buildings: _buildings,
                 herds: _herds,
                 caredToday: _wateredToday,
-                onOpen: () => openLandPreview(context),
+                onOpen: () => openFarmPreview(context),
               ),
               if (showDiscover) ...[
                 const SizedBox(height: 12),
@@ -206,24 +225,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     onLongPress:
                         rec.isStarting ? null : () => _onLongPressPlay(btnCtx),
                   ),
-                  if (!rec.isStarting && !_activity.isAuto)
+                  if (!rec.isStarting && !preferred.isAuto)
                     Positioned(
                       right: -2,
                       bottom: -2,
-                      child: Semantics(
-                        label: _activity.label,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: BalmiColors.surface,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: BalmiColors.potato, width: 2),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: ActivityPills.glyphOf(
-                              _activity,
-                              size: 16,
-                              color: BalmiColors.potato,
+                      child: IgnorePointer(
+                        child: Semantics(
+                          label: preferred.label,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: BalmiColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: BalmiColors.potato, width: 2),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: ActivityPills.glyphOf(
+                                preferred,
+                                size: 16,
+                                color: BalmiColors.potato,
+                              ),
                             ),
                           ),
                         ),

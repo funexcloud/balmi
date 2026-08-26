@@ -16,7 +16,7 @@ import '../../domain/models/activity.dart';
 import '../../widgets/circle_action.dart';
 import '../../widgets/osm_trace_map.dart';
 import '../../widgets/session_row.dart';
-import '../land/land_preview_screen.dart';
+import '../land/land_map_screen.dart';
 import '../session_detail/session_detail_screen.dart';
 
 class MapExploreScreen extends StatefulWidget {
@@ -251,7 +251,7 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                 CircleAction(
                   icon: Icons.landscape_outlined,
                   label: BalmiCopy.landTab,
-                  onTap: () => openLandPreview(context),
+                  onTap: () => openLandMap(context),
                 ),
                 const SizedBox(height: 10),
                 CircleAction(

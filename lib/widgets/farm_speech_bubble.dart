@@ -22,7 +22,8 @@ abstract final class FarmSpeechBubbleSession {
   static String _key(List<String> lines) => lines.join('\u001f');
 }
 
-/// Soft speech bubble: one sentence at a time, tap to advance; hides after the last.
+/// Soft farm caption bubble: one sentence at a time, tap to advance;
+/// hides after the last tip for the rest of the session.
 class FarmSpeechBubble extends StatefulWidget {
   const FarmSpeechBubble({
     super.key,
@@ -89,8 +90,11 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
     final line = widget.lines[_index.clamp(0, widget.lines.length - 1)];
     final multi = widget.lines.length > 1;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final fill = BalmiColors.paper.withValues(alpha: 0.82);
-    final edge = BalmiColors.line.withValues(alpha: 0.55);
+
+    // Soft cream fill that blends with day/night farm sky.
+    const fill = Color(0xE6FFF8EE); // ~90% opaque warm paper
+    const edge = Color(0x66C4B8A8); // soft taupe border
+    const inkSoft = Color(0xCC3D342C); // muted brown text
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -112,7 +116,7 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
               transitionBuilder: (child, animation) {
                 if (reduceMotion) return child;
                 final offset = Tween<Offset>(
-                  begin: const Offset(0, 0.18),
+                  begin: const Offset(0, 0.12),
                   end: Offset.zero,
                 ).animate(animation);
                 return FadeTransition(
@@ -125,11 +129,12 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
                 text: line,
                 showHint: true,
                 fill: fill,
-                border: edge,
+                edge: edge,
+                ink: inkSoft,
               ),
             ),
             CustomPaint(
-              size: const Size(18, 10),
+              size: const Size(16, 9),
               painter: _BubbleTailPainter(
                 color: fill,
                 border: edge,
@@ -148,23 +153,25 @@ class _BubbleBody extends StatelessWidget {
     required this.text,
     required this.showHint,
     required this.fill,
-    required this.border,
+    required this.edge,
+    required this.ink,
   });
 
   final String text;
   final bool showHint;
   final Color fill;
-  final Color border;
+  final Color edge;
+  final Color ink;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 280),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: edge, width: 1),
         boxShadow: [
           BoxShadow(
             color: BalmiColors.ink.withValues(alpha: 0.04),
@@ -181,17 +188,19 @@ class _BubbleBody extends StatelessWidget {
             textAlign: TextAlign.center,
             style: BalmiTheme.body(
               size: 13,
-              weight: FontWeight.w700,
-              color: BalmiColors.ink.withValues(alpha: 0.88),
+              weight: FontWeight.w600,
+              color: ink,
+              height: 1.35,
             ),
           ),
           if (showHint) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               '탭',
               style: BalmiTheme.body(
                 size: 10,
-                color: BalmiColors.sub.withValues(alpha: 0.85),
+                weight: FontWeight.w500,
+                color: BalmiColors.sub.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -209,10 +218,21 @@ class _BubbleTailPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Rounded-ish soft triangle that sits under the bubble.
     final path = Path()
-      ..moveTo(size.width * 0.2, 0)
-      ..lineTo(size.width * 0.5, size.height)
-      ..lineTo(size.width * 0.8, 0)
+      ..moveTo(size.width * 0.28, 0.5)
+      ..quadraticBezierTo(
+        size.width * 0.42,
+        size.height * 0.35,
+        size.width * 0.5,
+        size.height,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.58,
+        size.height * 0.35,
+        size.width * 0.72,
+        0.5,
+      )
       ..close();
     canvas.drawPath(path, Paint()..color = color);
     canvas.drawPath(
@@ -220,12 +240,13 @@ class _BubbleTailPainter extends CustomPainter {
       Paint()
         ..color = border
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
+        ..strokeWidth = 1
+        ..strokeJoin = StrokeJoin.round,
     );
     // Cover the top stroke so the tail joins the bubble cleanly.
     canvas.drawLine(
-      Offset(size.width * 0.22, 0),
-      Offset(size.width * 0.78, 0),
+      Offset(size.width * 0.3, 0.5),
+      Offset(size.width * 0.7, 0.5),
       Paint()
         ..color = color
         ..strokeWidth = 2.5,

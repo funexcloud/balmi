@@ -38,5 +38,9 @@ void main() {
     expect(home, contains('CircleAction.playSize'));
     expect(home, contains('Icons.play_arrow'));
     expect(home, contains('filled: true'));
+    expect(home, contains('preferredActivity'));
+    expect(home, contains('setPreferredActivity'));
+    expect(home, contains('openFarmPreview'));
+    expect(home, isNot(contains('openLandPreview')));
   });
 }
