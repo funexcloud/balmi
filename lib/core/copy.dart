@@ -122,6 +122,8 @@ abstract final class BalmiCopy {
   static const sessionLandNone = '아직 없어요';
   static const sessionLandPathBand = '밟은 띠';
   static const sessionLandLoop = '닫힌 루프';
+  static const sessionLandCells = '칸';
+  static const landEmptyMine = '아직 내 땅이 없어요';
 
   static const onboardingWelcome = '안녕하세요, balmi예요';
   static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';
@@ -147,7 +149,7 @@ abstract final class BalmiCopy {
   static const landPreview = '2차 기능 미리보기 — 지금은 실제 등기되지 않습니다';
   static const landEmptyArea = '아직 닫힌 루프가 없어요';
   static const landEmptyRecent = '닫힌 루프가 생기면 여기에 필지가 쌓입니다.';
-  static const landNoPath = '아직 등기할 경로가 없습니다';
+  static const landNoPath = '아직 내 땅이 없어요';
   static const landEmptyField = '아직 빈 들판이에요';
   static const landWalkedPath = '내가 걸은 길';
   static const landWalkHint = '오늘 걸으면 물을 한 번 줄 수 있어요';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/copy.dart';
 import '../core/format.dart';
 import '../core/theme.dart';
+import '../domain/engines/live_speed.dart';
 import 'path_spark.dart';
 
 class LiveStatsSheet extends StatelessWidget {
@@ -47,12 +48,11 @@ class LiveStatsSheet extends StatelessWidget {
 
   bool get _showLaps => showLaps || trackMode || lapCount > 0;
 
-  double get _avgKmh {
-    final moving = movingDuration.inSeconds;
-    final sec = moving >= 1 ? moving : elapsed.inSeconds;
-    if (sec < 1) return 0;
-    return (distM / 1000) / (sec / 3600);
-  }
+  double get _avgKmh => averageSpeedKmh(
+        distM: distM,
+        movingDurationMs: movingDuration.inMilliseconds,
+        elapsedMs: elapsed.inMilliseconds,
+      );
 
   @override
   Widget build(BuildContext context) {

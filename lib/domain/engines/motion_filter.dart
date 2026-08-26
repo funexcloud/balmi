@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'distance.dart';
+import 'live_speed.dart';
 
 class MotionDecision {
   const MotionDecision({
@@ -48,9 +49,11 @@ class GpsMotionFilter {
     this.lowCadenceSpm = 80,
     this.goodSpeedAccMs = 2,
     this.gapResume = const Duration(seconds: 8),
-    this.speedWindow = const Duration(seconds: 4),
+    this.speedWindow = const Duration(seconds: 6),
     this.stillNetM = 2.5,
     this.walkFloorMs = 0.7,
+    this.speedEmaAlpha = 0.35,
+    this.maxSpeedRiseMsPerS = 2.5,
   });
 
   final double maxAccuracyM;
@@ -65,6 +68,8 @@ class GpsMotionFilter {
   final Duration speedWindow;
   final double stillNetM;
   final double walkFloorMs;
+  final double speedEmaAlpha;
+  final double maxSpeedRiseMsPerS;
 
   bool moving = false;
   double? _lat;
@@ -133,9 +138,16 @@ class GpsMotionFilter {
         speedAccuracyMs > 0 &&
         speedAccuracyMs < goodSpeedAccMs;
     final windowSp = _windowSpeedMs();
-    var candidate = dopplerOk
-        ? rawSpeedMs
-        : (windowSp > 0 ? windowSp : derived);
+    // Live number: recent displacement (window → derived). Doppler is only a
+    // cold-start fallback — phone Doppler often under-reports walking pace.
+    final displacement = displaySpeedFromDisplacement(
+      derivedMs: derived,
+      windowMs: windowSp,
+      dopplerMs: rawSpeedMs,
+      dopplerReliable: dopplerOk,
+      walkFloorMs: walkFloorMs,
+    );
+    var candidate = displacement;
     final resumedAfterGap =
         dt >= gapResume.inMilliseconds / 1000.0 && d >= plotAccuracyM;
 
@@ -143,6 +155,8 @@ class GpsMotionFilter {
     final jitterR = math.max(h, minMoveM);
     final insideCircle = d < jitterR || d < 0.7 * h;
     final stepping = cadenceSpm != null && cadenceSpm >= lowCadenceSpm;
+    // Instantaneous walk band only — window net can look "walk-like" under
+    // standing GPS zig-zag and must not bypass the standing-cadence freeze.
     final gpsWalk = (derived >= walkFloorMs && derived <= 4.0) ||
         (dopplerOk && rawSpeedMs >= walkFloorMs && rawSpeedMs <= 4.0);
     final windowStill = _isWindowStill();
@@ -189,14 +203,17 @@ class GpsMotionFilter {
       _stillStreak = 0;
       moving = gpsWalk || stepping || derived >= walkFloorMs;
       _accept(lat, lon, now);
-      if (dopplerOk) lastGoodSpeedMs = rawSpeedMs;
       final plausible = derived >= walkFloorMs && derived <= spikeMs;
-      if (plausible) lastGoodSpeedMs = derived;
+      final shown = _smoothDisplay(
+        candidateMs: plausible ? derived : (dopplerOk ? rawSpeedMs! : 0),
+        dtS: dt,
+      );
+      lastGoodSpeedMs = shown;
       return MotionDecision(
         addDistance: plausible,
         plotOnMap: true,
         distanceM: plausible ? d : 0,
-        filteredSpeedMs: lastGoodSpeedMs ?? 0,
+        filteredSpeedMs: shown,
         useForSport: plausible,
         moving: moving,
       );
@@ -248,12 +265,13 @@ class GpsMotionFilter {
       }
       moving = true;
       _accept(lat, lon, now);
-      lastGoodSpeedMs = candidate;
+      final shown = _smoothDisplay(candidateMs: candidate, dtS: dt);
+      lastGoodSpeedMs = shown;
       return MotionDecision(
         addDistance: true,
         plotOnMap: true,
         distanceM: d,
-        filteredSpeedMs: candidate,
+        filteredSpeedMs: shown,
         useForSport: true,
         moving: true,
       );
@@ -279,14 +297,29 @@ class GpsMotionFilter {
     }
 
     _accept(lat, lon, now);
-    lastGoodSpeedMs = candidate;
+    final shown = _smoothDisplay(candidateMs: candidate, dtS: dt);
+    lastGoodSpeedMs = shown;
     return MotionDecision(
       addDistance: d > 0,
       plotOnMap: d > 0,
       distanceM: d,
-      filteredSpeedMs: candidate,
+      filteredSpeedMs: shown,
       useForSport: true,
       moving: true,
+    );
+  }
+
+  double _smoothDisplay({required double candidateMs, required double dtS}) {
+    final risen = clampSpeedRiseMs(
+      nextMs: candidateMs,
+      previousMs: lastGoodSpeedMs,
+      dtS: dtS <= 0 ? 1.0 : dtS,
+      maxRiseMsPerS: maxSpeedRiseMsPerS,
+    );
+    return smoothSpeedMs(
+      candidateMs: risen,
+      previousMs: lastGoodSpeedMs,
+      alpha: speedEmaAlpha,
     );
   }
 
@@ -309,9 +342,11 @@ class GpsMotionFilter {
         1000.0;
   }
 
+  /// Net displacement over the window ÷ time — resists zig-zag jitter better
+  /// than path length, while a longer window (~6s) damps 1Hz GPS noise.
   double _windowSpeedMs() {
     final dt = _windowDtS();
-    if (dt < 1.5) return 0;
+    if (dt < 2.0) return 0;
     return _windowNetM() / dt;
   }
 
