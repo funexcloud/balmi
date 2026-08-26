@@ -8,6 +8,8 @@ import '../../core/theme.dart';
 import '../../data/db/app_database.dart';
 import '../../data/map/session_trace_line.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../domain/engines/loop_area.dart';
+import '../../domain/engines/session_land_reward.dart';
 import '../../domain/models/activity.dart';
 import '../../domain/models/sport.dart';
 import '../../widgets/activity_pills.dart';
@@ -32,6 +34,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   List<Lap> _laps = [];
   Duration _walk = Duration.zero;
   Duration _run = Duration.zero;
+  SessionLandReward _land = SessionLandReward.none;
 
   @override
   void initState() {
@@ -53,6 +56,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     } else if (pts.isNotEmpty) {
       last = LatLng(pts.last.lat, pts.last.lng);
     }
+    final geo = [for (final p in line) GeoPoint(p.latitude, p.longitude)];
+    final land = session == null
+        ? SessionLandReward.none
+        : SessionLandReward.fromSession(
+            totalDistM: session.totalDistM,
+            path: geo,
+          );
     if (!mounted) return;
     setState(() {
       _session = session;
@@ -62,6 +72,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _laps = laps;
       _walk = durs[Sport.walk] ?? Duration.zero;
       _run = durs[Sport.run] ?? Duration.zero;
+      _land = land;
     });
   }
 
@@ -106,7 +117,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   fitToPath: true,
                 ),
                 const HeartbeatDivider(),
-                ..._segments.map(_segmentTile),
+                ..._segments.asMap().entries.map(
+                  (e) => _segmentTile(e.value, showLand: e.key == 0),
+                ),
+                if (_segments.isEmpty) _landRewardCard(),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   ..._laps.map(
@@ -128,7 +142,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
   }
 
-  Widget _segmentTile(Segment seg) {
+  Widget _segmentTile(Segment seg, {required bool showLand}) {
     final sport = Sport.fromWire(seg.sport);
     final judged = Sport.fromWire(seg.judgedSport);
     return Card(
@@ -143,18 +157,66 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           '${seg.userOverride == 1 ? ' · 수정됨' : ''}',
           style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
         ),
-        trailing: TextButton(
-          onPressed: () async {
-            final next = sport == Sport.run ? Sport.walk : Sport.run;
-            final repo = context.read<SessionRepository>();
-            await repo.overrideSegmentSport(seg.id, next);
-            await repo.recomputeWalkRunFromSegments(widget.sessionId);
-            if (!mounted) return;
-            await _load();
-          },
-          child: const Text(BalmiCopy.overrideSport),
-        ),
+        trailing: showLand ? _landRewardTrailing() : null,
       ),
+    );
+  }
+
+  Widget _landRewardCard() {
+    return Card(
+      child: ListTile(
+        title: Text(
+          BalmiCopy.sessionLandReward,
+          style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+        ),
+        trailing: _landRewardTrailing(),
+      ),
+    );
+  }
+
+  Widget _landRewardTrailing() {
+    if (!_land.qualifies) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            BalmiCopy.sessionLandReward,
+            style: BalmiTheme.body(
+              size: 13,
+              weight: FontWeight.w800,
+              color: BalmiColors.potato,
+            ),
+          ),
+          Text(
+            BalmiCopy.sessionLandNone,
+            style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+          ),
+        ],
+      );
+    }
+    final subtitle = _land.cellCount > 0
+        ? '+${_land.cellCount}칸 · ${formatAreaM2(_land.earnedM2)}'
+        : formatAreaM2(_land.earnedM2);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          BalmiCopy.sessionLandReward,
+          style: BalmiTheme.body(
+            size: 13,
+            weight: FontWeight.w800,
+            color: BalmiColors.potato,
+          ),
+        ),
+        Text(
+          subtitle,
+          style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+        ),
+      ],
     );
   }
 }

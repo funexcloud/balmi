@@ -118,6 +118,10 @@ abstract final class BalmiCopy {
   static const originalJudgment = '원래 판정';
   static const overrideSport = '종목 수정';
   static const sessionDetail = '기록 상세';
+  static const sessionLandReward = '내 땅';
+  static const sessionLandNone = '아직 없어요';
+  static const sessionLandPathBand = '밟은 띠';
+  static const sessionLandLoop = '닫힌 루프';
 
   static const onboardingWelcome = '안녕하세요, balmi예요';
   static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';

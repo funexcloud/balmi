@@ -68,3 +68,6 @@ String formatSpeedKmh(double speedKmh) => '${speedKmh.toStringAsFixed(1)}km/h';
 /// Thousands-separated step counts for hero and settings.
 String formatSteps(int steps) => NumberFormat('#,###').format(steps);
 
+/// Area for 「내 땅」 rewards — whole ㎡ with thousands separators.
+String formatAreaM2(double m2) => '${NumberFormat('#,###').format(m2.round())}㎡';
+
