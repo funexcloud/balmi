@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -5,6 +7,8 @@ import '../../domain/engines/farm_life.dart';
 import '../../domain/engines/farm_resource.dart';
 import '../../domain/engines/farm_water.dart';
 import '../../domain/engines/land_city.dart';
+import '../../domain/engines/recovery.dart';
+import '../../domain/engines/session_checkpoint.dart';
 import '../../domain/engines/session_farm_grant.dart';
 import '../../domain/engines/sync_backoff.dart';
 import '../../domain/engines/workout_stats.dart';
@@ -43,6 +47,70 @@ class SessionRepository {
     final row = await (db.select(db.appKv)..where((t) => t.key.equals(key)))
         .getSingleOrNull();
     return row?.value;
+  }
+
+  static String checkpointKey(String sessionId) => 'checkpoint:$sessionId';
+
+  Future<void> saveCheckpoint(SessionCheckpoint checkpoint) {
+    return putKv(
+      checkpointKey(checkpoint.sessionId),
+      jsonEncode(checkpoint.toJson()),
+    );
+  }
+
+  Future<SessionCheckpoint?> loadCheckpoint(String sessionId) async {
+    final raw = await getKv(checkpointKey(sessionId));
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final map = jsonDecode(raw);
+      if (map is! Map) return null;
+      return SessionCheckpoint.fromJson(Map<String, Object?>.from(map));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearCheckpoint(String sessionId) async {
+    await (db.delete(db.appKv)
+          ..where((t) => t.key.equals(checkpointKey(sessionId))))
+        .go();
+  }
+
+  Future<DateTime?> lastPointAt(String sessionId) async {
+    final rows = await (db.select(db.points)
+          ..where((t) => t.sessionId.equals(sessionId))
+          ..orderBy([(t) => OrderingTerm.desc(t.seq)])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first.ts;
+  }
+
+  Future<int> pointCount(String sessionId) async {
+    final expr = db.points.id.count();
+    final q = db.selectOnly(db.points)
+      ..addColumns([expr])
+      ..where(db.points.sessionId.equals(sessionId));
+    final row = await q.getSingle();
+    return row.read(expr) ?? 0;
+  }
+
+  /// App-start unfinished session with checkpoint + point stats for recovery UI.
+  Future<RecoverableSession?> loadRecoverableRecording() async {
+    final open = await findRecording();
+    if (open == null) return null;
+    final checkpoint = await loadCheckpoint(open.id);
+    final last = await lastPointAt(open.id);
+    final count = await pointCount(open.id);
+    return RecoverableSession(
+      id: open.id,
+      status: SessionStatus.fromWire(open.status),
+      startedAt: open.startedAt,
+      activity: open.activity,
+      totalDistM: open.totalDistM,
+      pointCount: count,
+      lastPointAt: last,
+      checkpoint: checkpoint,
+    );
   }
 
   Future<Session> createSession({
@@ -443,6 +511,7 @@ class SessionRepository {
         endedAt: Value(at),
       ),
     );
+    await clearCheckpoint(sessionId);
     await _grantFarmResourcesOnClose(sessionId, endedAt: at);
   }
 

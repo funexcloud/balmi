@@ -29,6 +29,19 @@ String formatDateTime(DateTime ts) {
   return DateFormat('yyyy.MM.dd HH:mm').format(ts.toLocal());
 }
 
+/// Recovery UI clock, e.g. `오후 7:42`.
+String formatClockAmPm(DateTime ts) {
+  final local = ts.toLocal();
+  final h = local.hour;
+  final m = local.minute.toString().padLeft(2, '0');
+  if (h < 12) {
+    final hour = h == 0 ? 12 : h;
+    return '오전 $hour:$m';
+  }
+  final hour = h == 12 ? 12 : h - 12;
+  return '오후 $hour:$m';
+}
+
 String formatElapsed(Duration d) {
   final h = d.inHours;
   final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');

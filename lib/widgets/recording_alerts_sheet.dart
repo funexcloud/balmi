@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/copy.dart';
 import '../core/theme.dart';
+import '../domain/engines/record_status.dart';
 import 'circle_action.dart';
 
 Future<void> showRecordingAlertsSheet({
@@ -10,7 +11,9 @@ Future<void> showRecordingAlertsSheet({
   required bool paused,
   required bool waitingGps,
   String? lastError,
+  RecordSurvivalStatus? status,
 }) {
+  final survival = status;
   return showBalmiSheet(
     context: context,
     builder: (ctx) {
@@ -26,14 +29,30 @@ Future<void> showRecordingAlertsSheet({
             ),
             const SizedBox(height: 12),
             _line(
-              paused ? BalmiCopy.pause : BalmiCopy.recordingLive,
-              paused
-                  ? '기록이 멈춰 있습니다. 포인트는 기기에 남아 있습니다.'
-                  : BalmiCopy.trustAlways,
+              survival?.primaryLine ??
+                  (paused ? BalmiCopy.pause : BalmiCopy.recordingLive),
+              survival?.saveLine ??
+                  (paused
+                      ? BalmiCopy.recoverySavedHint
+                      : BalmiCopy.deviceSaving),
             ),
-            if (waitingGps) ...[
+            const SizedBox(height: 10),
+            _line(
+              BalmiCopy.gps,
+              waitingGps
+                  ? BalmiCopy.gpsSearching
+                  : (survival?.gpsLine ?? BalmiCopy.waitingGpsShort),
+            ),
+            if (survival != null) ...[
               const SizedBox(height: 10),
-              _line(BalmiCopy.gps, BalmiCopy.waitingGps),
+              _line(
+                '네트워크',
+                survival.network == RecordLink.offline
+                    ? BalmiCopy.offlineRecording
+                    : survival.network == RecordLink.online
+                        ? '연결됨'
+                        : '상태 확인 중',
+              ),
             ],
             if (lastError != null && lastError.isNotEmpty) ...[
               const SizedBox(height: 10),
