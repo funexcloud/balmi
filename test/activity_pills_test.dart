@@ -64,7 +64,7 @@ void main() {
     expect(spec, isNull);
   });
 
-  testWidgets('home dock shows one activity control not the full grid', (tester) async {
+  testWidgets('home dock is play-only; sport icons hidden until long-press', (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     final db = AppDatabase.executor(NativeDatabase.memory());
     addTearDown(db.close);
@@ -102,7 +102,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel('자동'), findsOneWidget);
+    expect(find.bySemanticsLabel('기록 시작'), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+    expect(find.bySemanticsLabel('자동'), findsNothing);
     expect(find.bySemanticsLabel('걷기'), findsNothing);
     expect(find.bySemanticsLabel('달리기'), findsNothing);
     expect(find.bySemanticsLabel('등산'), findsNothing);
