@@ -6,6 +6,7 @@ import 'package:balmi/data/repositories/activity_recovery_store.dart';
 import 'package:balmi/data/repositories/session_repository.dart';
 import 'package:balmi/domain/engines/activity_recovery.dart';
 import 'package:balmi/domain/models/activity.dart';
+import 'package:balmi/domain/models/sport.dart';
 import 'package:balmi/features/activity_recovery/activity_recovery_controller.dart';
 import 'package:balmi/features/session_detail/session_detail_screen.dart';
 import 'package:drift/native.dart';
@@ -16,12 +17,12 @@ import 'package:provider/provider.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<String> _closedSession(SessionRepository repo) async {
+  Future<String> closedSession(SessionRepository repo) async {
     final s = await repo.createSession(
       trackMode: false,
       activity: ActivityKind.walk,
     );
-    await repo.closeSession(s.id);
+    await repo.closeSession(s.id, status: SessionStatus.closed);
     return s.id;
   }
 
@@ -36,7 +37,7 @@ void main() {
     addTearDown(recovery.dispose);
     await recovery.bootstrap();
 
-    final id = await _closedSession(repo);
+    final id = await closedSession(repo);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -77,7 +78,7 @@ void main() {
     addTearDown(recovery.dispose);
     await recovery.bootstrap();
 
-    final id = await _closedSession(repo);
+    final id = await closedSession(repo);
     final started = await store.startCheck(
       workoutSessionId: id,
       metrics: const RecoverySessionMetrics(
