@@ -40,7 +40,11 @@ void main() {
     expect(home, contains('filled: true'));
     expect(home, contains('preferredActivity'));
     expect(home, contains('setPreferredActivity'));
+    expect(home, contains('startPreferred'));
     expect(home, contains('openFarmPreview'));
     expect(home, isNot(contains('openLandPreview')));
+    // Prior fragile 40ms delay removed; CircleAction arms on pointer-up.
+    expect(home, isNot(contains('milliseconds: 40')));
+    expect(home, isNot(contains('SchedulerBinding')));
   });
 }

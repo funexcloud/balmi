@@ -23,10 +23,14 @@ class RecordingController extends ChangeNotifier {
   RecordingController({
     required this.repo,
     required this.dbPath,
-  });
+    Future<String?> Function()? ensurePermissions,
+  }) : _ensurePermissions = ensurePermissions ?? RecordingPermissions.ensure;
 
   final SessionRepository repo;
   final String dbPath;
+
+  /// Injectable for tests; defaults to [RecordingPermissions.ensure].
+  final Future<String?> Function() _ensurePermissions;
 
   final FlutterTts _tts = FlutterTts();
   Timer? _localTimer;
@@ -55,6 +59,23 @@ class RecordingController extends ChangeNotifier {
       preferredTrackSpecM = trackSpecM ?? preferredTrackSpecM ?? 400;
     }
     notifyListeners();
+  }
+
+  /// Persist [activity] as preferred and start recording in that mode.
+  ///
+  /// Used by the home play long-press sport picker so selection cannot be
+  /// dropped by a rebuild before [start] reads preferred state.
+  Future<bool> startPreferred(
+    ActivityKind activity, {
+    int? trackSpecM,
+  }) {
+    setPreferredActivity(activity, trackSpecM: trackSpecM);
+    return start(
+      activity: activity,
+      trackSpecM: activity.isTrack
+          ? (trackSpecM ?? preferredTrackSpecM)
+          : null,
+    );
   }
 
   bool get isRecording => snapshot != null;
@@ -177,7 +198,7 @@ class RecordingController extends ChangeNotifier {
     lastError = null;
     notifyListeners();
     try {
-      final denied = await RecordingPermissions.ensure();
+      final denied = await _ensurePermissions();
       if (denied != null) {
         lastError = denied;
         notifyListeners();
@@ -230,7 +251,7 @@ class RecordingController extends ChangeNotifier {
 
   Future<bool> resume(String sessionId) async {
     lastError = null;
-    final denied = await RecordingPermissions.ensure();
+    final denied = await _ensurePermissions();
     if (denied != null) {
       lastError = denied;
       notifyListeners();

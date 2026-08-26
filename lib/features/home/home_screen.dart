@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/copy.dart';
@@ -36,6 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<FarmKind> _buildings = const [];
   List<HerdKind> _herds = const [];
   var _wateredToday = false;
+
+  /// Blocks play [onTap] while the long-press picker / start flow is open.
+  var _sportPickOpen = false;
 
   @override
   void initState() {
@@ -94,33 +96,55 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onLongPressPlay(BuildContext btnCtx) async {
-    final box = btnCtx.findRenderObject() as RenderBox?;
-    final origin = box?.localToGlobal(box.size.center(Offset.zero));
+    if (_sportPickOpen || !mounted) return;
+    setState(() => _sportPickOpen = true);
 
-    // Wait until the long-press pointer-up is done so it cannot dismiss the
-    // picker barrier immediately (classic showDialog-from-onLongPress race).
-    await SchedulerBinding.instance.endOfFrame;
-    await Future<void>.delayed(const Duration(milliseconds: 40));
-    if (!mounted) return;
+    try {
+      final box = btnCtx.findRenderObject() as RenderBox?;
+      final origin = box?.localToGlobal(box.size.center(Offset.zero));
 
-    final rec = context.read<RecordingController>();
-    final picked = await showActivityCirclePicker(
-      context: context,
-      selected: rec.preferredActivity,
-      origin: origin,
-    );
-    if (picked == null || !mounted) return;
+      final rec = context.read<RecordingController>();
+      // CircleAction fires long-press on pointer-up, so the picker can open
+      // without the opening gesture dismissing its barrier.
+      final picked = await showActivityCirclePicker(
+        context: context,
+        selected: rec.preferredActivity,
+        origin: origin,
+      );
+      if (picked == null || !mounted) return;
 
-    rec.setPreferredActivity(
-      picked,
-      trackSpecM: picked.isTrack ? rec.preferredTrackSpecM : null,
-    );
-    if (picked.isTrack) await _pickTrackSpec(rec);
-    if (!mounted) return;
+      if (picked.isTrack) {
+        rec.setPreferredActivity(
+          picked,
+          trackSpecM: rec.preferredTrackSpecM,
+        );
+        await _pickTrackSpec(rec);
+        if (!mounted) return;
+        if (!rec.isStarting && !rec.isRecording) {
+          await _start(rec);
+        }
+        return;
+      }
 
-    // Selecting a sport from the play picker starts that mode immediately.
-    if (!rec.isStarting && !rec.isRecording) {
-      await _start(rec);
+      // Selecting a sport starts that mode immediately (explicit activity —
+      // do not rely only on preferred being read later).
+      if (!rec.isStarting && !rec.isRecording) {
+        final ok = await rec.startPreferred(picked);
+        if (!mounted) return;
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(rec.lastError ?? BalmiCopy.startFailed)),
+          );
+        }
+      } else {
+        rec.setPreferredActivity(picked);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sportPickOpen = false);
+      } else {
+        _sportPickOpen = false;
+      }
     }
   }
 
@@ -212,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           child: Builder(
             builder: (btnCtx) {
+              final busy = rec.isStarting || _sportPickOpen;
               return Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
@@ -221,9 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: rec.isStarting ? BalmiCopy.starting : BalmiCopy.start,
                     filled: true,
                     size: CircleAction.playSize,
-                    onTap: rec.isStarting ? () {} : () => _start(rec),
-                    onLongPress:
-                        rec.isStarting ? null : () => _onLongPressPlay(btnCtx),
+                    onTap: busy ? () {} : () => _start(rec),
+                    onLongPress: busy ? null : () => _onLongPressPlay(btnCtx),
                   ),
                   if (!rec.isStarting && !preferred.isAuto)
                     Positioned(
