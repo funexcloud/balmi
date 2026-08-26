@@ -65,3 +65,6 @@ String formatLapClock(double lapTimeS) {
 
 String formatSpeedKmh(double speedKmh) => '${speedKmh.toStringAsFixed(1)}km/h';
 
+/// Thousands-separated step counts for hero and settings.
+String formatSteps(int steps) => NumberFormat('#,###').format(steps);
+

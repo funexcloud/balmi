@@ -13,11 +13,14 @@ import '../../domain/models/activity.dart';
 import '../../widgets/activity_pills.dart';
 import '../../widgets/circle_action.dart';
 import '../../widgets/farm_status_card.dart';
+import '../../widgets/today_exercise_card.dart';
 import '../../widgets/today_summary_card.dart';
+import '../health/health_goals_controller.dart';
 import '../land/land_preview_screen.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
 import '../meal_walk/meal_walk_onboarding.dart';
+import '../settings/step_goal_controller.dart';
 import '../recording/recording_controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -76,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final rec = context.watch<RecordingController>();
     final steps = context.watch<StepService>();
+    final stepGoal = context.watch<StepGoalController>();
     final meal = context.watch<MealWalkController>();
     final due = meal.mealDueNow();
     final showDiscover = !meal.enabled && !meal.discoverHidden;
@@ -98,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 steps: steps.displaySteps,
                 stepLabel: steps.label,
                 stats: _today,
+                stepGoal: stepGoal.goal,
               ),
               const SizedBox(height: 20),
               FarmStatusCard(

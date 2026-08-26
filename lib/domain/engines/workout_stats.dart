@@ -1,4 +1,5 @@
 import '../models/activity.dart';
+import '../models/health_goals.dart';
 
 class WorkoutRow {
   const WorkoutRow({
@@ -204,6 +205,41 @@ List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
       unit: 'm',
     ),
   ];
+}
+
+class ExerciseGoalProgress {
+  const ExerciseGoalProgress({
+    required this.minutesCurrent,
+    required this.minutesTarget,
+    required this.kmCurrent,
+    required this.kmTarget,
+  });
+
+  final double minutesCurrent;
+  final int minutesTarget;
+  final double kmCurrent;
+  final double kmTarget;
+
+  double get minutesRatio =>
+      minutesTarget <= 0 ? 0 : (minutesCurrent / minutesTarget).clamp(0, 1);
+
+  double get kmRatio => kmTarget <= 0 ? 0 : (kmCurrent / kmTarget).clamp(0, 1);
+
+  bool get minutesDone => minutesCurrent + 1e-6 >= minutesTarget;
+
+  bool get kmDone => kmCurrent + 1e-6 >= kmTarget;
+}
+
+ExerciseGoalProgress exerciseGoalProgress({
+  required PeriodStats stats,
+  required HealthGoals goals,
+}) {
+  return ExerciseGoalProgress(
+    minutesCurrent: stats.duration.inMinutes.toDouble(),
+    minutesTarget: goals.exerciseMinutes,
+    kmCurrent: stats.distM / 1000,
+    kmTarget: goals.exerciseKm,
+  );
 }
 
 double eventProgress(EventSpec event, List<WorkoutRow> closed) {

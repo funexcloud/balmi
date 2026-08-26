@@ -55,6 +55,7 @@ class _BalmiAppState extends State<BalmiApp> {
       recording: _recording,
       alarms: MealWalkAlarms(),
     );
+    _stepGoal = StepGoalController(store: StepGoalStore(widget.db));
     _steps = StepService(repo: _repo)..start();
     _sync = SyncWorker(_repo)..start();
     _load();
@@ -62,7 +63,10 @@ class _BalmiAppState extends State<BalmiApp> {
 
   Future<void> _load() async {
     await _recording.initForeground();
-    await _mealWalk.bootstrap();
+    await Future.wait([
+      _mealWalk.bootstrap(),
+      _stepGoal.bootstrap(),
+    ]);
     final done = await isOnboardingDone(_repo);
     if (!mounted) return;
     setState(() => _onboarded = done);
@@ -72,6 +76,7 @@ class _BalmiAppState extends State<BalmiApp> {
   void dispose() {
     _sync.stop();
     _mealWalk.dispose();
+    _stepGoal.dispose();
     _recording.dispose();
     _steps.dispose();
     super.dispose();
@@ -85,6 +90,7 @@ class _BalmiAppState extends State<BalmiApp> {
         Provider<SessionRepository>.value(value: _repo),
         ChangeNotifierProvider<RecordingController>.value(value: _recording),
         ChangeNotifierProvider<MealWalkController>.value(value: _mealWalk),
+        ChangeNotifierProvider<StepGoalController>.value(value: _stepGoal),
         ChangeNotifierProvider<StepService>.value(value: _steps),
       ],
       child: WithForegroundTask(
