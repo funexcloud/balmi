@@ -56,8 +56,11 @@ void main() {
     expect(brand, contains('심혈관 건강을 위한 식생활에 잘 어울리는'));
     expect(brand, contains('#D9774A'));
     expect(brand, contains('GPS track'));
-    expect(brand, contains('location pin'));
-    expect(brand, isNot(contains('고구마는 누구에게나 심장에 좋다')));
+    expect(brand, contains('trackPath'));
+    expect(brand, contains('locationPin'));
+    // Forbidden absolute claim appears only as a negative example in the safety table.
+    expect(brand, contains('금지'));
+    expect(brand, contains('절대·보편 효능'));
     expect(brand.toLowerCase(), isNot(contains('naver')));
     // Potassium caution stays in BRAND docs only (not scare copy in onboarding).
     expect(brand, contains('칼륨'));
