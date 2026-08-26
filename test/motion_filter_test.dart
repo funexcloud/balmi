@@ -586,6 +586,89 @@ void main() {
     final stored = await repo.lapsFor(session.id);
     expect(stored, hasLength(1));
   });
+
+  test('street approach then stadium loops count laps in pipeline', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 26, 11, 30);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.auto,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.auto,
+    );
+    await pipe.restore();
+
+    const streetLat = 35.5355;
+    const streetLon = 129.2593;
+    const trackLat = 35.5324;
+    const trackLon = 129.2593;
+    const lapM = 600.0;
+    const speedMs = 1.5;
+    final radiusM = lapM / (2 * math.pi);
+    var t = 0;
+    RecordingSnapshot? snap;
+
+    const approachM = 350.0;
+    final approachSec = (approachM / speedMs).round();
+    for (var i = 0; i <= approachSec; i++) {
+      final frac = i / approachSec;
+      final lat = streetLat + (trackLat - streetLat) * frac;
+      final lon = streetLon + (trackLon - streetLon) * frac;
+      final ts = start.add(Duration(seconds: t++));
+      pipe
+        ..onCadence(100)
+        ..onFix(
+          LocationFix(
+            ts: ts,
+            lat: lat,
+            lng: lon,
+            speedMs: speedMs,
+            speedAccuracyMs: 0.4,
+            hAccM: 6,
+          ),
+        );
+      snap = await pipe.sampleNow(ts);
+    }
+
+    final loopSec = (lapM / speedMs).round();
+    for (var lap = 0; lap < 3; lap++) {
+      for (var i = 1; i <= loopSec; i++) {
+        final dist = speedMs * i;
+        final ang = (dist / lapM) * 2 * math.pi;
+        final lat = trackLat + (radiusM * math.cos(ang) - radiusM) / 111000;
+        final lon = trackLon +
+            (radiusM * math.sin(ang)) /
+                (111000 * math.cos(trackLat * math.pi / 180));
+        final ts = start.add(Duration(seconds: t++));
+        pipe
+          ..onCadence(100)
+          ..onFix(
+            LocationFix(
+              ts: ts,
+              lat: lat,
+              lng: lon,
+              speedMs: speedMs,
+              speedAccuracyMs: 0.4,
+              hAccM: 6,
+            ),
+          );
+        snap = await pipe.sampleNow(ts);
+      }
+    }
+
+    expect(snap!.lapCount, greaterThanOrEqualTo(2));
+    expect(snap.trackMode, isTrue);
+    final stored = await repo.lapsFor(session.id);
+    expect(stored.length, greaterThanOrEqualTo(2));
+  });
 }
 
 double _walkLaps({
