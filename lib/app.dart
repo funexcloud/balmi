@@ -9,6 +9,7 @@ import 'data/notifications/activity_recovery_alarms.dart';
 import 'data/notifications/meal_walk_alarms.dart';
 import 'data/repositories/activity_recovery_store.dart';
 import 'data/repositories/meal_walk_store.dart';
+import 'data/repositories/mission_settings_store.dart';
 import 'data/repositories/step_goal_store.dart';
 import 'data/repositories/session_repository.dart';
 import 'data/sensors/step_service.dart';
@@ -17,6 +18,7 @@ import 'domain/engines/recovery.dart';
 import 'features/activity_recovery/activity_recovery_controller.dart';
 import 'features/activity_recovery/activity_recovery_flow.dart';
 import 'features/meal_walk/meal_walk_controller.dart';
+import 'features/missions/mission_settings_controller.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/step_goal_controller.dart';
 import 'features/recording/recording_controller.dart';
@@ -44,6 +46,7 @@ class _BalmiAppState extends State<BalmiApp> {
   late final MealWalkController _mealWalk;
   late final ActivityRecoveryController _activityRecovery;
   late final StepGoalController _stepGoal;
+  late final MissionSettingsController _missionSettings;
   late final StepService _steps;
   late final SyncWorker _sync;
   bool? _onboarded;
@@ -66,6 +69,8 @@ class _BalmiAppState extends State<BalmiApp> {
       alarms: ActivityRecoveryAlarms(),
     );
     _stepGoal = StepGoalController(store: StepGoalStore(widget.db));
+    _missionSettings =
+        MissionSettingsController(store: MissionSettingsStore(widget.db));
     _steps = StepService(repo: _repo)..start();
     _sync = SyncWorker(_repo)..start();
     _load();
@@ -77,6 +82,7 @@ class _BalmiAppState extends State<BalmiApp> {
       _mealWalk.bootstrap(),
       _activityRecovery.bootstrap(),
       _stepGoal.bootstrap(),
+      _missionSettings.bootstrap(),
     ]);
     final done = await isOnboardingDone(_repo);
     if (!mounted) return;
@@ -89,6 +95,7 @@ class _BalmiAppState extends State<BalmiApp> {
     _mealWalk.dispose();
     _activityRecovery.dispose();
     _stepGoal.dispose();
+    _missionSettings.dispose();
     _recording.dispose();
     _steps.dispose();
     super.dispose();
@@ -106,6 +113,9 @@ class _BalmiAppState extends State<BalmiApp> {
           value: _activityRecovery,
         ),
         ChangeNotifierProvider<StepGoalController>.value(value: _stepGoal),
+        ChangeNotifierProvider<MissionSettingsController>.value(
+          value: _missionSettings,
+        ),
         ChangeNotifierProvider<StepService>.value(value: _steps),
       ],
       child: WithForegroundTask(

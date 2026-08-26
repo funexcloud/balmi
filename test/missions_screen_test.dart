@@ -1,7 +1,9 @@
 import 'package:balmi/core/copy.dart';
 import 'package:balmi/core/theme.dart';
 import 'package:balmi/data/db/app_database.dart';
+import 'package:balmi/data/repositories/mission_settings_store.dart';
 import 'package:balmi/data/repositories/session_repository.dart';
+import 'package:balmi/features/missions/mission_settings_controller.dart';
 import 'package:balmi/features/missions/missions_screen.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +15,18 @@ void main() {
     final db = AppDatabase.executor(NativeDatabase.memory());
     addTearDown(db.close);
     final repo = SessionRepository(db);
+    final settings =
+        MissionSettingsController(store: MissionSettingsStore(db));
+    addTearDown(settings.dispose);
+    await settings.bootstrap();
 
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           Provider<SessionRepository>.value(value: repo),
+          ChangeNotifierProvider<MissionSettingsController>.value(
+            value: settings,
+          ),
         ],
         child: MaterialApp(
           theme: BalmiTheme.light(),
@@ -28,6 +37,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(BalmiCopy.missions), findsOneWidget);
+    expect(find.text(BalmiCopy.missionSettings), findsWidgets);
     expect(find.text('오늘 30분'), findsOneWidget);
     expect(find.text('이번 주 15km'), findsOneWidget);
     expect(find.text('트랙 10바퀴'), findsOneWidget);
