@@ -31,7 +31,7 @@ void main() {
     expect(find.text(BalmiCopy.landEmptyField), findsOneWidget);
   });
 
-  testWidgets('speech bubble tap does not open land; scene tap does',
+  testWidgets('speech bubble tap does not open farm; scene tap does',
       (tester) async {
     var opens = 0;
     await tester.pumpWidget(
@@ -52,10 +52,30 @@ void main() {
     expect(opens, 0);
     expect(find.text(BalmiCopy.landWalkHint), findsOneWidget);
 
-    // Tap sky area above the bubble to open land.
+    // Tap sky area above the bubble to open farm.
     await tester.tapAt(tester.getTopLeft(find.byType(FarmScene)) + const Offset(40, 24));
     await tester.pumpAndSettle();
     expect(opens, 1);
+  });
+
+  testWidgets('speech bubble uses soft translucent fill not solid paper',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FarmSpeechBubble(lines: ['테스트 안내']),
+        ),
+      ),
+    );
+    final body = tester.widgetList<DecoratedBox>(find.byType(DecoratedBox)).firstWhere(
+      (w) {
+        final d = w.decoration;
+        return d is BoxDecoration && d.color != null;
+      },
+    );
+    final color = (body.decoration as BoxDecoration).color!;
+    expect(color.a, lessThan(1.0));
+    expect(find.text('테스트 안내'), findsOneWidget);
   });
 
   testWidgets('non-empty farm still paints and shows speech captions',

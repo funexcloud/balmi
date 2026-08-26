@@ -4,7 +4,8 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../activity/my_activity_screen.dart';
 import '../events/events_screen.dart';
-import '../land/land_preview_screen.dart';
+import '../land/farm_preview_screen.dart';
+import '../land/land_map_screen.dart';
 import '../missions/missions_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -42,7 +43,8 @@ class MoreScreen extends StatelessWidget {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EventsScreen()));
         },
       ),
-      (Icons.landscape_outlined, BalmiCopy.landTab, () => openLandPreview(context)),
+      (Icons.landscape_outlined, BalmiCopy.landTab, () => openLandMap(context)),
+      (Icons.agriculture_outlined, BalmiCopy.farmTitle, () => openFarmPreview(context)),
       (
         Icons.favorite_outline,
         BalmiCopy.mealWalkHealthSection,

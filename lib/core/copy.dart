@@ -130,6 +130,7 @@ abstract final class BalmiCopy {
   static const registryEyebrow = '발미 등기부';
   static const landTitle = '걸어서 등기한 내 땅';
   static const landSteppedTitle = '내가 밟은 땅';
+  static const farmTitle = '농장';
   static const landGuide = '등기 안내';
   static const landPreview = '2차 기능 미리보기 — 지금은 실제 등기되지 않습니다';
   static const landEmptyArea = '아직 닫힌 루프가 없어요';

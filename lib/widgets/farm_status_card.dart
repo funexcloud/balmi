@@ -29,7 +29,7 @@ class FarmStatusCard extends StatelessWidget {
         onTap: onOpen,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
-          // Speech-bubble taps are absorbed inside FarmScene; scene taps open land.
+          // Speech-bubble taps are absorbed inside FarmScene; scene taps open farm.
           child: FarmScene(
             buildings: buildings,
             herds: herds,
