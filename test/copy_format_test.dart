@@ -44,8 +44,10 @@ void main() {
     }
     expect(blob, isNot(contains('동반')));
     expect(blob, isNot(contains('장례')));
-    expect(BalmiCopy.positioning, '잃어버리지 않는 기록');
-    expect(BalmiCopy.trustAlways, '통신이 끊겨도 기록은 기기에 전부 저장됩니다');
+    expect(BalmiCopy.slogan, '걸음은 멈춰도, 기록은 멈추지 않도록.');
+    expect(BalmiCopy.subcopy, '단 한 걸음도 잃어버리지 않도록.');
+    expect(BalmiCopy.positioning, '기록을 잃지 않도록 설계했습니다');
+    expect(BalmiCopy.trustAlways, '인터넷이 끊겨도 기록은 기기에 보존됩니다');
     expect(BalmiCopy.todaySteps, '오늘 걸음');
     expect(BalmiCopy.recordingSteps, '기록 중 걸음');
   });

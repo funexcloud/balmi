@@ -1,9 +1,16 @@
 /// User-facing Korean copy. Keep this file free of unrelated brand/funeral wording.
 abstract final class BalmiCopy {
   static const appName = 'balmi';
-  static const oneLiner = '통신이 끊겨도, 앱이 죽어도, 단 한 걸음도 잃어버리지 않는 걷기·달리기 기록 앱.';
-  static const positioning = '잃어버리지 않는 기록';
-  static const trustAlways = '통신이 끊겨도 기록은 기기에 전부 저장됩니다';
+  /// Brand slogan — product / store / about.
+  static const slogan = '걸음은 멈춰도, 기록은 멈추지 않도록.';
+  /// Product promise (onboarding screen 4 / about).
+  static const subcopy = '단 한 걸음도 잃어버리지 않도록.';
+  static const actionLine = '걷고. 달리고. 기록하다.';
+  static const oneLiner =
+      '걸음은 멈춰도, 기록은 멈추지 않도록. '
+      '인터넷이 끊겨도, 앱이 예기치 않게 종료되어도, 다시 켜면 기록이 이어지도록 설계한 이동 기록 앱.';
+  static const positioning = '기록을 잃지 않도록 설계했습니다';
+  static const trustAlways = '인터넷이 끊겨도 기록은 기기에 보존됩니다';
 
   static const resumeRecording = '이어서 기록';
   static const endHere = '여기서 종료';
@@ -125,12 +132,46 @@ abstract final class BalmiCopy {
   static const sessionLandCells = '칸';
   static const landEmptyMine = '아직 내 땅이 없어요';
 
-  static const onboardingWelcome = '안녕하세요, balmi예요';
-  static const onboardingTrustTitle = '한 걸음도 기기에서 잃지 않아요';
+  // Onboarding — MOVE → OFFLINE → RECOVERY → PROMISE (no OS perms mid-story)
+  static const onboardingPageCount = 4;
+  static const onboardingNext = '다음';
+  static const onboardingStart = 'Balmi 시작하기';
+
+  static const onboardingMoveTitle = '걷든, 달리든.\n시작부터 끝까지.';
+  static const onboardingMoveBody =
+      '걷기부터 달리기, 트랙까지.\n당신이 움직이는 순간을 기록합니다.';
+  static const onboardingMoveWalk = '걷기';
+  static const onboardingMoveRun = '달리기';
+  static const onboardingMoveTrack = '트랙';
+
+  static const onboardingOfflineTitle = '인터넷이 끊겨도\n기록은 계속됩니다.';
+  static const onboardingOfflineBody =
+      '통신이 불안정한 곳에서도\n이동 기록을 기기에 계속 보존합니다.';
+  static const onboardingOfflineBadge = '오프라인 기록 중';
+  static const onboardingGpsOk = 'GPS 연결';
+  static const onboardingNet5g = '5G';
+  static const onboardingNetWeak = '약함';
+  static const onboardingNetNone = '연결없음';
+
+  static const onboardingRecoveryTitle = '앱이 종료되어도\n기록은 사라지지 않도록.';
+  static const onboardingRecoveryBody =
+      '예기치 않은 종료에 대비해\n진행 중인 기록을 기기에 보존합니다.';
+  static const onboardingRecoveryDistance = '3.82 km';
+  static const onboardingRecoveryRestored = '기록을 복구했습니다';
+  static const onboardingRecoveryBadge = '기록 복구 완료';
+  static const onboardingRecoveryBadgeEn = 'RECORD RECOVERED';
+
+  static const onboardingPromiseTitle = '단 한 걸음도\n잃어버리지 않도록.';
+  static const onboardingPromiseBody =
+      '걷고, 달리고, 길을 남기세요.\n당신이 지나온 순간을 Balmi가 기록합니다.';
+
+  /// Legacy aliases for older call sites / tests.
+  static const onboardingWelcome = slogan;
+  static const onboardingTrustTitle = onboardingOfflineTitle;
   static const onboardingPermsTitle = '기록이 끊기지 않게 권한을 켜 주세요';
   static const onboardingBatteryTitle = '배터리 최적화만 꺼 주세요';
   static const onboardingBatteryBody =
-      '일부 휴대폰은 절전 때문에 백그라운드 기록을 멈춥니다. 아래 제조사 설정에서 balmi를 예외로 두세요.';
+      '일부 휴대폰은 절전 때문에 백그라운드 기록을 멈춥니다. 설정에서 balmi를 예외로 두세요.';
   static const continueLabel = '계속';
   static const done = '시작하기';
   static const locationPermission = '정확한 위치';
@@ -211,6 +252,19 @@ abstract final class BalmiCopy {
   static const vasaCredit = '× VASA';
   static const vasaCreditDetail = '활동을 기록하며 쌓이는 VASA입니다.';
   static const about = '이 앱 정보';
+  static const aboutTitle = '기록을 잃지 않도록 설계했습니다';
+  static const aboutBody =
+      'Balmi는 네트워크 연결 여부와 관계없이 운동 기록을 우선 기기에 저장하도록 설계합니다. '
+      '예기치 않은 앱 종료가 발생하더라도 저장된 운동 데이터를 기반으로 진행 중이던 기록을 복구할 수 있도록 합니다.';
+  static const aboutStatusLocal = 'Local Recording';
+  static const aboutStatusLocalHint = '기기에 우선 기록';
+  static const aboutStatusOffline = 'Offline Ready';
+  static const aboutStatusOfflineHint = '네트워크 연결 없이 기록 가능';
+  static const aboutStatusRecovery = 'Recovery';
+  static const aboutStatusRecoveryHint = '중단된 기록 복구';
+  static const aboutStatusSync = 'Sync';
+  static const aboutStatusSyncHint = '연결 복구 후 필요한 데이터 동기화';
+  static const aboutTechLine = 'Local First · Offline Ready · Recovery';
   static const versionLabel = '0.1.13';
 
   static const mealWalkDiscover = '식사 후 15분 걷기, 시작해볼까요?';
