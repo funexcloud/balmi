@@ -112,8 +112,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 }),
                 children: [
                   _pageBody(
-                    title: BalmiCopy.onboardingWelcome,
-                    body: '${BalmiCopy.oneLiner}\n\n${BalmiCopy.positioning}',
+                    title: BalmiCopy.slogan,
+                    body: '${BalmiCopy.heroLine}\n\n${BalmiCopy.oneLiner}\n\n${BalmiCopy.healthSlogan}',
                   ),
                   _pageBody(
                     title: BalmiCopy.onboardingTrustTitle,

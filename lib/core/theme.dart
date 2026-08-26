@@ -1,20 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Light canvas + 고구마톤 accent. Brand orange is for logo and buttons only.
+/// Balmi color tokens — see [docs/BRAND.md].
+///
+/// Hierarchy: **Sweet Potato (brand)** → **Active Orange (movement)** →
+/// **Sage (GPS good)** → **Attention yellow** → **Critical red**.
+///
+/// Usage matrix:
+/// - [potato] / [potatoDk]: logo heartbeat, GPS track / path lines, record
+///   start·stop CTAs, active nav, selection, key data emphasis.
+/// - [activeOrange] ([amber] alias): in-activity state, current location pin,
+///   running indicator, progress accents, small status dots.
+/// - [sage]: GPS good / healthy / connected.
+/// - [attention]: GPS weak.
+/// - [critical]: SOS / hard errors (also ColorScheme.error).
+/// - [ink] / [sub] / [line]: typography and chrome — **not** GPS tracks.
 abstract final class BalmiColors {
   static const paper = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
   static const mist = Color(0xFFF3F3F3);
   static const ink = Color(0xFF1C1C1C);
+
+  /// Balmi Sweet Potato — brand / heart / VASA heritage primary.
   static const potato = Color(0xFFD9774A);
   static const potatoDk = Color(0xFFC45E32);
+
   static const plum = Color(0xFF6E3B4B);
   static const plumLt = Color(0xFFC98FA1);
-  static const amber = Color(0xFFE39A3B);
+
+  /// Balmi Active Orange — movement / activity accent (not brand primary).
+  static const activeOrange = Color(0xFFE39A3B);
+
+  /// Legacy alias for [activeOrange] (farm scenes, older call sites).
+  static const amber = activeOrange;
+
+  /// GPS good / healthy / connected.
   static const sage = Color(0xFF7C8F6D);
+
+  /// GPS weak / attention.
+  static const attention = Color(0xFFE8C547);
+
+  /// SOS / critical.
+  static const critical = Color(0xFFB0442F);
+
   static const line = Color(0xFFE6E6E6);
   static const sub = Color(0xFF8A8A8A);
+
+  /// Live / selected GPS track polyline (Sweet Potato).
+  static const trackPath = potato;
+
+  /// Dimmer historical traces on explore maps (still potato family).
+  static const trackPathMuted = Color(0xB3D9774A);
+
+  /// Current-location marker while moving (Active Orange).
+  static const locationPin = activeOrange;
 }
 
 abstract final class BalmiFonts {
@@ -96,12 +135,14 @@ abstract final class BalmiTheme {
     const scheme = ColorScheme.light(
       primary: BalmiColors.potato,
       onPrimary: Colors.white,
-      secondary: BalmiColors.sage,
+      secondary: BalmiColors.activeOrange,
       onSecondary: Colors.white,
+      tertiary: BalmiColors.sage,
+      onTertiary: Colors.white,
       surface: BalmiColors.surface,
       onSurface: BalmiColors.ink,
       outline: BalmiColors.line,
-      error: Color(0xFFB0442F),
+      error: BalmiColors.critical,
     );
     final text = TextTheme(
       displayLarge: num(size: 74, weight: FontWeight.w800),
@@ -178,7 +219,7 @@ abstract final class BalmiTheme {
         ),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: BalmiColors.potato,
+        color: BalmiColors.activeOrange,
       ),
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: BalmiColors.ink,

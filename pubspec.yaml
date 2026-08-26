@@ -1,5 +1,5 @@
 name: balmi
-description: "통신이 끊겨도, 앱이 죽어도, 단 한 걸음도 잃어버리지 않는 걷기·달리기 기록 앱."
+description: "걸음은 멈춰도, 기록은 멈추지 않도록. 단 한 걸음도 잃어버리지 않는 이동 기록 앱."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

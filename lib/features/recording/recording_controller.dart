@@ -289,7 +289,7 @@ class RecordingController extends ChangeNotifier {
           serviceId: 210,
           serviceTypes: const [ForegroundServiceTypes.location],
           notificationTitle: 'balmi 기록 중',
-          notificationText: '통신이 끊겨도 기록은 기기에 전부 저장됩니다',
+          notificationText: BalmiCopy.trustAlways,
           notificationIcon: notificationIcon,
           callback: recordingStartCallback,
         );
