@@ -96,6 +96,40 @@ void main() {
     expect(find.text(BalmiCopy.endConfirmTitle), findsNothing);
   });
 
+  testWidgets('end confirm 기록 종료 returns true via showBalmiSheet', (tester) async {
+    bool? confirmed;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return Center(
+                child: TextButton(
+                  onPressed: () async {
+                    confirmed = await EndRecordingDialog.confirm(context, distM: 800);
+                  },
+                  child: const Text('end'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('end'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text(BalmiCopy.endShortWalk), findsNothing);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+
+    await tester.tap(find.text(BalmiCopy.endConfirmYes));
+    await tester.pumpAndSettle();
+    expect(confirmed, isTrue);
+    expect(find.text(BalmiCopy.endConfirmTitle), findsNothing);
+  });
+
   testWidgets('collapsed sheet shows time and distance; pause shows 종료 and 재시작', (tester) async {
     var paused = false;
     await tester.pumpWidget(
