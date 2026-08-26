@@ -586,6 +586,130 @@ void main() {
     final stored = await repo.lapsFor(session.id);
     expect(stored, hasLength(1));
   });
+
+  test('live speed prefers displacement over under-reporting Doppler', () {
+    final filter = GpsMotionFilter();
+    final t0 = DateTime.utc(2026, 8, 26, 10);
+    var lat = 35.532;
+    const lon = 129.259;
+    filter.evaluate(
+      now: t0,
+      lat: lat,
+      lon: lon,
+      hAccM: 6,
+      rawSpeedMs: 1.1,
+      speedAccuracyMs: 0.4,
+      cadenceSpm: 110,
+    );
+    double? speed;
+    for (var i = 1; i <= 20; i++) {
+      lat += 1.55 / 111000; // ~5.6 km/h
+      final d = filter.evaluate(
+        now: t0.add(Duration(seconds: i)),
+        lat: lat,
+        lon: lon,
+        hAccM: 6,
+        rawSpeedMs: 1.1, // phone Doppler ~4.0 km/h
+        speedAccuracyMs: 0.4,
+        cadenceSpm: 110,
+      );
+      speed = d.filteredSpeedMs;
+    }
+    expect(speed, isNotNull);
+    // Displacement ~1.55 m/s; must not stick to Doppler 1.1 m/s.
+    expect(speed! * 3.6, greaterThan(4.8));
+    expect(speed * 3.6, lessThan(6.5));
+  });
+
+  test('one-second GPS spike does not jump live speed to running', () {
+    final filter = GpsMotionFilter();
+    final t0 = DateTime.utc(2026, 8, 26, 11);
+    var lat = 35.532;
+    const lon = 129.259;
+    filter.evaluate(
+      now: t0,
+      lat: lat,
+      lon: lon,
+      hAccM: 5,
+      rawSpeedMs: 1.5,
+      speedAccuracyMs: 0.5,
+      cadenceSpm: 110,
+    );
+    for (var i = 1; i <= 8; i++) {
+      lat += 1.5 / 111000;
+      filter.evaluate(
+        now: t0.add(Duration(seconds: i)),
+        lat: lat,
+        lon: lon,
+        hAccM: 5,
+        rawSpeedMs: 1.5,
+        speedAccuracyMs: 0.5,
+        cadenceSpm: 110,
+      );
+    }
+    lat += 5.5 / 111000;
+    final spiked = filter.evaluate(
+      now: t0.add(const Duration(seconds: 9)),
+      lat: lat,
+      lon: lon,
+      hAccM: 5,
+      rawSpeedMs: 1.5,
+      speedAccuracyMs: 0.5,
+      cadenceSpm: 110,
+    );
+    expect(spiked.filteredSpeedMs ?? 0, lessThan(4.2)); // < ~15 km/h
+  });
+
+  test('sparse unique GPS + clones keeps avg near true walk pace', () async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final start = DateTime.utc(2026, 8, 26, 12);
+    final session = await repo.createSession(
+      trackMode: false,
+      startedAt: start,
+      activity: ActivityKind.walk,
+    );
+    final pipe = RecordingPipeline(
+      repo: repo,
+      sessionId: session.id,
+      startedAt: start,
+      trackMode: false,
+      activity: ActivityKind.walk,
+    );
+    await pipe.restore();
+    var lat = 35.532;
+    const lon = 129.259;
+    const speedMs = 1.55;
+    RecordingSnapshot? snap;
+    for (var tick = 0; tick < 60; tick++) {
+      if (tick % 4 == 0) {
+        lat += speedMs * 4 / 111000;
+        pipe
+          ..onCadence(null)
+          ..onFix(
+            LocationFix(
+              ts: start.add(Duration(seconds: tick)),
+              lat: lat,
+              lng: lon,
+              // Under-reporting Doppler must not dominate live speed.
+              speedMs: 1.1,
+              speedAccuracyMs: 0.4,
+              hAccM: 8,
+            ),
+          );
+      }
+      snap = await pipe.sampleNow(start.add(Duration(seconds: tick)));
+    }
+    expect(snap, isNotNull);
+    final dist = snap!.totalDistM;
+    final movingS = snap.movingDurationMs / 1000.0;
+    expect(movingS, greaterThan(40)); // clones still count moving time
+    final avgKmh = (dist / 1000) / (movingS / 3600);
+    expect(avgKmh, closeTo(speedMs * 3.6, 1.2));
+    expect(snap.speedKmh ?? 0, greaterThan(4.5));
+    expect(snap.speedKmh ?? 0, lessThan(7.0));
+  });
 }
 
 double _walkLaps({

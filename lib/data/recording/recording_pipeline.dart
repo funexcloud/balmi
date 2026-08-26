@@ -311,6 +311,12 @@ class RecordingPipeline {
           walkDistM: walkDistM,
           runDistM: runDistM,
         );
+      } else if ((_displaySpeedMs ?? 0) >= 0.4) {
+        // Android often re-emits the same GPS fix at 1Hz. Unique-fix
+        // consume skips distance, but the user is still moving — keep the
+        // moving clock aligned so avg = dist / movingTime stays honest when
+        // the next unique fix credits the chord.
+        movingMs += _elapsedTickMs(now);
       }
     }
 

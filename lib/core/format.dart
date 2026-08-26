@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../domain/engines/live_speed.dart';
+
 String formatKm(double meters) => (meters / 1000).toStringAsFixed(2);
 
 String formatMeters(double meters) => '${meters.round()}m';
@@ -45,8 +47,8 @@ String formatRecordingNotification({
 
 /// Current pace from km/h, mockup form `m'ss"`. Slow/unknown → `--'--"`.
 String formatPace(double speedKmh) {
-  if (speedKmh <= 0.5) return '--\'--"';
-  final p = 60 / speedKmh;
+  final p = paceMinPerKm(speedKmh);
+  if (p == null) return '--\'--"';
   var m = p.floor();
   var s = ((p - m) * 60).round();
   if (s == 60) {
