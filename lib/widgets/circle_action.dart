@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
+import 'balmi_dock.dart';
 
 /// Icon-only round control. Not a labeled menu item.
 class CircleAction extends StatelessWidget {
@@ -61,17 +62,51 @@ class CircleAction extends StatelessWidget {
   }
 }
 
+/// Modal sheet that sits **above** the floating [BalmiDock].
+///
+/// Default [showModalBottomSheet] anchors to the screen bottom, so the sheet
+/// (and its CTAs) end up behind the dock. We clear [BalmiDock.extent] under a
+/// transparent sheet chrome so content paints above the dock.
 Future<void> showBalmiSheet({
   required BuildContext context,
   required WidgetBuilder builder,
 }) {
+  final dockClearance = BalmiDock.extent(context);
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: BalmiColors.surface,
-    showDragHandle: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-    ),
-    builder: builder,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    barrierColor: Colors.black54,
+    builder: (ctx) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: dockClearance),
+        child: Material(
+          color: BalmiColors.surface,
+          elevation: 8,
+          shadowColor: Colors.black.withValues(alpha: 0.12),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: BalmiColors.line,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              builder(ctx),
+            ],
+          ),
+        ),
+      );
+    },
   );
 }

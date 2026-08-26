@@ -23,7 +23,6 @@ class LiveStatsSheet extends StatelessWidget {
     this.lapCount = 0,
     this.trackMode = false,
     this.showLaps = false,
-    this.liveSport,
     this.lastLapTimeS,
     this.movingDuration = Duration.zero,
   });
@@ -43,7 +42,6 @@ class LiveStatsSheet extends StatelessWidget {
   final int lapCount;
   final bool trackMode;
   final bool showLaps;
-  final String? liveSport;
   final double? lastLapTimeS;
   final Duration movingDuration;
 
@@ -84,21 +82,20 @@ class LiveStatsSheet extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Column(
               children: [
                 Row(
                   children: [
                     _cell(BalmiCopy.statTime, formatElapsed(elapsed)),
                     _divider(),
-                    _cell(BalmiCopy.statDistance, distM < 1000 ? formatMeters(distM) : '${formatKm(distM)}km'),
+                    _cell(
+                      BalmiCopy.statDistance,
+                      distM < 1000 ? formatMeters(distM) : '${formatKm(distM)}km',
+                    ),
                     if (_showLaps) ...[
                       _divider(),
                       _cell(BalmiCopy.statLaps, '$lapCount바퀴'),
-                    ],
-                    if (liveSport != null) ...[
-                      _divider(),
-                      _cell(BalmiCopy.activityAuto, liveSport!),
                     ],
                   ],
                 ),
@@ -128,10 +125,10 @@ class LiveStatsSheet extends StatelessWidget {
                   PathSpark(values: spark),
                   if (paused) ...[
                     const SizedBox(height: 8),
-                      Text(
-                        formatElapsed(pauseHold),
-                        style: BalmiTheme.num(size: 16),
-                      ),
+                    Text(
+                      formatElapsed(pauseHold),
+                      style: BalmiTheme.num(size: 16),
+                    ),
                   ],
                 ],
                 const SizedBox(height: 12),
@@ -174,9 +171,23 @@ class LiveStatsSheet extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(label, style: BalmiTheme.body(size: 11, color: BalmiColors.sub)),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+          ),
           const SizedBox(height: 2),
-          Text(value, style: BalmiTheme.num(size: 28)),
+          // Scale down so values like "00:48" / "0바퀴" never wrap mid-glyph.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              softWrap: false,
+              style: BalmiTheme.num(size: 22),
+            ),
+          ),
         ],
       ),
     );
@@ -185,8 +196,8 @@ class LiveStatsSheet extends StatelessWidget {
   Widget _divider() {
     return Container(
       width: 1,
-      height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      height: 36,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       color: BalmiColors.line,
     );
   }
