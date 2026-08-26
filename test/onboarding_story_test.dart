@@ -9,6 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('onboarding has four story pages with key copy', (tester) async {
+    final view = tester.view;
+    view.physicalSize = const Size(390, 844);
+    view.devicePixelRatio = 1.0;
+    addTearDown(view.resetPhysicalSize);
+    addTearDown(view.resetDevicePixelRatio);
+
     var done = false;
     await tester.pumpWidget(
       MaterialApp(
@@ -54,7 +60,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // PROMISE
-    expect(find.textContaining('단 한 걸음도'), findsOneWidget);
+    expect(find.text(BalmiCopy.onboardingPromiseTitle), findsOneWidget);
     expect(find.text(BalmiCopy.slogan), findsOneWidget);
     expect(find.text(BalmiCopy.subcopy), findsOneWidget);
     expect(find.text(BalmiCopy.onboardingStart), findsOneWidget);

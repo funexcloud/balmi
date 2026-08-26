@@ -185,58 +185,47 @@ class _MovePageState extends State<_MovePage>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _StoryHeader(
-            title: BalmiCopy.onboardingMoveTitle,
-            body: BalmiCopy.onboardingMoveBody,
-          ),
-          const SizedBox(height: 22),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _ctrl,
-              builder: (context, _) {
-                final t = Curves.easeOutCubic.transform(_ctrl.value);
-                final chipIndex = (_ctrl.value * _chips.length)
-                    .floor()
-                    .clamp(0, _chips.length - 1);
-                return Column(
-                  children: [
-                    OnboardingPathVisual(
-                      progress: t,
-                      variant: OnboardingPathVariant.single,
-                      height: 210,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (var i = 0; i < _chips.length; i++) ...[
-                          if (i > 0)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              child: Text(
-                                '→',
-                                style: BalmiTheme.body(
-                                  size: 13,
-                                  color: BalmiColors.sub,
-                                ),
-                              ),
-                            ),
-                          _ModeChip(label: _chips[i], active: i == chipIndex),
-                        ],
-                      ],
-                    ),
-                  ],
-                );
-              },
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final t = Curves.easeOutCubic.transform(_ctrl.value);
+        final chipIndex =
+            (_ctrl.value * _chips.length).floor().clamp(0, _chips.length - 1);
+        return _StoryScroll(
+          children: [
+            const _StoryHeader(
+              title: BalmiCopy.onboardingMoveTitle,
+              body: BalmiCopy.onboardingMoveBody,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 20),
+            OnboardingPathVisual(
+              progress: t,
+              variant: OnboardingPathVariant.single,
+              height: 180,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 0,
+              runSpacing: 8,
+              children: [
+                for (var i = 0; i < _chips.length; i++) ...[
+                  if (i > 0)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        '→',
+                        style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                      ),
+                    ),
+                  _ModeChip(label: _chips[i], active: i == chipIndex),
+                ],
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -297,75 +286,64 @@ class _OfflinePageState extends State<_OfflinePage>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _StoryHeader(
-            title: BalmiCopy.onboardingOfflineTitle,
-            body: BalmiCopy.onboardingOfflineBody,
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _ctrl,
-              builder: (context, _) {
-                // Path keeps growing even as network drops (5G → weak → none).
-                final pathT = (0.35 + _ctrl.value * 0.65).clamp(0.0, 1.0);
-                final phase = _ctrl.value < 0.33
-                    ? 0
-                    : _ctrl.value < 0.66
-                        ? 1
-                        : 2;
-                final netLabel = switch (phase) {
-                  0 => BalmiCopy.onboardingNet5g,
-                  1 => BalmiCopy.onboardingNetWeak,
-                  _ => BalmiCopy.onboardingNetNone,
-                };
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        _StatusPill(
-                          label: BalmiCopy.onboardingGpsOk,
-                          tone: BalmiColors.sage,
-                        ),
-                        const SizedBox(width: 8),
-                        _StatusPill(
-                          label: netLabel,
-                          tone: phase == 0
-                              ? BalmiColors.sage
-                              : phase == 1
-                                  ? BalmiColors.amber
-                                  : BalmiColors.plum,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    OnboardingPathVisual(
-                      progress: pathT,
-                      variant: OnboardingPathVariant.offline,
-                      networkPhase: phase,
-                      height: 200,
-                    ),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _StatusPill(
-                        label: BalmiCopy.onboardingOfflineBadge,
-                        tone: BalmiColors.potato,
-                        filled: true,
-                      ),
-                    ),
-                  ],
-                );
-              },
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        // Path keeps growing even as network drops (5G → weak → none).
+        final pathT = (0.35 + _ctrl.value * 0.65).clamp(0.0, 1.0);
+        final phase = _ctrl.value < 0.33
+            ? 0
+            : _ctrl.value < 0.66
+                ? 1
+                : 2;
+        final netLabel = switch (phase) {
+          0 => BalmiCopy.onboardingNet5g,
+          1 => BalmiCopy.onboardingNetWeak,
+          _ => BalmiCopy.onboardingNetNone,
+        };
+        return _StoryScroll(
+          children: [
+            const _StoryHeader(
+              title: BalmiCopy.onboardingOfflineTitle,
+              body: BalmiCopy.onboardingOfflineBody,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _StatusPill(
+                  label: BalmiCopy.onboardingGpsOk,
+                  tone: BalmiColors.sage,
+                ),
+                const SizedBox(width: 8),
+                _StatusPill(
+                  label: netLabel,
+                  tone: phase == 0
+                      ? BalmiColors.sage
+                      : phase == 1
+                          ? BalmiColors.amber
+                          : BalmiColors.plum,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            OnboardingPathVisual(
+              progress: pathT,
+              variant: OnboardingPathVariant.offline,
+              networkPhase: phase,
+              height: 170,
+            ),
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _StatusPill(
+                label: BalmiCopy.onboardingOfflineBadge,
+                tone: BalmiColors.potato,
+                filled: true,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -424,109 +402,97 @@ class _RecoveryPageState extends State<_RecoveryPage>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _StoryHeader(
-            title: BalmiCopy.onboardingRecoveryTitle,
-            body: BalmiCopy.onboardingRecoveryBody,
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _ctrl,
-              builder: (context, _) {
-                final t = _ctrl.value;
-                // 0–0.28 recording, 0.28–0.45 gone, 0.45–0.62 relaunch, 0.62–1 recovered
-                final phase = t < 0.28
-                    ? 0
-                    : t < 0.45
-                        ? 1
-                        : t < 0.62
-                            ? 2
-                            : 3;
-                final pathT = phase == 0
-                    ? (t / 0.28).clamp(0.0, 1.0)
-                    : phase == 1
-                        ? 0.0
-                        : phase == 2
-                            ? 0.15
-                            : Curves.easeOutCubic.transform(
-                                ((t - 0.62) / 0.38).clamp(0.0, 1.0),
-                              );
-                final dimmed = phase == 1;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AnimatedOpacity(
-                      duration: const Duration(milliseconds: 220),
-                      opacity: phase == 1 ? 0.15 : 1,
-                      child: OnboardingPathVisual(
-                        progress: pathT,
-                        variant: phase >= 3
-                            ? OnboardingPathVariant.recovered
-                            : OnboardingPathVariant.single,
-                        dimmed: dimmed,
-                        height: 180,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 280),
-                      child: Text(
-                        phase <= 1
-                            ? BalmiCopy.onboardingRecoveryDistance
-                            : phase == 2
-                                ? BalmiCopy.appName
-                                : BalmiCopy.onboardingRecoveryRestored,
-                        key: ValueKey(phase),
-                        textAlign: TextAlign.center,
-                        style: BalmiTheme.num(
-                          size: phase >= 3 ? 20 : 28,
-                          weight: FontWeight.w800,
-                          color: phase >= 3
-                              ? BalmiColors.potatoDk
-                              : BalmiColors.ink,
-                        ),
-                      ),
-                    ),
-                    if (phase >= 3) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _StatusPill(
-                            label: BalmiCopy.onboardingRecoveryBadge,
-                            tone: BalmiColors.sage,
-                            filled: true,
-                          ),
-                          const SizedBox(width: 8),
-                          _StatusPill(
-                            label: BalmiCopy.onboardingRecoveryBadgeEn,
-                            tone: BalmiColors.sage,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        BalmiCopy.onboardingRecoveryDistance,
-                        textAlign: TextAlign.center,
-                        style: BalmiTheme.body(
-                          size: 14,
-                          weight: FontWeight.w700,
-                          color: BalmiColors.sub,
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-              },
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final t = _ctrl.value;
+        // 0–0.28 recording, 0.28–0.45 gone, 0.45–0.62 relaunch, 0.62–1 recovered
+        final phase = t < 0.28
+            ? 0
+            : t < 0.45
+                ? 1
+                : t < 0.62
+                    ? 2
+                    : 3;
+        final pathT = phase == 0
+            ? (t / 0.28).clamp(0.0, 1.0)
+            : phase == 1
+                ? 0.0
+                : phase == 2
+                    ? 0.15
+                    : Curves.easeOutCubic.transform(
+                        ((t - 0.62) / 0.38).clamp(0.0, 1.0),
+                      );
+        final dimmed = phase == 1;
+        return _StoryScroll(
+          children: [
+            const _StoryHeader(
+              title: BalmiCopy.onboardingRecoveryTitle,
+              body: BalmiCopy.onboardingRecoveryBody,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 16),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 220),
+              opacity: phase == 1 ? 0.15 : 1,
+              child: OnboardingPathVisual(
+                progress: pathT,
+                variant: phase >= 3
+                    ? OnboardingPathVariant.recovered
+                    : OnboardingPathVariant.single,
+                dimmed: dimmed,
+                height: 150,
+              ),
+            ),
+            const SizedBox(height: 14),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              child: Text(
+                phase <= 1
+                    ? BalmiCopy.onboardingRecoveryDistance
+                    : phase == 2
+                        ? BalmiCopy.appName
+                        : BalmiCopy.onboardingRecoveryRestored,
+                key: ValueKey(phase),
+                textAlign: TextAlign.center,
+                style: BalmiTheme.num(
+                  size: phase >= 3 ? 20 : 28,
+                  weight: FontWeight.w800,
+                  color: phase >= 3 ? BalmiColors.potatoDk : BalmiColors.ink,
+                ),
+              ),
+            ),
+            if (phase >= 3) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatusPill(
+                    label: BalmiCopy.onboardingRecoveryBadge,
+                    tone: BalmiColors.sage,
+                    filled: true,
+                  ),
+                  _StatusPill(
+                    label: BalmiCopy.onboardingRecoveryBadgeEn,
+                    tone: BalmiColors.sage,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                BalmiCopy.onboardingRecoveryDistance,
+                textAlign: TextAlign.center,
+                style: BalmiTheme.body(
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: BalmiColors.sub,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -553,57 +519,70 @@ class _PromisePageState extends State<_PromisePage>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _StoryHeader(
-            title: BalmiCopy.onboardingPromiseTitle,
-            body: BalmiCopy.onboardingPromiseBody,
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _ctrl,
-              builder: (context, _) {
-                final t = Curves.easeOutCubic.transform(_ctrl.value);
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OnboardingPathVisual(
-                      progress: t,
-                      variant: OnboardingPathVariant.merged,
-                      height: 168,
-                    ),
-                    const SizedBox(height: 18),
-                    const BalmiWordmark(height: 36),
-                    const SizedBox(height: 12),
-                    Text(
-                      BalmiCopy.slogan,
-                      style: BalmiTheme.body(
-                        size: 15,
-                        weight: FontWeight.w800,
-                        height: 1.4,
-                        color: BalmiColors.potatoDk,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      BalmiCopy.subcopy,
-                      style: BalmiTheme.body(
-                        size: 13,
-                        color: BalmiColors.sub,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                );
-              },
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final t = Curves.easeOutCubic.transform(_ctrl.value);
+        return _StoryScroll(
+          children: [
+            const _StoryHeader(
+              title: BalmiCopy.onboardingPromiseTitle,
+              body: BalmiCopy.onboardingPromiseBody,
+            ),
+            const SizedBox(height: 16),
+            OnboardingPathVisual(
+              progress: t,
+              variant: OnboardingPathVariant.merged,
+              height: 150,
+            ),
+            const SizedBox(height: 18),
+            const BalmiWordmark(height: 36),
+            const SizedBox(height: 12),
+            Text(
+              BalmiCopy.slogan,
+              style: BalmiTheme.body(
+                size: 15,
+                weight: FontWeight.w800,
+                height: 1.4,
+                color: BalmiColors.potatoDk,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              BalmiCopy.subcopy,
+              style: BalmiTheme.body(
+                size: 13,
+                color: BalmiColors.sub,
+                height: 1.4,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StoryScroll extends StatelessWidget {
+  const _StoryScroll({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
