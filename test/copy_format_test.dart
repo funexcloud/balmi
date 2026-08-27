@@ -179,8 +179,34 @@ void main() {
     expect(detail, isNot(contains('overrideSegmentSport')));
     expect(detail, contains('BalmiCopy.sessionLandReward'));
     expect(detail, contains('SessionLandReward'));
+    expect(detail, contains('_landRewardSummary'));
     expect(BalmiCopy.sessionLandReward, '내 땅');
     expect(BalmiCopy.overrideSport, '종목 수정');
+  });
+
+  test('recording end surfaces have no 내 땅 보기 / land-map CTA', () {
+    final detail =
+        File('lib/features/session_detail/session_detail_screen.dart')
+            .readAsStringSync();
+    final endDialog =
+        File('lib/widgets/end_recording_dialog.dart').readAsStringSync();
+    final recording =
+        File('lib/features/recording/recording_screen.dart').readAsStringSync();
+    final copy = File('lib/core/copy.dart').readAsStringSync();
+
+    for (final src in [detail, endDialog, recording, copy]) {
+      expect(src, isNot(contains('내 땅 보기')));
+      expect(src, isNot(contains('내땅보기')));
+    }
+    for (final src in [detail, endDialog, recording]) {
+      expect(src, isNot(contains('openLandMap')));
+      expect(src, isNot(contains('openLandPreview')));
+    }
+    // Reward summary stays; faux CTA trailing / potato land button does not.
+    expect(detail, contains('_landRewardSummary'));
+    expect(detail, isNot(contains('_landRewardTrailing')));
+    expect(detail, isNot(contains('_landRewardCard')));
+    expect(detail, isNot(contains('showLand')));
   });
 
   test('map OSD has no flutter_map badge; OSM credit lives in settings', () {
