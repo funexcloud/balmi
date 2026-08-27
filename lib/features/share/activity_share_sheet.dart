@@ -5,6 +5,7 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../domain/engines/activity_share.dart';
 import '../../widgets/balmi_wordmark.dart';
+import '../../widgets/circle_action.dart';
 
 Future<void> openActivityShareSheet(
   BuildContext context, {
@@ -14,13 +15,9 @@ Future<void> openActivityShareSheet(
   required Duration duration,
   required int steps,
 }) {
-  return showModalBottomSheet<void>(
+  return showBalmiSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: BalmiColors.paper,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-    ),
     builder: (ctx) {
       return ActivityShareSheet(
         sessionId: sessionId,
@@ -75,24 +72,13 @@ class _ActivityShareSheetState extends State<ActivityShareSheet> {
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
-    final bottom = MediaQuery.paddingOf(context).bottom;
+    // Drag handle + dock clearance come from [showBalmiSheet].
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottom),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: BalmiColors.line,
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           Text(
             BalmiCopy.shareTitle,
             style: BalmiTheme.body(size: 18, weight: FontWeight.w800),

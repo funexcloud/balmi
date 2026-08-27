@@ -5,6 +5,7 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../domain/engines/activity_recovery.dart';
 import '../../domain/models/activity.dart';
+import '../../widgets/circle_action.dart';
 import 'activity_recovery_controller.dart';
 
 /// Compact entry on session summary / detail.
@@ -101,13 +102,9 @@ Future<void> openActivityRecoveryFlow(
   double? avgSpeedKmh,
   String? resumeCheckId,
 }) {
-  return showModalBottomSheet<void>(
+  return showBalmiSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: BalmiColors.paper,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => ChangeNotifierProvider.value(
       value: context.read<ActivityRecoveryController>(),
       child: ActivityRecoveryFlowSheet(
@@ -309,46 +306,32 @@ class _ActivityRecoveryFlowSheetState extends State<ActivityRecoveryFlowSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    // Drag handle, keyboard inset, and dock clearance come from [showBalmiSheet].
     final maxH = MediaQuery.sizeOf(context).height * 0.85;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxH),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottom),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: BalmiColors.line,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              BalmiCopy.activityRecoveryTitle,
+              style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              BalmiCopy.activityRecoveryDisclaimer,
+              style: BalmiTheme.body(size: 12, color: BalmiColors.sub, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: SingleChildScrollView(
+                child: _body(),
               ),
-              const SizedBox(height: 14),
-              Text(
-                BalmiCopy.activityRecoveryTitle,
-                style: BalmiTheme.body(size: 18, weight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                BalmiCopy.activityRecoveryDisclaimer,
-                style: BalmiTheme.body(size: 12, color: BalmiColors.sub, height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: _body(),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

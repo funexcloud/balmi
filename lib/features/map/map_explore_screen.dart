@@ -165,6 +165,8 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
           );
         }
         return ListView(
+          shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           children: [
             for (final s in _sessions)
