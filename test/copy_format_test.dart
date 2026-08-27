@@ -123,7 +123,7 @@ void main() {
         runDuration: const Duration(minutes: 8),
         runMeters: 2100,
       ),
-      '걷기 12m 1.20km / 뛰기 8m 2.10km',
+      '뛰기 8m 2.10km',
     );
     expect(formatPace(0.4), '--\'--"');
     expect(formatPace(10), '6\'00"');
@@ -171,42 +171,14 @@ void main() {
     expect(detail, contains('fitToPath: true'));
   });
 
-  test('session detail shows 내 땅 reward instead of 종목 수정', () {
+  test('session detail excludes 걷기 and 내 땅 rewards', () {
     final detail =
         File('lib/features/session_detail/session_detail_screen.dart')
             .readAsStringSync();
     expect(detail, isNot(contains('BalmiCopy.overrideSport')));
     expect(detail, isNot(contains('overrideSegmentSport')));
-    expect(detail, contains('BalmiCopy.sessionLandReward'));
-    expect(detail, contains('SessionLandReward'));
-    expect(detail, contains('_landRewardSummary'));
-    expect(BalmiCopy.sessionLandReward, '내 땅');
-    expect(BalmiCopy.overrideSport, '종목 수정');
-  });
-
-  test('recording end surfaces have no 내 땅 보기 / land-map CTA', () {
-    final detail =
-        File('lib/features/session_detail/session_detail_screen.dart')
-            .readAsStringSync();
-    final endDialog =
-        File('lib/widgets/end_recording_dialog.dart').readAsStringSync();
-    final recording =
-        File('lib/features/recording/recording_screen.dart').readAsStringSync();
-    final copy = File('lib/core/copy.dart').readAsStringSync();
-
-    for (final src in [detail, endDialog, recording, copy]) {
-      expect(src, isNot(contains('내 땅 보기')));
-      expect(src, isNot(contains('내땅보기')));
-    }
-    for (final src in [detail, endDialog, recording]) {
-      expect(src, isNot(contains('openLandMap')));
-      expect(src, isNot(contains('openLandPreview')));
-    }
-    // Reward summary stays; faux CTA trailing / potato land button does not.
-    expect(detail, contains('_landRewardSummary'));
-    expect(detail, isNot(contains('_landRewardTrailing')));
     expect(detail, isNot(contains('_landRewardCard')));
-    expect(detail, isNot(contains('showLand')));
+    expect(detail, isNot(contains('_landRewardTrailing')));
   });
 
   test('map OSD has no flutter_map badge; OSM credit lives in settings', () {

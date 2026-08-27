@@ -53,6 +53,7 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
   @override
   void didUpdateWidget(covariant FarmSpeechBubble oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_dismissed) return;
     if (oldWidget.lines.length != widget.lines.length ||
         !_sameLines(oldWidget.lines, widget.lines)) {
       _index = 0;
@@ -91,10 +92,10 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
     final multi = widget.lines.length > 1;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
-    // Soft cream fill that blends with day/night farm sky.
-    const fill = Color(0xE6FFF8EE); // ~90% opaque warm paper
-    const edge = Color(0x66C4B8A8); // soft taupe border
-    const inkSoft = Color(0xCC3D342C); // muted brown text
+    // Soft translucent glass fill that blends with day/night farm sky.
+    const fill = Color(0xF0FAF6F0); // ~94% opaque warm paper glass
+    const edge = Color(0x33C4B8A8); // subtle soft border
+    const inkSoft = Color(0xEE2D251E); // crisp dark brown text
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -104,43 +105,31 @@ class _FarmSpeechBubbleState extends State<FarmSpeechBubble> {
         label: line,
         hint: multi && _index < widget.lines.length - 1 ? '다음 안내' : '안내 닫기',
         excludeSemantics: true,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedSwitcher(
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 280),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                if (reduceMotion) return child;
-                final offset = Tween<Offset>(
-                  begin: const Offset(0, 0.12),
-                  end: Offset.zero,
-                ).animate(animation);
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(position: offset, child: child),
-                );
-              },
-              child: _BubbleBody(
-                key: ValueKey<String>('$line-$_index'),
-                text: line,
-                showHint: true,
-                fill: fill,
-                edge: edge,
-                ink: inkSoft,
-              ),
-            ),
-            CustomPaint(
-              size: const Size(16, 9),
-              painter: _BubbleTailPainter(
-                color: fill,
-                border: edge,
-              ),
-            ),
-          ],
+        child: AnimatedSwitcher(
+          duration: reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 280),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            if (reduceMotion) return child;
+            final offset = Tween<Offset>(
+              begin: const Offset(0, 0.12),
+              end: Offset.zero,
+            ).animate(animation);
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: offset, child: child),
+            );
+          },
+          child: _BubbleBody(
+            key: ValueKey<String>('$line-$_index'),
+            text: line,
+            showHint: true,
+            fill: fill,
+            edge: edge,
+            ink: inkSoft,
+          ),
         ),
       ),
     );
@@ -166,17 +155,23 @@ class _BubbleBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 260),
-      padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
+      constraints: const BoxConstraints(maxWidth: 270),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: edge, width: 1),
         boxShadow: [
           BoxShadow(
-            color: BalmiColors.ink.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0x18000000),
+            blurRadius: 14,
+            spreadRadius: -1,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: const Color(0x0C000000),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -190,17 +185,35 @@ class _BubbleBody extends StatelessWidget {
               size: 13,
               weight: FontWeight.w600,
               color: ink,
-              height: 1.35,
+              height: 1.38,
             ),
           ),
           if (showHint) ...[
-            const SizedBox(height: 3),
-            Text(
-              '탭',
-              style: BalmiTheme.body(
-                size: 10,
-                weight: FontWeight.w500,
-                color: BalmiColors.sub.withValues(alpha: 0.7),
+            const SizedBox(height: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: BalmiColors.ink.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '탭',
+                    style: BalmiTheme.body(
+                      size: 10,
+                      weight: FontWeight.w700,
+                      color: BalmiColors.sub.withValues(alpha: 0.85),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 12,
+                    color: BalmiColors.sub.withValues(alpha: 0.7),
+                  ),
+                ],
               ),
             ),
           ],

@@ -6,15 +6,17 @@ String formatKm(double meters) => (meters / 1000).toStringAsFixed(2);
 
 String formatMeters(double meters) => '${meters.round()}m';
 
-/// Result copy: 걷기 Xm Ykm / 뛰기 Xm Ykm — X is minutes, Y is km.
+/// Result copy: 뛰기 Xm Ykm — X is minutes, Y is km. Excludes 걷기.
 String walkRunResultLine({
   required Duration walkDuration,
   required double walkMeters,
   required Duration runDuration,
   required double runMeters,
 }) {
-  return '걷기 ${walkDuration.inMinutes}m ${formatKm(walkMeters)}km / '
-      '뛰기 ${runDuration.inMinutes}m ${formatKm(runMeters)}km';
+  if (runDuration > Duration.zero || runMeters > 0) {
+    return '뛰기 ${runDuration.inMinutes}m ${formatKm(runMeters)}km';
+  }
+  return '${walkDuration.inMinutes}m ${formatKm(walkMeters)}km';
 }
 
 String formatLapTts({required int lapNo, required double lapTimeS}) {

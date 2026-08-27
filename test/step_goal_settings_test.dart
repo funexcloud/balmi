@@ -71,6 +71,32 @@ void main() {
     expect(stepGoal.goal, 8000);
     expect(find.text('8,000걸음'), findsOneWidget);
 
+    // Verify dragging the step goal Slider updates goal
+    final stepSlider = find.byType(Slider).at(0);
+    await tester.ensureVisible(stepSlider);
+    await tester.pumpAndSettle();
+    await tester.drag(stepSlider, const Offset(50, 0));
+    await tester.pumpAndSettle();
+    expect(stepGoal.goal, greaterThan(8000));
+
+    // Verify dragging exercise time Slider updates exerciseMinutes
+    final timeSlider = find.byType(Slider).at(1);
+    await tester.ensureVisible(timeSlider);
+    await tester.pumpAndSettle();
+    final initialMin = stepGoal.exerciseMinutes;
+    await tester.drag(timeSlider, const Offset(60, 0));
+    await tester.pumpAndSettle();
+    expect(stepGoal.exerciseMinutes, greaterThan(initialMin));
+
+    // Verify dragging exercise distance Slider updates exerciseKm
+    final distSlider = find.byType(Slider).at(2);
+    await tester.ensureVisible(distSlider);
+    await tester.pumpAndSettle();
+    final initialKm = stepGoal.exerciseKm;
+    await tester.drag(distSlider, const Offset(60, 0));
+    await tester.pumpAndSettle();
+    expect(stepGoal.exerciseKm, greaterThan(initialKm));
+
     await tester.pumpWidget(
       MaterialApp(
         theme: BalmiTheme.light(),

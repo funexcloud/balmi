@@ -67,3 +67,7 @@ android/.gradle/
 # Docker / local data dumps
 docker-data/
 .gradle-home/
+
+landing/node_modules/
+landing/.next/
+

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -24,16 +22,9 @@ import '../activity_recovery/activity_recovery_flow.dart';
 import '../share/activity_share_sheet.dart';
 
 class SessionDetailScreen extends StatefulWidget {
-  const SessionDetailScreen({
-    super.key,
-    required this.sessionId,
-    this.autoOpenRecovery = false,
-  });
+  const SessionDetailScreen({super.key, required this.sessionId});
 
   final String sessionId;
-
-  /// After ending a live recording, open 회복 체크 once the detail loads.
-  final bool autoOpenRecovery;
 
   @override
   State<SessionDetailScreen> createState() => _SessionDetailScreenState();
@@ -49,7 +40,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Duration _run = Duration.zero;
   ActivityRecoveryRecord? _recovery;
   SessionLandReward _land = SessionLandReward.none;
-  var _autoRecoveryScheduled = false;
 
   @override
   void initState() {
@@ -91,20 +81,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _run = durs[Sport.run] ?? Duration.zero;
       _recovery = recoveryRow;
       _land = land;
-    });
-    _maybeAutoOpenRecovery();
-  }
-
-  void _maybeAutoOpenRecovery() {
-    if (!widget.autoOpenRecovery || _autoRecoveryScheduled) return;
-    final s = _session;
-    if (s == null || s.endedAt == null) return;
-    final status = _recovery?.status;
-    if (status != null && status.isTerminal) return;
-    _autoRecoveryScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(_openRecovery());
     });
   }
 
@@ -239,9 +215,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   fitToPath: true,
                 ),
                 const HeartbeatDivider(),
-                ..._segments.map(_segmentTile),
-                // Reward summary only — no land-map CTA on this end surface.
-                _landRewardSummary(),
+                ..._segments
+                    .where((seg) => Sport.fromWire(seg.sport) != Sport.walk)
+                    .map((seg) => _segmentTile(seg)),
                 if (_laps.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   ..._laps.map(
@@ -269,7 +245,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     return Card(
       child: ListTile(
         title: Text(
-          sport == Sport.run ? BalmiCopy.run : BalmiCopy.walk,
+          sport == Sport.run ? BalmiCopy.run : BalmiCopy.activityTrack,
           style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
         ),
         subtitle: Text(
@@ -278,31 +254,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           '${seg.userOverride == 1 ? ' · 수정됨' : ''}',
           style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
         ),
-      ),
-    );
-  }
-
-  /// Session-earned 내 땅 area — display only, not a land-map entry point.
-  Widget _landRewardSummary() {
-    final value = !_land.qualifies
-        ? BalmiCopy.sessionLandNone
-        : (_land.cellCount > 0
-            ? '+${_land.cellCount}칸 · ${formatAreaM2(_land.earnedM2)}'
-            : formatAreaM2(_land.earnedM2));
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Text(
-            BalmiCopy.sessionLandReward,
-            style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: BalmiTheme.body(size: 14, color: BalmiColors.sub),
-          ),
-        ],
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../core/copy.dart';
 import '../../core/theme.dart';
 import '../../domain/engines/activity_share.dart';
 import '../../widgets/balmi_wordmark.dart';
+
 import '../../widgets/circle_action.dart';
 
 Future<void> openActivityShareSheet(
@@ -17,7 +18,6 @@ Future<void> openActivityShareSheet(
 }) {
   return showBalmiSheet<void>(
     context: context,
-    isScrollControlled: true,
     builder: (ctx) {
       return ActivityShareSheet(
         sessionId: sessionId,
@@ -72,9 +72,8 @@ class _ActivityShareSheetState extends State<ActivityShareSheet> {
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
-    // Drag handle + dock clearance come from [showBalmiSheet].
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,9 +87,9 @@ class _ActivityShareSheetState extends State<ActivityShareSheet> {
             BalmiCopy.shareSubtitle,
             style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           _ShareCardPreview(summary: summary),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             BalmiCopy.shareStyleLabel,
             style: BalmiTheme.tracked(size: 10, color: BalmiColors.sub),
@@ -111,7 +110,7 @@ class _ActivityShareSheetState extends State<ActivityShareSheet> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: Text(
@@ -126,12 +125,12 @@ class _ActivityShareSheetState extends State<ActivityShareSheet> {
             activeThumbColor: BalmiColors.potato,
             onChanged: (v) => setState(() => _hideStartEnd = v),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             BalmiCopy.shareDeepLinkStubHint,
             style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           FilledButton(
             onPressed: _share,
             style: FilledButton.styleFrom(
@@ -220,10 +219,13 @@ class _ShareCardPreview extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF8F3), Color(0xFFF3F3F3)],
+          colors: [Color(0xFFFFF4EE), Color(0xFFFDE8DC)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: BalmiColors.line),
+        border: Border.all(
+          color: BalmiColors.potato.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +234,11 @@ class _ShareCardPreview extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             summary.headline,
-            style: BalmiTheme.body(size: 17, weight: FontWeight.w800),
+            style: BalmiTheme.body(
+              size: 17,
+              weight: FontWeight.w800,
+              color: BalmiColors.potatoDk,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -242,7 +248,7 @@ class _ShareCardPreview extends StatelessWidget {
               if (summary.avgPaceLabel != null)
                 '페이스 ${summary.avgPaceLabel}',
             ].join(' · '),
-            style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+            style: BalmiTheme.body(size: 13, color: BalmiColors.ink.withValues(alpha: 0.8)),
           ),
           if (summary.includeMap) ...[
             const SizedBox(height: 10),
@@ -258,8 +264,8 @@ class _ShareCardPreview extends StatelessWidget {
             summary.tagline,
             style: BalmiTheme.body(
               size: 13,
-              weight: FontWeight.w700,
-              color: BalmiColors.ink,
+              weight: FontWeight.w800,
+              color: BalmiColors.potatoDk,
             ),
           ),
         ],

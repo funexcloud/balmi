@@ -60,7 +60,7 @@ void main() {
     expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
   });
 
-  testWidgets('new tip set shows again after farm state changes',
+  testWidgets('dismissed speech bubble stays hidden when farm state updates during actions',
       (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -87,9 +87,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(FarmSpeechBubble), findsOneWidget);
-    expect(find.text(BalmiCopy.herdsFed), findsOneWidget);
-    expect(tester.getSize(find.byType(FarmSpeechBubble)).height, greaterThan(0));
+    // Once dismissed, state changes (actions) do not resurrect the speech bubble.
+    expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
   });
 
   testWidgets('speech bubble tap does not open farm; scene tap does',

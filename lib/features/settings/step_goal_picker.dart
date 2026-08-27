@@ -40,10 +40,38 @@ class StepGoalPicker extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '${formatSteps(goal.goal)}걸음',
-          style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${formatSteps(goal.goal)}걸음',
+              style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+            ),
+            Text(
+              '드래그로 조절',
+              style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+            ),
+          ],
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: BalmiColors.potato,
+            inactiveTrackColor: BalmiColors.mist,
+            thumbColor: BalmiColors.potato,
+            overlayColor: BalmiColors.potato.withValues(alpha: 0.12),
+            trackHeight: 6,
+          ),
+          child: Slider(
+            value: goal.goal.toDouble().clamp(1000.0, 30000.0),
+            min: 1000.0,
+            max: 30000.0,
+            divisions: 58,
+            label: '${formatSteps(goal.goal)}걸음',
+            onChanged: (val) {
+              goal.setGoal((val / 500).round() * 500);
+            },
+          ),
         ),
       ],
     );

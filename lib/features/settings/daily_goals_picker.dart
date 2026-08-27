@@ -77,10 +77,38 @@ class _ExerciseMinutesPicker extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '$value${BalmiCopy.goalMinutesUnit}',
-          style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$value${BalmiCopy.goalMinutesUnit}',
+              style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+            ),
+            Text(
+              '드래그로 조절',
+              style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+            ),
+          ],
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: BalmiColors.potato,
+            inactiveTrackColor: BalmiColors.mist,
+            thumbColor: BalmiColors.potato,
+            overlayColor: BalmiColors.potato.withValues(alpha: 0.12),
+            trackHeight: 6,
+          ),
+          child: Slider(
+            value: value.toDouble().clamp(5.0, 180.0),
+            min: 5.0,
+            max: 180.0,
+            divisions: 35,
+            label: '$value${BalmiCopy.goalMinutesUnit}',
+            onChanged: (val) {
+              onChanged((val / 5).round() * 5);
+            },
+          ),
         ),
       ],
     );
@@ -121,10 +149,38 @@ class _ExerciseKmPicker extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '${value.toStringAsFixed(2)} ${BalmiCopy.goalKmUnit}',
-          style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${value.toStringAsFixed(1)} ${BalmiCopy.goalKmUnit}',
+              style: BalmiTheme.num(size: 18, color: BalmiColors.ink),
+            ),
+            Text(
+              '드래그로 조절',
+              style: BalmiTheme.body(size: 11, color: BalmiColors.sub),
+            ),
+          ],
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: BalmiColors.potato,
+            inactiveTrackColor: BalmiColors.mist,
+            thumbColor: BalmiColors.potato,
+            overlayColor: BalmiColors.potato.withValues(alpha: 0.12),
+            trackHeight: 6,
+          ),
+          child: Slider(
+            value: value.clamp(0.5, 30.0),
+            min: 0.5,
+            max: 30.0,
+            divisions: 59,
+            label: '${value.toStringAsFixed(1)} ${BalmiCopy.goalKmUnit}',
+            onChanged: (val) {
+              onChanged((val * 2).round() / 2.0);
+            },
+          ),
         ),
       ],
     );
