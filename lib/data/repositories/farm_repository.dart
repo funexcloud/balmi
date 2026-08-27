@@ -854,7 +854,7 @@ LIMIT ?
   }) async {
     final at = now ?? DateTime.now();
     final dayKey = localDateKey(at);
-    final prior = await listUmatchiActions(sinceDays: 2);
+    final prior = await listUmatchiActions(sinceDays: 2, now: at);
     if (!canSendUmatchi(
       helperId: helperUserId,
       recipientId: recipientUserId,
@@ -914,9 +914,12 @@ WHERE user_id = ?
     return true;
   }
 
-  Future<List<UmatchiAction>> listUmatchiActions({int sinceDays = 30}) async {
+  Future<List<UmatchiAction>> listUmatchiActions({
+    int sinceDays = 30,
+    DateTime? now,
+  }) async {
     await ensureInitialized();
-    final since = DateTime.now()
+    final since = (now ?? DateTime.now())
         .subtract(Duration(days: sinceDays))
         .millisecondsSinceEpoch;
     final rows = await db.customSelect(

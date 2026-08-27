@@ -131,7 +131,7 @@ void main() {
       );
     });
 
-    test('병아리 early stage uses incubating egg copy', () {
+    test('병아리 stage uses grow copy after incubating start beat', () {
       final mid = evaluateAnimal(
         animal: chicken,
         cumulativeFeed: 60,
@@ -141,7 +141,7 @@ void main() {
         now: DateTime(2026, 8, 26, 12),
       );
       final line = animalStatusLine(animal: chicken, status: mid);
-      expect(line, '계란을 품고 있어요!');
+      expect(line, '닭 · 병아리가 자라고 있어요');
       expect(line, isNot(contains('사료')));
       expect(line, isNot(contains('400')));
       expect(line, isNot(contains('120까지')));

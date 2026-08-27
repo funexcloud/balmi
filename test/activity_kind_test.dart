@@ -59,16 +59,11 @@ void main() {
     expect(sheet, contains('balmi-sheet-chrome'));
     // Route chrome is transparent for rounded corners; dock cover is opaque.
     expect(sheet, contains('Colors.transparent'));
-<<<<<<< HEAD
-    expect(sheet, contains('balmi-sheet-dock-cover'));
-    expect(sheet, contains('useRootNavigator: true'));
-=======
     expect(sheet, contains('useRootNavigator: true'));
     expect(
       sheet,
       isNot(contains('padding: EdgeInsets.only(bottom: dockClearance)')),
     );
->>>>>>> origin/cursor/dock-occlusion-all-6f2e
     final home = File('lib/features/home/home_screen.dart').readAsStringSync();
     expect(home, contains('_pickTrackSpec'));
     expect(home, contains('TrackSpecPills'));
