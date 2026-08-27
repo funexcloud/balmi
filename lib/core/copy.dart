@@ -273,7 +273,8 @@ abstract final class BalmiCopy {
   static const farmV2Hint =
       '걸으면 사료·물·영양제를 받아요. 아래에서 나눠 주면 작물과 가축이 자라요.';
   static const farmV2NeedResource = '자원이 부족해요. 오늘 걸으면 더 받을 수 있어요';
-  static const farmV2NoSlot = '나눠 줄 작물이나 가축이 없어요. 빈 슬롯을 눌러 심거나 품으세요';
+  static const farmV2NoSlot =
+      '나눠 줄 작물이나 가축이 없어요. 빈 슬롯을 눌러 심거나 입양·품으세요';
   static const farmV2ApplyFailed = '자원을 나누지 못했어요';
   static const farmV2Applied = '잘 자라고 있어요';
   static const farmV2Planted = '씨앗을 뿌렸어요!';
@@ -288,6 +289,8 @@ abstract final class BalmiCopy {
   /// After drag/long-press rearrange between unlocked same-type slots.
   static const farmV2Moved = '자리를 옮겼어요';
   static const farmV2MoveFailed = '그 자리로는 옮길 수 없어요';
+  static const farmFieldSheep = '들판에 새끼양이 생겼어요';
+  static const farmFieldCow = '들판에 송아지가 생겼어요';
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';

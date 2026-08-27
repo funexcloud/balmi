@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
+import '../domain/engines/farm_animal.dart';
 import '../domain/engines/farm_life.dart';
 import '../domain/engines/farm_scene_ui.dart';
 import '../domain/engines/farm_slot_move.dart';
@@ -64,17 +65,28 @@ class FarmSceneV2 extends StatelessWidget {
               // Land preview keeps its own status line below the scene.
               showSpeechCaptions: false,
             ),
-            ...snapshot.slots.map((slot) => _SlotAnchor(
-                  slot: slot,
-                  crop: slot.occupant?.cropId != null
-                      ? crops[slot.occupant!.cropId!]
-                      : null,
-                  animal: slot.occupant?.animalId != null
-                      ? animals[slot.occupant!.animalId!]
-                      : null,
-                  onTap: onSlotTap == null ? null : () => onSlotTap!(slot),
-                  onSlotMove: onSlotMove,
-                )),
+            ...snapshot.slots.map((slot) {
+              final owned = snapshot.slots
+                  .map((s) => s.occupant?.animalId)
+                  .whereType<String>();
+              final next = pickNextAdoptableAnimal(
+                catalog: animals.values.toList(),
+                occupiedAnimalIds: owned,
+                farmLevel: snapshot.farm.farmLevel,
+              );
+              return _SlotAnchor(
+                slot: slot,
+                crop: slot.occupant?.cropId != null
+                    ? crops[slot.occupant!.cropId!]
+                    : null,
+                animal: slot.occupant?.animalId != null
+                    ? animals[slot.occupant!.animalId!]
+                    : null,
+                nextAdoptable: next,
+                onTap: onSlotTap == null ? null : () => onSlotTap!(slot),
+                onSlotMove: onSlotMove,
+              );
+            }),
             Positioned(
               left: 12,
               top: 10,
@@ -114,6 +126,7 @@ class _SlotAnchor extends StatelessWidget {
     required this.slot,
     required this.crop,
     required this.animal,
+    this.nextAdoptable,
     this.onTap,
     this.onSlotMove,
   });
@@ -121,6 +134,7 @@ class _SlotAnchor extends StatelessWidget {
   final FarmSlotView slot;
   final CropDefinition? crop;
   final AnimalDefinition? animal;
+  final AnimalDefinition? nextAdoptable;
   final VoidCallback? onTap;
   final FarmSlotMoveCallback? onSlotMove;
 
@@ -150,6 +164,7 @@ class _SlotAnchor extends StatelessWidget {
                   slot: slot,
                   crop: crop,
                   animal: animal,
+                  nextAdoptable: nextAdoptable,
                   onTap: onTap,
                   onSlotMove: onSlotMove,
                 ),
@@ -167,6 +182,7 @@ class _SlotChip extends StatelessWidget {
     required this.slot,
     required this.crop,
     required this.animal,
+    this.nextAdoptable,
     this.onTap,
     this.onSlotMove,
   });
@@ -174,6 +190,7 @@ class _SlotChip extends StatelessWidget {
   final FarmSlotView slot;
   final CropDefinition? crop;
   final AnimalDefinition? animal;
+  final AnimalDefinition? nextAdoptable;
   final VoidCallback? onTap;
   final FarmSlotMoveCallback? onSlotMove;
 
@@ -181,7 +198,12 @@ class _SlotChip extends StatelessWidget {
       slot.occupant != null && !slot.occupant!.isEmpty && slot.unlocked;
 
   Widget _chip({required bool highlight, double opacity = 1}) {
-    final label = slotDisplayLabel(slot: slot, crop: crop, animal: animal);
+    final label = slotDisplayLabel(
+      slot: slot,
+      crop: crop,
+      animal: animal,
+      nextAdoptable: nextAdoptable,
+    );
     final icon = slotIcon(slot: slot, crop: crop, animal: animal);
     final empty = slot.occupant == null || slot.occupant!.isEmpty;
     final alpha = (slot.unlocked ? 1.0 : 0.35) * opacity;

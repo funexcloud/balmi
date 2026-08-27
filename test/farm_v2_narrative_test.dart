@@ -181,7 +181,15 @@ void main() {
         occupant: null,
         unlocked: true,
       );
-      expect(slotDisplayLabel(slot: empty, crop: null, animal: null), '품기');
+      expect(
+        slotDisplayLabel(
+          slot: empty,
+          crop: null,
+          animal: null,
+          nextAdoptable: chicken,
+        ),
+        '품기',
+      );
     });
 
     test('toast / BalmiCopy adopt + plant match story beats', () {

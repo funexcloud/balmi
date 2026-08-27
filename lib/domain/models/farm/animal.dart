@@ -54,11 +54,7 @@ class AnimalDefinition {
 
   int get adultFeedThreshold {
     final adult = growthStages.where(
-      (s) =>
-          s.stageName == '성체' ||
-          s.stageName == '암탉' ||
-          s.stageName == '다 큰 양' ||
-          s.stageName == '다 큰 소',
+      (s) => s.stageName == '성체' || s.stageName == '암탉',
     );
     if (adult.isNotEmpty) return adult.first.feedThreshold;
     return growthStages.isEmpty ? 0 : growthStages.last.feedThreshold;

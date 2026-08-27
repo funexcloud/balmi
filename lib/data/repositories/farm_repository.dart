@@ -27,6 +27,7 @@ class FarmRepository {
     await createFarmV2Tables(db);
     await seedFarmV2MasterData(db);
     await patchFarmV2ChickenEggNarrative(db);
+    await patchFarmV2LivestockSheepCowNarrative(db);
     final now = DateTime.now();
     final ms = now.millisecondsSinceEpoch;
     await db.customStatement(

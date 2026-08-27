@@ -144,7 +144,12 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
       _busy = false;
     });
     if (result.raised != null) {
-      _toast(farmBirthToastForHerd(result.raised!));
+      final raised = result.raised!;
+      _toast(switch (raised) {
+        HerdKind.sheep => BalmiCopy.farmFieldSheep,
+        HerdKind.cattle => BalmiCopy.farmFieldCow,
+        _ => farmBirthToastForHerd(raised),
+      });
     } else if (result.unlocked != null) {
       _toast('${result.unlocked!.label} · ${BalmiCopy.waterDone}');
     } else {
