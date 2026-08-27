@@ -6,6 +6,8 @@ import '../../core/theme.dart';
 import '../../data/repositories/session_repository.dart';
 import '../../domain/engines/workout_stats.dart';
 import '../../widgets/balmi_app_bar.dart';
+import 'mission_settings_controller.dart';
+import 'mission_settings_sheet.dart';
 
 class MissionsScreen extends StatelessWidget {
   const MissionsScreen({super.key});
@@ -13,17 +15,55 @@ class MissionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.read<SessionRepository>();
+    final settings = context.watch<MissionSettingsController>();
     return Scaffold(
       backgroundColor: BalmiColors.paper,
-      appBar: const BalmiAppBar(title: BalmiCopy.missions),
+      appBar: BalmiAppBar(
+        title: BalmiCopy.missions,
+        actions: [
+          IconButton(
+            tooltip: BalmiCopy.missionSettings,
+            icon: const Icon(Icons.tune),
+            onPressed: () => openMissionSettingsSheet(context),
+          ),
+        ],
+      ),
       body: FutureBuilder<List<WorkoutRow>>(
         future: repo.closedWorkouts(),
         builder: (context, snap) {
-          final missions = missionPresets(snap.data ?? [], DateTime.now());
+          final presets = missionPresets(snap.data ?? [], DateTime.now());
+          final missions = settings.filterMissions(presets);
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
-              for (final m in missions) _MissionTile(mission: m),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.settings_outlined, color: BalmiColors.potato),
+                title: Text(
+                  BalmiCopy.missionSettings,
+                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+                ),
+                subtitle: Text(
+                  BalmiCopy.missionSettingsHint,
+                  style: BalmiTheme.body(size: 12, color: BalmiColors.sub, height: 1.35),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: BalmiColors.sub),
+                onTap: () => openMissionSettingsSheet(context),
+              ),
+              const SizedBox(height: 4),
+              const Divider(color: BalmiColors.line),
+              const SizedBox(height: 8),
+              if (missions.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    BalmiCopy.missionEmptyFiltered,
+                    style: BalmiTheme.body(size: 14, color: BalmiColors.sub, height: 1.4),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                for (final m in missions) _MissionTile(mission: m),
             ],
           );
         },

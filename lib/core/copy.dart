@@ -98,6 +98,16 @@ abstract final class BalmiCopy {
   static const myActivity = '나의 활동';
   static const mapExplore = '지도탐색';
   static const missions = '미션';
+  static const missionSettings = '미션 설정';
+  static const missionSettingsHint =
+      '미션 화면에서만 쓰는 설정이에요. 건강습관·일일 목표와는 별개입니다.';
+  static const missionReminder = '미션 알림';
+  static const missionReminderHint = '미션 진행·완료를 알려 줄 때 씁니다.';
+  static const missionShowCompleted = '완료한 미션 보기';
+  static const missionShowCompletedHint = '끄면 아직 진행 중인 미션만 보여 줍니다.';
+  static const missionTypes = '표시할 미션';
+  static const missionTypesHint = '목록에 넣을 미션 종류를 골라 주세요.';
+  static const missionEmptyFiltered = '표시할 미션이 없어요. 미션 설정에서 켜 주세요.';
   static const events = '대회';
   static const todaySummary = '오늘의 운동 요약';
   static const todayExercise = '오늘의 운동';

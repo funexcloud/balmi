@@ -170,6 +170,31 @@ List<WorkoutRow> inLocalMonth(List<WorkoutRow> rows, DateTime day) {
       .toList();
 }
 
+/// Built-in mission ids for 미션 설정 (not health habits / daily goals).
+const kMissionToday30m = 'today_30m';
+const kMissionWeek15km = 'week_15km';
+const kMissionTrack10 = 'track_10';
+
+const kKnownMissionIds = <String>[
+  kMissionToday30m,
+  kMissionWeek15km,
+  kMissionTrack10,
+];
+
+/// Display title for a known mission id (settings toggles).
+String missionTitleForId(String id) {
+  switch (id) {
+    case kMissionToday30m:
+      return '오늘 30분';
+    case kMissionWeek15km:
+      return '이번 주 15km';
+    case kMissionTrack10:
+      return '트랙 10바퀴';
+    default:
+      return id;
+  }
+}
+
 /// Built-in mission cards for 미션. Do **not** re-add `today_feed_800m`
 /// (`오늘 800m — 목장 먹이`) — removed for 0.1.13; farm feed is not a mission.
 List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
@@ -178,22 +203,22 @@ List<MissionSnapshot> missionPresets(List<WorkoutRow> closed, DateTime now) {
   final weekLaps = inLocalWeek(closed, now).fold<int>(0, (s, r) => s + r.laps);
   return [
     MissionSnapshot(
-      id: 'today_30m',
-      title: '오늘 30분',
+      id: kMissionToday30m,
+      title: missionTitleForId(kMissionToday30m),
       current: today.duration.inMinutes.toDouble(),
       target: 30,
       unit: '분',
     ),
     MissionSnapshot(
-      id: 'week_15km',
-      title: '이번 주 15km',
+      id: kMissionWeek15km,
+      title: missionTitleForId(kMissionWeek15km),
       current: week.distM / 1000,
       target: 15,
       unit: 'km',
     ),
     MissionSnapshot(
-      id: 'track_10',
-      title: '트랙 10바퀴',
+      id: kMissionTrack10,
+      title: missionTitleForId(kMissionTrack10),
       current: weekLaps.toDouble(),
       target: 10,
       unit: '바퀴',
