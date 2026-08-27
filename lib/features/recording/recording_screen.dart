@@ -94,7 +94,12 @@ class _RecordingScreenState extends State<RecordingScreen>
     if (id == null) return;
     if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     await nav.push(
-      MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: id)),
+      MaterialPageRoute(
+        builder: (_) => SessionDetailScreen(
+          sessionId: id,
+          autoOpenRecovery: true,
+        ),
+      ),
     );
   }
 

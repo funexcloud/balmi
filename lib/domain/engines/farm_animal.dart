@@ -141,24 +141,6 @@ String animalStatusLine({
   };
 }
 
-/// Chicken early / chick incubating status (egg story).
-const kChickenIncubatingCopy = '계란을 품고 있어요!';
-
-bool _isChickenIncubatingStage(AnimalDefinition animal, String stageName) {
-  final chicken =
-      animal.startsAsEgg || animal.animalId.toLowerCase().contains('chicken');
-  if (!chicken) {
-    // Generic egg/알 labels still use incubating copy.
-    return stageName == '계란' || stageName == '품는 중' || stageName == '알';
-  }
-  // Align 병아리/새끼 early messaging with incubating-egg story.
-  return stageName == '계란' ||
-      stageName == '품는 중' ||
-      stageName == '알' ||
-      stageName == '병아리' ||
-      stageName == '새끼';
-}
-
 /// Growth copy without opaque feed totals (e.g. old 「사료 400까지」).
 ///
 /// Causal order: stage-0 start beat (egg / birth) before any grow copy.

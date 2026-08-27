@@ -205,7 +205,7 @@ NSLocationWhenInUse, NSLocationAlwaysAndWhenInUse, UIBackgroundModes location.
 
 ### 사용자 흐름 (MVP)
 
-1. 세션 종료/상세 화면에 **「회복 체크」** 카드(최소 진입점).
+1. 세션 종료 → 기록 상세(경로) 진입 직후 **「회복 체크」** 바텀시트를 자동으로 올림(카드 진입점도 유지).
 2. **“현재 몸 상태는 어떤가요?”** — 정상 / 많이 지침 / 몸이 떨림 / 어지러움 / 메스꺼움 / 근육통·통증.
 3. 선택 + 세션 지표(거리·시간·평균 속도·활동 종류)로 **안전한 생활 안내** 표시.
    - 예(떨림): 앉아서 쉬기 → 물 마시기 → 탄수화물 간식.  
@@ -229,7 +229,7 @@ NSLocationWhenInUse, NSLocationAlwaysAndWhenInUse, UIBackgroundModes location.
 
 ### 통합
 
-- 세션 상세(종료 후) 진입. 농장/게이미피케이션과 **독립**(차단하지 않음).
+- 세션 상세(종료 후) 진입 후 회복 체크 바텀시트 자동 표시. 농장/게이미피케이션과 **독립**(차단하지 않음).
 - 로컬 알림은 식후 걷기와 동일 계열(`flutter_local_notifications`).
 - 스키마: Drift `schemaVersion` 8 + `activity_recovery_checks` 테이블.
 
