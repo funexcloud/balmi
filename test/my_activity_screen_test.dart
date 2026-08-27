@@ -91,8 +91,10 @@ void main() {
     expect(find.text(BalmiCopy.periodToday), findsOneWidget);
     expect(find.text(BalmiCopy.periodWeek), findsOneWidget);
     expect(find.text(BalmiCopy.periodMonth), findsOneWidget);
-    expect(find.text(BalmiCopy.workoutLogTab), findsOneWidget);
+    // Empty period: no orphan 운동기록 header (summary already has empty copy).
+    expect(find.text(BalmiCopy.workoutLogTab), findsNothing);
     expect(find.text(BalmiCopy.activityFilterSection), findsOneWidget);
+    expect(find.text(BalmiCopy.todayEmpty), findsOneWidget);
   });
 
   testWidgets('My Activity exercise card reflects recorded workout, not step hero', (tester) async {
@@ -206,11 +208,151 @@ void main() {
     expect(find.text(BalmiCopy.weekSummary), findsOneWidget);
     expect(find.text(BalmiCopy.weekEmpty), findsOneWidget);
     expect(find.text(BalmiCopy.todayEmpty), findsNothing);
+    expect(find.text(BalmiCopy.workoutLogTab), findsNothing);
 
     await tester.tap(find.text(BalmiCopy.periodMonth));
     await tester.pumpAndSettle();
     expect(find.text(BalmiCopy.monthSummary), findsOneWidget);
     expect(find.text(BalmiCopy.monthEmpty), findsOneWidget);
     expect(find.text(BalmiCopy.todayEmpty), findsNothing);
+    expect(find.text(BalmiCopy.workoutLogTab), findsNothing);
+  });
+
+  testWidgets('week tab includes earlier-this-week sessions, not only today', (tester) async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final steps = StepService(repo: repo);
+    addTearDown(steps.dispose);
+    final goals = StepGoalController(store: StepGoalStore(db));
+    addTearDown(goals.dispose);
+    await goals.bootstrap();
+
+    final now = DateTime.now();
+    // Place a walk earlier in the ISO week but not today (clamp so it stays Mon+).
+    final daysFromMonday = now.weekday - 1;
+    final earlierOffset = daysFromMonday >= 1 ? 1 : 0;
+    if (earlierOffset == 0) {
+      // Monday: seed yesterday would fall in prior week — use today-only + assert week == day.
+      final id = repo.newId();
+      await db.into(db.sessions).insert(
+            SessionsCompanion.insert(
+              id: id,
+              startedAt: now.subtract(const Duration(hours: 3)),
+              endedAt: Value(now.subtract(const Duration(hours: 2))),
+              status: SessionStatus.closed.wire,
+              activity: const Value('walk'),
+              totalDistM: const Value(1200),
+              walkDistM: const Value(1200),
+              runDistM: const Value(0),
+              steps: const Value(0),
+            ),
+          );
+      await pumpScreen(tester, repo: repo, steps: steps, goals: goals);
+      expect(find.textContaining('걷기'), findsWidgets);
+      await tester.tap(find.text(BalmiCopy.periodWeek));
+      await tester.pumpAndSettle();
+      expect(find.text(BalmiCopy.weekSummary), findsOneWidget);
+      expect(find.textContaining('걷기'), findsWidgets);
+      return;
+    }
+
+    final earlier = now.subtract(Duration(days: earlierOffset, hours: 4));
+    await db.into(db.sessions).insert(
+          SessionsCompanion.insert(
+            id: repo.newId(),
+            startedAt: earlier,
+            endedAt: Value(earlier.add(const Duration(minutes: 40))),
+            status: SessionStatus.closed.wire,
+            activity: const Value('walk'),
+            totalDistM: const Value(1500),
+            walkDistM: const Value(1500),
+            runDistM: const Value(0),
+            steps: const Value(0),
+          ),
+        );
+    await db.into(db.sessions).insert(
+          SessionsCompanion.insert(
+            id: repo.newId(),
+            startedAt: now.subtract(const Duration(hours: 2)),
+            endedAt: Value(now.subtract(const Duration(hours: 1))),
+            status: SessionStatus.closed.wire,
+            activity: const Value('run'),
+            totalDistM: const Value(3000),
+            walkDistM: const Value(0),
+            runDistM: const Value(3000),
+            steps: const Value(0),
+          ),
+        );
+
+    await pumpScreen(tester, repo: repo, steps: steps, goals: goals);
+
+    expect(find.textContaining('달리기'), findsWidgets);
+    expect(find.textContaining('걷기'), findsNothing);
+
+    await tester.tap(find.text(BalmiCopy.periodWeek));
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.weekSummary), findsOneWidget);
+    expect(find.textContaining('달리기'), findsWidgets);
+    expect(find.textContaining('걷기'), findsWidgets);
+    expect(find.text(BalmiCopy.workoutLogTab), findsOneWidget);
+  });
+
+  testWidgets('sport filter scopes list and shows filter-empty copy', (tester) async {
+    final db = AppDatabase.executor(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = SessionRepository(db);
+    final steps = StepService(repo: repo);
+    addTearDown(steps.dispose);
+    final goals = StepGoalController(store: StepGoalStore(db));
+    addTearDown(goals.dispose);
+    await goals.bootstrap();
+
+    final now = DateTime.now();
+    await db.into(db.sessions).insert(
+          SessionsCompanion.insert(
+            id: repo.newId(),
+            startedAt: now.subtract(const Duration(hours: 3)),
+            endedAt: Value(now.subtract(const Duration(hours: 2))),
+            status: SessionStatus.closed.wire,
+            activity: const Value('walk'),
+            totalDistM: const Value(2000),
+            walkDistM: const Value(2000),
+            runDistM: const Value(0),
+            steps: const Value(0),
+          ),
+        );
+    await db.into(db.sessions).insert(
+          SessionsCompanion.insert(
+            id: repo.newId(),
+            startedAt: now.subtract(const Duration(hours: 1)),
+            endedAt: Value(now.subtract(const Duration(minutes: 30))),
+            status: SessionStatus.closed.wire,
+            activity: const Value('run'),
+            totalDistM: const Value(4000),
+            walkDistM: const Value(0),
+            runDistM: const Value(4000),
+            steps: const Value(0),
+          ),
+        );
+
+    await pumpScreen(tester, repo: repo, steps: steps, goals: goals);
+
+    expect(find.textContaining('걷기'), findsWidgets);
+    expect(find.textContaining('달리기'), findsWidgets);
+    // Today summary is unfiltered (home parity) — still 2 sessions on the card.
+    expect(find.text('2회'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('등산'));
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.activityFilterEmpty), findsOneWidget);
+    expect(find.textContaining('걷기'), findsNothing);
+    expect(find.textContaining('달리기'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('걷기'));
+    await tester.pumpAndSettle();
+    expect(find.text(BalmiCopy.activityFilterEmpty), findsNothing);
+    expect(find.textContaining('걷기'), findsWidgets);
+    expect(find.textContaining('달리기'), findsNothing);
   });
 }

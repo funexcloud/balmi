@@ -128,11 +128,6 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
           onChanged: (v) => setState(() => _filter = v == ActivityKind.auto ? null : v),
         ),
         const SizedBox(height: 22),
-        Text(
-          BalmiCopy.workoutLogTab,
-          style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
         if (!_loaded)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
@@ -144,28 +139,36 @@ class _MyActivityScreenState extends State<MyActivityScreen> {
               ),
             ),
           )
-        else if (filtered.isEmpty) ...[
-          if (inPeriod.isNotEmpty)
+        else if (inPeriod.isNotEmpty) ...[
+          // Only show 운동기록 when the period has sessions — avoid orphan header
+          // when summary already carries the period empty copy.
+          Text(
+            BalmiCopy.workoutLogTab,
+            style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          if (filtered.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Text(
                 BalmiCopy.activityFilterEmpty,
                 style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
               ),
-            ),
-        ] else
-          for (final r in filtered)
-            SessionRow(
-              startedAt: r.startedAt,
-              activityLabel: r.activity.label,
-              distM: r.totalDistM,
-              trailing: formatElapsed(r.duration),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: r.id)),
-                );
-              },
-            ),
+            )
+          else
+            for (final r in filtered)
+              SessionRow(
+                startedAt: r.startedAt,
+                activityLabel: r.activity.label,
+                distM: r.totalDistM,
+                trailing: formatElapsed(r.duration),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: r.id)),
+                  );
+                },
+              ),
+        ],
       ],
     );
   }
