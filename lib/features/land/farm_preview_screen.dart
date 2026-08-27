@@ -152,8 +152,6 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
       });
     } else if (result.unlocked != null) {
       _toast('${result.unlocked!.label} · ${BalmiCopy.waterDone}');
-    } else {
-      _toast(BalmiCopy.waterDone);
     }
   }
 
@@ -195,7 +193,6 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
       return;
     }
     await _load();
-    _toast(BalmiCopy.farmV2Applied);
   }
 
   Future<void> _onSlotTap(FarmSlotView slot) async {
