@@ -44,6 +44,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Duration _walk = Duration.zero;
   Duration _run = Duration.zero;
   ActivityRecoveryRecord? _recovery;
+  var _autoOpened = false;
 
   @override
   void initState() {
@@ -78,6 +79,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _run = durs[Sport.run] ?? Duration.zero;
       _recovery = recoveryRow;
     });
+
+    if (widget.autoOpenRecovery && !_autoOpened) {
+      _autoOpened = true;
+      final isDone = recoveryRow != null && recoveryRow.status.isTerminal;
+      if (!isDone) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _openRecovery();
+        });
+      }
+    }
   }
 
   Duration _sessionDuration(Session s) {

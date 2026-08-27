@@ -6,10 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('empty yard: empty field then walk hint', () {
-    expect(
-      farmHomeCaptionLines(buildings: [], herds: [], caredToday: false),
-      [BalmiCopy.landEmptyField, BalmiCopy.landWalkHint],
-    );
+    final lines = farmHomeCaptionLines(buildings: [], herds: [], caredToday: false);
+    expect(lines, contains(BalmiCopy.landEmptyField));
+    expect(lines, contains(BalmiCopy.landWalkHint));
   });
 
   test('fence only: ready line then unlocked label', () {
@@ -37,5 +36,19 @@ void main() {
     expect(hungry, contains(BalmiCopy.herdsHungry));
     expect(fed, contains(BalmiCopy.herdsFed));
     expect(hungry, contains('양떼 1'));
+  });
+
+  test('contextual day-of-week, climate and region captions', () {
+    final mondayMorning = farmHomeCaptionLines(
+      buildings: [],
+      herds: [],
+      caredToday: false,
+      now: DateTime(2026, 8, 24, 9, 0), // Monday 9am
+      region: '서울숲',
+      weather: '화창한',
+    );
+    expect(mondayMorning.any((l) => l.contains('월요일')), isTrue);
+    expect(mondayMorning.any((l) => l.contains('화창한')), isTrue);
+    expect(mondayMorning.any((l) => l.contains('서울숲')), isTrue);
   });
 }

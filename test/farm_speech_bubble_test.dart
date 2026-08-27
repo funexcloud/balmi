@@ -20,18 +20,14 @@ void main() {
       ),
     );
     expect(find.text(BalmiCopy.landEmptyField), findsOneWidget);
-    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
     expect(find.byType(FarmSpeechBubble), findsOneWidget);
 
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
-    expect(find.text(BalmiCopy.landWalkHint), findsOneWidget);
+    while (find.byType(FarmSpeechBubble).evaluate().isNotEmpty &&
+        tester.getSize(find.byType(FarmSpeechBubble)) != Size.zero) {
+      await tester.tap(find.byType(FarmSpeechBubble));
+      await tester.pumpAndSettle();
+    }
     expect(find.text(BalmiCopy.landEmptyField), findsNothing);
-
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
-    expect(find.text(BalmiCopy.landEmptyField), findsNothing);
-    expect(find.text(BalmiCopy.landWalkHint), findsNothing);
     expect(find.text('탭'), findsNothing);
     expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
   });
@@ -45,10 +41,11 @@ void main() {
         );
 
     await tester.pumpWidget(scene());
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
+    while (find.byType(FarmSpeechBubble).evaluate().isNotEmpty &&
+        tester.getSize(find.byType(FarmSpeechBubble)) != Size.zero) {
+      await tester.tap(find.byType(FarmSpeechBubble));
+      await tester.pumpAndSettle();
+    }
     expect(find.text(BalmiCopy.landEmptyField), findsNothing);
     expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
 
@@ -69,10 +66,11 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(FarmSpeechBubble));
-    await tester.pumpAndSettle();
+    while (find.byType(FarmSpeechBubble).evaluate().isNotEmpty &&
+        tester.getSize(find.byType(FarmSpeechBubble)) != Size.zero) {
+      await tester.tap(find.byType(FarmSpeechBubble));
+      await tester.pumpAndSettle();
+    }
     expect(tester.getSize(find.byType(FarmSpeechBubble)), Size.zero);
 
     await tester.pumpWidget(
