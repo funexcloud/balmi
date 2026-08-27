@@ -22,9 +22,14 @@ import '../activity_recovery/activity_recovery_flow.dart';
 import '../share/activity_share_sheet.dart';
 
 class SessionDetailScreen extends StatefulWidget {
-  const SessionDetailScreen({super.key, required this.sessionId});
+  const SessionDetailScreen({
+    super.key,
+    required this.sessionId,
+    this.autoOpenRecovery = false,
+  });
 
   final String sessionId;
+  final bool autoOpenRecovery;
 
   @override
   State<SessionDetailScreen> createState() => _SessionDetailScreenState();
@@ -39,7 +44,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Duration _walk = Duration.zero;
   Duration _run = Duration.zero;
   ActivityRecoveryRecord? _recovery;
-  SessionLandReward _land = SessionLandReward.none;
 
   @override
   void initState() {
@@ -63,13 +67,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     } else if (pts.isNotEmpty) {
       last = LatLng(pts.last.lat, pts.last.lng);
     }
-    final geo = [for (final p in line) GeoPoint(p.latitude, p.longitude)];
-    final land = session == null
-        ? SessionLandReward.none
-        : SessionLandReward.fromSession(
-            totalDistM: session.totalDistM,
-            path: geo,
-          );
     if (!mounted) return;
     setState(() {
       _session = session;
@@ -80,7 +77,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       _walk = durs[Sport.walk] ?? Duration.zero;
       _run = durs[Sport.run] ?? Duration.zero;
       _recovery = recoveryRow;
-      _land = land;
     });
   }
 
