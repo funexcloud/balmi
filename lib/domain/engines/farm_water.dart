@@ -1,3 +1,4 @@
+import 'farm_birth.dart';
 import 'farm_life.dart';
 import 'land_city.dart';
 
@@ -62,7 +63,8 @@ class WaterLedger {
       watersAfter: nextTotal,
     );
     if (unlock == null && herd != null) {
-      return '물 $watersTotal회 · 다음 물 주면 ${herd.giftLabel}';
+      // Preview the start beat (egg / birth / seed), not an adult gift label.
+      return '물 $watersTotal회 · 다음 물 주면 ${farmBirthToastForHerd(herd)}';
     }
     final next = nextBuilding;
     if (next == null) return '물 $watersTotal회';

@@ -278,10 +278,11 @@ abstract final class BalmiCopy {
   static const farmV2ApplyFailed = '자원을 나누지 못했어요';
   static const farmV2Applied = '잘 자라고 있어요';
   static const farmV2Planted = '씨앗을 뿌렸어요!';
-  /// Chicken start / early incubating toast — egg story (with !).
+  /// Chicken start toast — egg first, then hatch through feed stages.
   static const farmV2Adopted = '계란을 품고 있어요!';
   static const farmV2NoAdoptable =
       '아직 들일 수 있는 가축이 없어요. 농장 레벨을 올려 보세요';
+  /// Sheep/cow start beat — birth before grow stages.
   static const farmBirthSheep = '양이 태어났어요!';
   static const farmBirthCow = '송아지가 태어났어요!';
   static const farmBirthChickenEgg = farmV2Adopted;
@@ -289,8 +290,8 @@ abstract final class BalmiCopy {
   /// After drag/long-press rearrange between unlocked same-type slots.
   static const farmV2Moved = '자리를 옮겼어요';
   static const farmV2MoveFailed = '그 자리로는 옮길 수 없어요';
-  static const farmFieldSheep = '들판에 새끼양이 생겼어요';
-  static const farmFieldCow = '들판에 송아지가 생겼어요';
+  static const farmFieldSheep = farmBirthSheep;
+  static const farmFieldCow = farmBirthCow;
   static const raiseNeedBuilding = '먼저 맞는 건물부터 지어 주세요';
   static const raiseAtCapacity = '이 목장에는 더 들일 자리가 없어요';
   static const raiseNeedFeed = '오늘 더 걸어야 먹이가 생겨요';

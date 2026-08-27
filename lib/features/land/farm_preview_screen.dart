@@ -250,14 +250,11 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
               .map((s) => s.occupant?.animalId)
               .whereType<String>() ??
           const <String>[];
-      // Unlock sheep + cows as livestock (catalog gates go up to level 8).
-      final level = _farm?.farm.farmLevel ?? 1;
-      final animalId = resolveLivestockAdoptId(
+      final next = pickNextAdoptableAnimal(
         catalog: _animals.values.toList(),
         occupiedAnimalIds: owned,
-        farmLevel: level < 8 ? 8 : level,
+        farmLevel: _farm?.farm.farmLevel ?? 1,
       );
-      final next = _animals[animalId];
       if (next == null) {
         setState(() => _busy = false);
         _toast(BalmiCopy.farmV2NoAdoptable);
