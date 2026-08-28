@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>balmi × VASA — 걸음은 멈춰도, 기록은 멈추지 않도록</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #2E2320;
+      --paper: #FAF6EF;
+      --amber: #E39A3B;
+      --plum: #6E3B4B;
+      --plumLt: #C98FA1;
+      --sage: #7C8F6D;
+      --line: #E4DCCB;
+      --sub: #8A7F72;
+      --potato: #D97757;
+      --potatoDk: #A8482A;
+    }
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+    }
+    .font-baloo {
+      font-family: 'Baloo 2', cursive;
+    }
+    .brand-gradient {
+      background: linear-gradient(135deg, #2E2320 0%, #6E3B4B 60%, #8A3D52 100%);
+    }
+    .potato-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(46, 35, 32, 0.05);
+    }
+    .glass-pill {
+      background: rgba(250, 246, 239, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(228, 220, 203, 0.6);
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 glass-pill border-b border-[var(--line)] px-6 py-4 transition-all">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="font-baloo text-3xl font-extrabold text-[var(--ink)] tracking-tight">balmi</span>
+        <span class="text-[var(--amber)] text-xl font-bold">×</span>
+        <span class="font-baloo text-2xl font-bold text-[var(--plum)] tracking-wider">VASA</span>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 font-semibold text-sm text-[var(--sub)]">
+        <a href="#features" class="hover:text-[var(--plum)] transition">핵심기능</a>
+        <a href="#farm" class="hover:text-[var(--plum)] transition">농장 & 날씨</a>
+        <a href="#meal" class="hover:text-[var(--plum)] transition">식후 워킹</a>
+        <a href="#watch" class="hover:text-[var(--plum)] transition">스마트워치</a>
+        <a href="#b2b" class="hover:text-[var(--plum)] transition">기업 웰니스</a>
+      </nav>
+      <a href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk" 
+         class="bg-[var(--plum)] hover:bg-[var(--ink)] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2">
+        <span>APK 0.1.13 다운로드</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative px-6 pt-16 pb-20 max-w-6xl mx-auto text-center md:text-left">
+    <div class="grid md:grid-cols-12 gap-12 items-center">
+      <div class="md:col-span-7 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[rgba(110,59,75,0.08)] border border-[rgba(110,59,75,0.15)] text-[var(--plum)] text-xs font-bold">
+          <span class="w-2 h-2 rounded-full bg-[var(--amber)] animate-pulse"></span>
+          v0.1.13 Official Release · 무손실 이동 기록 앱
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[var(--ink)] leading-[1.25] tracking-tight">
+          걸음은 멈춰도,<br>
+          <span class="text-[var(--plum)] underline decoration-[var(--amber)] decoration-wavy decoration-2">기록은 멈추지 않도록</span>
+        </h1>
+        
+        <p class="text-lg text-[var(--sub)] font-medium leading-relaxed">
+          네트워크 연결이 끊겨도 1초 단위로 안전하게 기기에 저장되는 오프라인 무손실 저장 엔진.<br class="hidden sm:inline">
+          발걸음에서 심장까지, 심장에서 혈관 건강까지 연동되는 <b>Balmi × VASA</b>를 만나보세요.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-4 pt-2 justify-center md:justify-start">
+          <a href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk" 
+             class="bg-[var(--ink)] hover:bg-[var(--plum)] text-white px-7 py-4 rounded-2xl font-extrabold shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-3">
+            <svg class="w-6 h-6 text-[var(--amber)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414C17.06 15.3414 16.6836 14.965 16.6836 14.5016C16.6836 14.0382 17.06 13.6618 17.523 13.6618C17.9864 13.6618 18.3628 14.0382 18.3628 14.5016C18.3628 14.965 17.9864 15.3414 17.523 15.3414ZM6.47702 15.3414C6.01362 15.3414 5.63721 14.965 5.63721 14.5016C5.63721 14.0382 6.01362 13.6618 6.47702 13.6618C6.94042 13.6618 7.31683 14.0382 7.31683 14.5016C7.31683 14.965 6.94042 15.3414 6.47702 15.3414ZM17.9712 9.53951L19.7431 6.4704C19.9056 6.18902 19.8092 5.82902 19.5278 5.66652C19.2464 5.50402 18.8864 5.60042 18.7239 5.88182L16.9118 9.02051C15.4262 8.33771 13.7634 7.95471 12 7.95471C10.2366 7.95471 8.57382 8.33771 7.08822 9.02051L5.27612 5.88182C5.11362 5.60042 4.75362 5.50402 4.47222 5.66652C4.19082 5.82902 4.09442 6.18902 4.25692 6.4704L6.02882 9.53951C2.65802 11.3853 0.364424 14.6865 0 18.6667H24C23.6356 14.6865 21.342 11.3853 17.9712 9.53951Z"/></svg>
+            <div class="text-left">
+              <div class="text-xs font-normal opacity-80">Android release APK</div>
+              <div class="text-base leading-none mt-0.5">v0.1.13 설치 파일 다운로드</div>
+            </div>
+          </a>
+
+          <a href="https://github.com/funexcloud/balmi/releases/tag/v0.1.13-mvp" target="_blank"
+             class="potato-card px-6 py-4 font-bold text-[var(--ink)] hover:border-[var(--plum)] transition flex items-center gap-2">
+            <span>GitHub Release</span>
+            <span class="text-xs bg-[var(--line)] px-2 py-0.5 rounded text-[var(--sub)]">v0.1.13-mvp</span>
+          </a>
+        </div>
+
+        <div class="pt-4 flex items-center gap-6 text-xs text-[var(--sub)] font-semibold justify-center md:justify-start">
+          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1초 단위 SQLite 무손실</span>
+          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 오프라인 자동 복구</span>
+          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 헬스케어 비의료 웰니스</span>
+        </div>
+      </div>
+
+      <!-- App Mockup Preview Widget -->
+      <div class="md:col-span-5 flex justify-center">
+        <div class="relative w-[300px] h-[600px] bg-[#1E1917] rounded-[48px] p-4 shadow-2xl border-4 border-[#3A312D]">
+          <!-- Top Notch -->
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#1E1917] rounded-full z-20 flex items-center justify-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-[#111]"></div>
+            <div class="w-2 h-2 rounded-full bg-[#111]"></div>
+          </div>
+          
+          <!-- Screen Content Container -->
+          <div class="w-full h-full bg-[var(--paper)] rounded-[36px] overflow-hidden flex flex-col pt-8 relative text-[var(--ink)]">
+            <!-- App Bar -->
+            <div class="px-5 py-3 flex items-center justify-between border-b border-[var(--line)] bg-white/80">
+              <span class="font-baloo font-extrabold text-xl">balmi</span>
+              <span class="text-xs font-bold text-[var(--plum)] bg-[rgba(110,59,75,0.1)] px-2.5 py-0.5 rounded-full">v0.1.13</span>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 p-4 space-y-3.5 overflow-y-auto text-left text-xs">
+              
+              <!-- Farm Weather Card -->
+              <div class="bg-[rgba(250,246,239,0.95)] border border-[var(--line)] rounded-2xl p-3 shadow-sm space-y-1.5">
+                <div class="flex items-center justify-between font-bold">
+                  <span>☀️ 맑음 · 24°</span>
+                  <span class="text-[var(--potatoDk)] text-[10px]">체감 26°</span>
+                </div>
+                <div class="text-[10px] text-[var(--sub)]">🌅 05:48 · 🌇 19:02 &nbsp;|&nbsp; 💧 강수 20% · 🌬️ 2.4m/s</div>
+                <div class="text-[10px] text-[var(--sage)] font-semibold">🌱 토양 21° · 수분 31%</div>
+              </div>
+
+              <!-- Speech Bubble -->
+              <div class="bg-white border border-[var(--line)] rounded-2xl p-3 shadow-sm relative space-y-1">
+                <div class="text-[11px] text-[#4a4138]">"금요일의 활기찬 걸음이 목장을 더욱 푸르게 만들어요! 🌾"</div>
+                <div class="flex justify-end">
+                  <span class="inline-flex items-center gap-1 bg-[rgba(217,119,87,0.1)] px-2 py-0.5 rounded-full text-[9px] text-[var(--potatoDk)] font-bold">
+                    👉 ➔
+                  </span>
+                </div>
+              </div>
+
+              <!-- Meal Walk Card -->
+              <div class="bg-white border border-[var(--line)] rounded-2xl p-3 shadow-sm space-y-1.5">
+                <div class="font-bold flex items-center justify-between text-[11px]">
+                  <span>🍚 식사 시작과 동시에 눌러주세요</span>
+                  <span class="text-[var(--amber)]">▶</span>
+                </div>
+                <div class="text-[10px] text-[var(--sub)]">식후 30분 뒤 15분 혈당 산책 알림</div>
+              </div>
+
+              <!-- Activity Card -->
+              <div class="bg-[var(--ink)] text-white rounded-2xl p-3.5 space-y-2">
+                <div class="flex justify-between items-center text-[10px] opacity-80">
+                  <span>오늘의 운동</span>
+                  <span>자동 종목 판정</span>
+                </div>
+                <div class="text-xl font-black font-baloo text-[var(--amber)]">6,420 <span class="text-xs font-normal text-white/80">걸음</span></div>
+                <div class="grid grid-cols-2 gap-2 text-[10px] text-white/80 border-t border-white/10 pt-1.5">
+                  <div>걷기 42분 · 3.2km</div>
+                  <div>뛰기 18분 · 2.4km</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <div class="bg-white border-t border-[var(--line)] px-6 py-3 flex justify-around text-center text-[10px] font-bold text-[var(--sub)]">
+              <span class="text-[var(--plum)]">🏠 홈</span>
+              <span>🌾 농장</span>
+              <span>📊 기록</span>
+              <span>⚙️ 더보기</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Section -->
+  <section id="features" class="py-16 px-6 bg-white border-y border-[var(--line)]">
+    <div class="max-w-6xl mx-auto space-y-12">
+      <div class="text-center space-y-3">
+        <h2 class="text-xs font-bold text-[var(--plum)] tracking-widest uppercase">CORE FEATURES</h2>
+        <p class="text-3xl font-extrabold text-[var(--ink)]">Balmi 6대 핵심 기능 아키텍처</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- F1 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(110,59,75,0.08)] flex items-center justify-center text-2xl">🛡️</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F1. 무손실 오프라인 포스트</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            GPS 포인트를 1초마다 로컬 SQLite에 즉시 저장합니다. 산속이나 지하 터널에서 네트워크가 끊겨도 단 한 걸음도 유실되지 않습니다.
+          </p>
+        </div>
+
+        <!-- F2 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(227,154,59,0.1)] flex items-center justify-center text-2xl">🏃</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F2. 자동 걷기 ↔ 뛰기 판정</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            GPS 도플러 속도와 가속도계 케이던스를 조합한 히스테리시스 엔진으로 걷기와 뛰기를 자동으로 분류하여 세그먼트로 기록합니다.
+          </p>
+        </div>
+
+        <!-- F3 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(124,143,109,0.1)] flex items-center justify-center text-2xl">🏟️</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F3. 트랙 랩 & 성우 TTS</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            400m/300m/200m 트랙 진입 시 출발점 18m 반경을 감지하여 바퀴 수와 랩 타임을 한국어 TTS 성우 음성으로 자동 안내합니다.
+          </p>
+        </div>
+
+        <!-- F4 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(217,119,87,0.1)] flex items-center justify-center text-2xl">🌾</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F4. 농장 가미피케이션</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            운동량으로 획득한 물과 사료로 목초를 가꾸고 닭·양·소 동물을 분양받으세요. 요일과 시간대에 맞춘 다채로운 농장 말풍선이 작동합니다.
+          </p>
+        </div>
+
+        <!-- F5 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(110,59,75,0.08)] flex items-center justify-center text-2xl">⛅</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F5. GPS 기후 & 토양 정보</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            Open-Meteo REST API를 통해 농장 위치의 현재 기온, 체감온도, 일출·일몰, 강수확률 및 농업용 토양 수분/온도 카드를 제공합니다.
+          </p>
+        </div>
+
+        <!-- F6 -->
+        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
+          <div class="w-12 h-12 rounded-2xl bg-[rgba(227,154,59,0.1)] flex items-center justify-center text-2xl">⌚</div>
+          <h3 class="text-lg font-bold text-[var(--ink)]">F6. 독립형 스마트워치 연동</h3>
+          <p class="text-sm text-[var(--sub)] leading-relaxed">
+            Apple Watch (watchOS) & Galaxy Watch (Wear OS) 단독 앱을 지원하여 스마트폰 없이 시계 단독 러닝과 심박수 측정을 지원합니다.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Meal Walk & Health Habit Section -->
+  <section id="meal" class="py-16 px-6 max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div class="space-y-6">
+        <span class="text-xs font-bold text-[var(--plum)] tracking-widest uppercase">HEALTH HABIT</span>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-[var(--ink)]">식사 시작 후 30분,<br>15분 혈당 워킹 프로세스</h2>
+        <p class="text-[var(--sub)] leading-relaxed">
+          식후 30분이 되면 혈당 조절에 가장 효과적인 15분 산책 타이머가 작동합니다.
+          스마트폰 알림과 함께 가볍게 나가서 걸을 수 있도록 친절하게 안내합니다.
+        </p>
+
+        <div class="space-y-4 pt-2 text-sm">
+          <div class="flex items-start gap-4 potato-card p-4">
+            <div class="w-8 h-8 rounded-full bg-[var(--plum)] text-white font-bold flex items-center justify-center shrink-0">1</div>
+            <div>
+              <div class="font-bold text-[var(--ink)]">식사 시작 클릭</div>
+              <div class="text-xs text-[var(--sub)]">"식사 시작과 동시에 눌러주세요" 버튼으로 30분 카운트다운 시작</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 potato-card p-4">
+            <div class="w-8 h-8 rounded-full bg-[var(--amber)] text-white font-bold flex items-center justify-center shrink-0">2</div>
+            <div>
+              <div class="font-bold text-[var(--ink)]">식후 30분 스마트 푸시</div>
+              <div class="text-xs text-[var(--sub)]">"식후 30분이 되었어요! 15분 산책을 시작해보세요 👟" 알림 도착</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4 potato-card p-4">
+            <div class="w-8 h-8 rounded-full bg-[var(--sage)] text-white font-bold flex items-center justify-center shrink-0">3</div>
+            <div>
+              <div class="font-bold text-[var(--ink)]">15분 산책 & 달성 배지</div>
+              <div class="text-xs text-[var(--sub)]">15분 걷기 완수 시 '혈당지킴이' 달성 배지 및 VASA 반응 시간 기록</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meal Walk Card Illustration -->
+      <div class="potato-card p-8 space-y-6 border-2 border-[var(--line)]">
+        <div class="flex items-center justify-between border-b border-[var(--line)] pb-4">
+          <span class="font-bold text-lg">🍚 혈당 워킹 알림 현황</span>
+          <span class="text-xs bg-[var(--sage)] text-white px-2.5 py-1 rounded-full font-bold">건강 습관</span>
+        </div>
+
+        <div class="bg-[var(--paper)] p-4 rounded-xl space-y-2 border border-[var(--line)]">
+          <div class="flex justify-between font-bold text-sm">
+            <span>⏳ 식사 후 30분 대기 중</span>
+            <span class="font-baloo text-lg text-[var(--potatoDk)]">18:42</span>
+          </div>
+          <div class="text-xs text-[var(--sub)]">30분 뒤 알림이 오면 15분 산책을 시작하세요</div>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-[var(--line)] flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🏅</span>
+            <div>
+              <div class="font-bold text-xs">혈당지킴이 배지</div>
+              <div class="text-[11px] text-[var(--sub)]">식후 걷기 완수 시 수여</div>
+            </div>
+          </div>
+          <span class="text-xs text-[var(--plum)] font-bold">참여율 94%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B2B Wellness Proposal Banner -->
+  <section id="b2b" class="py-16 px-6 bg-[var(--ink)] text-[var(--paper)]">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-8 space-y-4">
+        <span class="text-xs font-bold text-[var(--plumLt)] tracking-widest uppercase">B2B CORPORATE SOLUTION</span>
+        <h2 class="text-3xl font-extrabold leading-tight">걸음은 직원이 걷고,<br><span class="text-[var(--amber)]">인사이트는 인사팀이 얻습니다</span></h2>
+        <p class="text-sm text-[#D9CFC2] leading-relaxed max-w-2xl">
+          balmi × VASA는 임직원 걷기·달리기 부서 대항 챌린지와 조직 심혈관 리스크 리포트 대시보드를 하나의 솔루션으로 제공합니다.
+        </p>
+      </div>
+      <div class="md:col-span-4 text-center md:text-right">
+        <a href="docs/balmi-vasa-wellness-proposal.html" target="_blank"
+           class="inline-block bg-[var(--plum)] hover:bg-[var(--amber)] hover:text-[var(--ink)] text-white font-extrabold px-6 py-4 rounded-2xl transition-all shadow-lg text-sm">
+          B2B 제안서 보기 📄
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-[var(--line)] bg-[var(--paper)] text-xs text-[var(--sub)]">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="space-y-1 text-center md:text-left">
+        <div class="font-baloo font-extrabold text-2xl text-[var(--ink)]">balmi × VASA</div>
+        <div>주식회사 동반 (DONGVAN Co., Ltd.) · 대표자 명의 법인 소유 서비스</div>
+        <div>im.balmi.app · Version 0.1.13+21</div>
+      </div>
+      <div class="flex items-center gap-6 font-semibold">
+        <a href="https://github.com/funexcloud/balmi" target="_blank" class="hover:text-[var(--ink)] transition">GitHub Repositories</a>
+        <a href="docs/WATCH_INTEGRATION_PLAN.md" target="_blank" class="hover:text-[var(--ink)] transition">Watch Specs</a>
+        <a href="docs/launch-sop/README.md" target="_blank" class="hover:text-[var(--ink)] transition">Launch SOP</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
