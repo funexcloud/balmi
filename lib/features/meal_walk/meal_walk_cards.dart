@@ -69,10 +69,10 @@ class MealWalkStartCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
         onTap: onStart,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Row(
             children: [
-              const Icon(Icons.restaurant, color: BalmiColors.potato, size: 36),
+              const Icon(Icons.restaurant, color: BalmiColors.potato, size: 34),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -80,22 +80,83 @@ class MealWalkStartCard extends StatelessWidget {
                   children: [
                     Text(
                       BalmiCopy.mealWalkStartPrompt,
-                      style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       meal.label,
-                      style: BalmiTheme.body(size: 13, color: BalmiColors.sub),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               Semantics(
                 button: true,
                 label: BalmiCopy.mealWalkStartBtn,
-                child: const Icon(Icons.play_arrow, color: BalmiColors.potato, size: 32),
+                child: const Icon(Icons.play_arrow_rounded, color: BalmiColors.potato, size: 32),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MealWalkPendingCard extends StatelessWidget {
+  const MealWalkPendingCard({
+    super.key,
+    required this.mealStartedAt,
+  });
+
+  final DateTime mealStartedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final promptAt = walkPromptAt(mealStartedAt);
+    final remaining = promptAt.difference(DateTime.now());
+    final leftSec = remaining.isNegative ? Duration.zero : remaining;
+
+    return Material(
+      color: BalmiColors.mist,
+      borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Row(
+          children: [
+            const Icon(Icons.hourglass_top_rounded, color: BalmiColors.potato, size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    BalmiCopy.mealWalkPendingTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    BalmiCopy.mealWalkPendingHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              formatElapsed(leftSec),
+              style: BalmiTheme.num(size: 20, color: BalmiColors.potatoDk),
+            ),
+          ],
         ),
       ),
     );
@@ -116,18 +177,21 @@ class MealWalkGoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
         onTap: onGo,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Row(
             children: [
-              const Icon(Icons.directions_walk, color: BalmiColors.potato, size: 36),
+              const Icon(Icons.directions_walk, color: BalmiColors.potato, size: 34),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   BalmiCopy.mealWalkGoShort,
-                  style: BalmiTheme.body(size: 15, weight: FontWeight.w800),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
                 ),
               ),
-              const Icon(Icons.play_arrow, color: BalmiColors.potato, size: 32),
+              const SizedBox(width: 8),
+              const Icon(Icons.play_arrow_rounded, color: BalmiColors.potato, size: 32),
             ],
           ),
         ),

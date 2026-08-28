@@ -46,7 +46,11 @@ class MealWalkController extends ChangeNotifier {
 
   MealType? mealDueNow([DateTime? now]) {
     if (!enabled) return null;
-    return mealInWindow(schedule, now ?? DateTime.now());
+    return mealInWindow(
+      schedule,
+      now ?? DateTime.now(),
+      promptedToday: mealsToday,
+    );
   }
 
   Duration walkRemaining(Duration elapsed) {

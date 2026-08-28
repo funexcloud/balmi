@@ -189,29 +189,30 @@ class _BubbleBody extends StatelessWidget {
             ),
           ),
           if (showHint) ...[
-            const SizedBox(height: 5),
+            const SizedBox(height: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(
-                color: BalmiColors.ink.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
+                color: BalmiColors.potato.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: BalmiColors.potato.withValues(alpha: 0.25),
+                  width: 0.8,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '탭',
-                    style: BalmiTheme.body(
-                      size: 10,
-                      weight: FontWeight.w700,
-                      color: BalmiColors.sub.withValues(alpha: 0.85),
-                    ),
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 12,
+                    color: BalmiColors.potatoDk.withValues(alpha: 0.85),
                   ),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 3),
                   Icon(
                     Icons.chevron_right_rounded,
-                    size: 12,
-                    color: BalmiColors.sub.withValues(alpha: 0.7),
+                    size: 14,
+                    color: BalmiColors.potatoDk.withValues(alpha: 0.85),
                   ),
                 ],
               ),

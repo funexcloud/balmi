@@ -174,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
         due != null &&
         !meal.mealsToday.contains(due) &&
         meal.open == null;
+      final showPending = meal.enabled && meal.open?.status == MealWalkStatus.pending;
     final showGo = meal.enabled && meal.open?.status == MealWalkStatus.prompted;
     final preferred = rec.preferredActivity;
     final recovery = context.watch<ActivityRecoveryController>();
@@ -279,6 +280,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 MealWalkStartCard(
                   meal: due,
                   onStart: () => meal.confirmMealStart(due),
+                ),
+              ],
+              if (showPending && meal.open != null) ...[
+                const SizedBox(height: 12),
+                MealWalkPendingCard(
+                  mealStartedAt: meal.open!.mealStartedAt,
                 ),
               ],
               if (showGo) ...[

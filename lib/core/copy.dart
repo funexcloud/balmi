@@ -382,8 +382,10 @@ abstract final class BalmiCopy {
   static const mealWalkMealTimesHint = '대략적인 시각이면 충분해요. 나중에 설정에서 바꿀 수 있어요.';
   static const mealWalkNotifNeed = '제때 알려드리려면 알림이 필요해요';
   static const mealWalkReady = '준비 됐어요! 다음 식사 시간에 알려드릴게요';
-  static const mealWalkStartPrompt = '식사 시작하셨으면 눌러주세요';
+  static const mealWalkStartPrompt = '식사 시작과 동시에 눌러주세요';
   static const mealWalkStartBtn = '식사 시작';
+  static const mealWalkPendingTitle = '식사 후 30분 대기 중';
+  static const mealWalkPendingHint = '30분 뒤 알림이 오면 15분 산책을 시작하세요';
   static const mealWalkGo = '지금 나가서 15분 걸어보세요!';
   static const mealWalkGoShort = '지금 나가서 15분 걸어요!';
   static const mealWalkSkip = '괜찮아요, 다음 끼니에 다시 해봐요';

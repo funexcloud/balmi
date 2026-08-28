@@ -190,9 +190,30 @@ bool inMealWindow({
   return delta <= window;
 }
 
-MealType? mealInWindow(MealSchedule schedule, DateTime now) {
+MealType? mealInWindow(
+  MealSchedule schedule,
+  DateTime now, {
+  Iterable<MealType>? promptedToday,
+}) {
+  final used = promptedToday?.toSet() ?? {};
+  // 1. Strict window check first
   for (final type in MealType.values) {
-    if (inMealWindow(scheduled: schedule.timeOf(type), now: now)) return type;
+    if (!used.contains(type) && inMealWindow(scheduled: schedule.timeOf(type), now: now)) {
+      return type;
+    }
+  }
+  // 2. Fallback for past meal times today: return the most recent meal that hasn't been logged yet
+  for (final type in MealType.values.reversed) {
+    final schedTime = schedule.timeOf(type).onDay(now);
+    if (!used.contains(type) && now.isAfter(schedTime.subtract(const Duration(minutes: 30)))) {
+      return type;
+    }
+  }
+  // 3. Fallback for upcoming meal today if none logged yet
+  for (final type in MealType.values) {
+    if (!used.contains(type)) {
+      return type;
+    }
   }
   return null;
 }

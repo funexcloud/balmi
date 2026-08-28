@@ -132,7 +132,7 @@ void main() {
       mealInWindow(schedule, DateTime(2026, 8, 25, 12, 35)),
       MealType.lunch,
     );
-    expect(mealInWindow(schedule, DateTime(2026, 8, 25, 15, 0)), isNull);
+    expect(mealInWindow(schedule, DateTime(2026, 8, 25, 15, 0), promptedToday: MealType.values), isNull);
   });
 
   test('defaults are 08:00, 12:30, 19:00', () {
