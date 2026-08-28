@@ -7,13 +7,16 @@ import '../../data/db/app_database.dart';
 import '../../data/map/device_traces.dart';
 import '../../data/repositories/farm_repository.dart';
 import '../../data/repositories/session_repository.dart';
+import '../../data/repositories/weather_repository.dart';
 import '../../domain/engines/farm_animal.dart';
 import '../../domain/engines/farm_birth.dart';
 import '../../domain/engines/farm_crop.dart';
 import '../../domain/engines/farm_life.dart';
+import '../../domain/engines/farm_resource.dart';
 import '../../domain/engines/farm_scene_ui.dart';
 import '../../domain/engines/farm_slot_move.dart';
 import '../../domain/engines/farm_water.dart';
+import '../../domain/engines/farm_weather.dart';
 import '../../domain/engines/land_city.dart';
 import '../../domain/models/farm/animal.dart';
 import '../../domain/models/farm/crop.dart';
@@ -22,6 +25,7 @@ import '../../domain/models/farm/farm_state.dart';
 import '../../domain/models/farm/farm_tier.dart';
 import '../../widgets/farm_resource_bar.dart';
 import '../../widgets/farm_scene_v2.dart';
+import '../../widgets/farm_weather_card.dart';
 
 void openFarmPreview(BuildContext context) {
   Navigator.of(context).push(
@@ -54,6 +58,8 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
   FarmSnapshot? _farm;
   Map<String, CropDefinition> _crops = {};
   Map<String, AnimalDefinition> _animals = {};
+  FarmWeatherState? _weather;
+  final WeatherRepository _weatherRepo = WeatherRepository();
   var _loaded = false;
   var _busy = false;
   var _watering = false;
@@ -79,6 +85,13 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
     final animalList = await farmRepo.listAnimalDefinitions();
     final ownedTiles = _ownedTileCount(buildings.length, traces);
     final snapshot = await farmRepo.loadSnapshot(ownedTileCount: ownedTiles);
+
+    final center = traces.center;
+    final weather = await _weatherRepo.getFarmWeather(
+      latitude: center.latitude,
+      longitude: center.longitude,
+    );
+
     if (!mounted) return;
     setState(() {
       _traces = traces;
@@ -88,6 +101,7 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
       _farm = snapshot;
       _crops = {for (final c in cropList) c.cropId: c};
       _animals = {for (final a in animalList) a.animalId: a};
+      _weather = weather;
       _loaded = true;
     });
   }
@@ -368,6 +382,21 @@ class _FarmPreviewScreenState extends State<FarmPreviewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_weather != null) ...[
+                  FarmWeatherCard(
+                    weather: _weather!,
+                    onRefresh: () async {
+                      final center = _traces.center;
+                      final updated = await _weatherRepo.getFarmWeather(
+                        latitude: center.latitude,
+                        longitude: center.longitude,
+                        forceRefresh: true,
+                      );
+                      if (mounted) setState(() => _weather = updated);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (_farm != null) ...[
                   FarmResourceBar(
                     balances: _farm!.resources,
