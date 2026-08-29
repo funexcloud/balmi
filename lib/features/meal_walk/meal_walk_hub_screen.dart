@@ -432,17 +432,19 @@ class _MealSlotCard extends StatelessWidget {
   Widget _statusChip(MealWalkStatus? status) {
     final text = switch (status) {
       MealWalkStatus.completed => '완료',
-      MealWalkStatus.pending => '30분 대기',
-      MealWalkStatus.prompted || MealWalkStatus.walking => '걷기 진행 가능',
-      MealWalkStatus.missed => '언제든 걷기 가능',
+      MealWalkStatus.mealCountdown => '30분 대기 중',
+      MealWalkStatus.readyToWalk => '지금 걷기 가능',
+      MealWalkStatus.walking => '걷기 진행 중',
+      MealWalkStatus.paused => '이어 걷기 가능',
+      MealWalkStatus.expired => '목표 미달성',
       _ => '미시작',
     };
 
     final color = switch (status) {
       MealWalkStatus.completed => BalmiColors.sage,
-      MealWalkStatus.pending => BalmiColors.potato,
-      MealWalkStatus.prompted || MealWalkStatus.walking => BalmiColors.amber,
-      MealWalkStatus.missed => BalmiColors.sub,
+      MealWalkStatus.mealCountdown => BalmiColors.potato,
+      MealWalkStatus.readyToWalk || MealWalkStatus.walking || MealWalkStatus.paused => BalmiColors.amber,
+      MealWalkStatus.expired => BalmiColors.sub,
       _ => BalmiColors.sub,
     };
 

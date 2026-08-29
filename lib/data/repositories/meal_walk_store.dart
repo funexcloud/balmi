@@ -65,16 +65,28 @@ ON CONFLICT(user_id) DO UPDATE SET
   Future<MealWalkSession> startMeal({
     required MealType mealType,
     DateTime? at,
+    int targetSeconds = 900,
   }) async {
     final id = _id();
     final started = at ?? DateTime.now();
+    final availableAt = started.add(MealWalkRules.promptAfterMeal);
+
     await db.customStatement(
       '''
 INSERT INTO meal_walk_sessions (
-  id, user_id, meal_type, meal_started_at, status
-) VALUES (?, ?, ?, ?, ?)
+  id, user_id, meal_type, meal_started_at, walk_available_at,
+  target_seconds, status
+) VALUES (?, ?, ?, ?, ?, ?, ?)
 ''',
-      [id, kLocalUserId, mealType.wire, started.millisecondsSinceEpoch, MealWalkStatus.pending.wire],
+      [
+        id,
+        kLocalUserId,
+        mealType.wire,
+        started.millisecondsSinceEpoch,
+        availableAt.millisecondsSinceEpoch,
+        targetSeconds,
+        MealWalkStatus.mealCountdown.wire,
+      ],
     );
     return (await sessionById(id))!;
   }
@@ -100,7 +112,7 @@ INSERT INTO meal_walk_sessions (
     final rows = await db.customSelect(
       '''
 SELECT * FROM meal_walk_sessions
-WHERE user_id = ? AND status IN ('pending', 'prompted', 'walking')
+WHERE user_id = ? AND status IN ('meal_countdown', 'pending', 'ready_to_walk', 'prompted', 'walking', 'paused', 'partial')
 ORDER BY meal_started_at DESC LIMIT 1
 ''',
       variables: [Variable.withString(kLocalUserId)],
@@ -125,7 +137,7 @@ UPDATE meal_walk_sessions
 SET walk_prompted_at = ?, status = ?
 WHERE id = ? AND walk_prompted_at IS NULL
 ''',
-      [t.millisecondsSinceEpoch, MealWalkStatus.prompted.wire, id],
+      [t.millisecondsSinceEpoch, MealWalkStatus.readyToWalk.wire, id],
     );
   }
 
@@ -138,7 +150,7 @@ WHERE id = ? AND walk_prompted_at IS NULL
     await db.customStatement(
       '''
 UPDATE meal_walk_sessions
-SET walk_started_at = ?, status = ?, recording_session_id = COALESCE(?, recording_session_id)
+SET walk_started_at = COALESCE(walk_started_at, ?), status = ?, recording_session_id = COALESCE(?, recording_session_id)
 WHERE id = ?
 ''',
       [
@@ -150,6 +162,46 @@ WHERE id = ?
     );
   }
 
+  Future<MealWalkSession> accumulateWalkProgress({
+    required String id,
+    required int addDurationSec,
+    required double addDistanceM,
+    required int addSteps,
+    required MealWalkStatus status,
+    DateTime? at,
+  }) async {
+    final existing = await sessionById(id);
+    if (existing == null) throw StateError('Session $id not found');
+
+    final newSec = existing.walkDurationSec + addDurationSec;
+    final newDist = existing.distanceM + addDistanceM;
+    final newSteps = existing.steps + addSteps;
+    final t = at ?? DateTime.now();
+    final isDone = status == MealWalkStatus.completed || newSec >= existing.targetSeconds;
+    final finalStatus = isDone ? MealWalkStatus.completed : status;
+
+    await db.customStatement(
+      '''
+UPDATE meal_walk_sessions
+SET walk_completed_at = COALESCE(walk_completed_at, ?),
+    walk_duration_sec = ?,
+    distance_m = ?,
+    steps = ?,
+    status = ?
+WHERE id = ?
+''',
+      [
+        isDone ? t.millisecondsSinceEpoch : null,
+        newSec,
+        newDist,
+        newSteps,
+        finalStatus.wire,
+        id,
+      ],
+    );
+    return (await sessionById(id))!;
+  }
+
   Future<void> finishWalk({
     required String id,
     required MealWalkStatus status,
@@ -157,27 +209,20 @@ WHERE id = ?
     required double distanceM,
     DateTime? at,
   }) async {
-    final t = at ?? DateTime.now();
-    await db.customStatement(
-      '''
-UPDATE meal_walk_sessions
-SET walk_completed_at = ?, walk_duration_sec = ?, distance_m = ?, status = ?
-WHERE id = ?
-''',
-      [
-        t.millisecondsSinceEpoch,
-        elapsed.inSeconds,
-        distanceM,
-        status.wire,
-        id,
-      ],
+    await accumulateWalkProgress(
+      id: id,
+      addDurationSec: elapsed.inSeconds,
+      addDistanceM: distanceM,
+      addSteps: 0,
+      status: status,
+      at: at,
     );
   }
 
   Future<void> markMissed(String id) {
     return db.customStatement(
       "UPDATE meal_walk_sessions SET status = ? WHERE id = ?",
-      [MealWalkStatus.missed.wire, id],
+      [MealWalkStatus.expired.wire, id],
     );
   }
 
@@ -217,11 +262,14 @@ WHERE id = ?
       id: r.read<String>('id'),
       mealType: MealType.fromWire(r.read<String>('meal_type')),
       mealStartedAt: DateTime.fromMillisecondsSinceEpoch(r.read<int>('meal_started_at')),
+      walkAvailableAt: _dt(r.readNullable<int>('walk_available_at')),
       walkPromptedAt: _dt(r.readNullable<int>('walk_prompted_at')),
       walkStartedAt: _dt(r.readNullable<int>('walk_started_at')),
       walkCompletedAt: _dt(r.readNullable<int>('walk_completed_at')),
-      walkDurationSec: r.readNullable<int>('walk_duration_sec'),
-      distanceM: r.readNullable<double>('distance_m'),
+      walkDurationSec: r.readNullable<int>('walk_duration_sec') ?? 0,
+      distanceM: r.readNullable<double>('distance_m') ?? 0.0,
+      steps: r.readNullable<int>('steps') ?? 0,
+      targetSeconds: r.readNullable<int>('target_seconds') ?? 900,
       status: MealWalkStatus.fromWire(r.read<String>('status')),
       recordingSessionId: r.readNullable<String>('recording_session_id'),
     );

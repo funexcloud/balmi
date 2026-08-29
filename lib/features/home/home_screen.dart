@@ -275,29 +275,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   onStart: () => openMealWalkOnboarding(context, meal),
                   onDismiss: meal.hideDiscover,
                 ),
-              ],
-              if (showStart) ...[
+              ] else if (meal.enabled) ...[
                 const SizedBox(height: 12),
-                MealWalkStartCard(
-                  meal: due,
-                  onStart: () => meal.confirmMealStart(due),
-                ),
-              ],
-              if (showPending && meal.open != null) ...[
-                const SizedBox(height: 12),
-                MealWalkPendingCard(
-                  mealStartedAt: meal.open!.mealStartedAt,
-                ),
-              ],
-              if (showGo) ...[
-                const SizedBox(height: 12),
-                MealWalkGoCard(
-                  onGo: () => meal.beginWalk(meal.open!.id),
-                ),
-              ],
-              if (meal.enabled && !showStart && !showPending && !showGo) ...[
-                const SizedBox(height: 12),
-                MealWalkStatusHubCard(
+                MealWalkPersistentCard(
+                  session: meal.open,
+                  onStartMeal: () => meal.confirmMealStart(due ?? MealType.lunch),
+                  onStartWalk: () => meal.open != null ? meal.beginWalk(meal.open!.id) : meal.confirmMealStart(due ?? MealType.lunch),
+                  onResumeWalk: () => meal.open != null ? meal.beginWalk(meal.open!.id) : null,
                   onOpenHub: () => openMealWalkHub(context),
                 ),
               ],

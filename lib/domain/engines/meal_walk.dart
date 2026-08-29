@@ -23,21 +23,42 @@ enum MealType {
 }
 
 enum MealWalkStatus {
-  pending,
-  prompted,
+  notStarted,
+  mealCountdown,
+  readyToWalk,
   walking,
+  paused,
   completed,
-  partial,
-  missed;
+  expired;
 
-  String get wire => name;
+  String get wire => switch (this) {
+        notStarted => 'not_started',
+        mealCountdown => 'meal_countdown',
+        readyToWalk => 'ready_to_walk',
+        walking => 'walking',
+        paused => 'paused',
+        completed => 'completed',
+        expired => 'expired',
+      };
 
   static MealWalkStatus fromWire(String value) {
-    return MealWalkStatus.values.firstWhere(
-      (e) => e.wire == value,
-      orElse: () => MealWalkStatus.pending,
-    );
+    return switch (value) {
+      'not_started' => notStarted,
+      'meal_countdown' || 'pending' => mealCountdown,
+      'ready_to_walk' || 'prompted' => readyToWalk,
+      'walking' => walking,
+      'paused' || 'partial' => paused,
+      'completed' => completed,
+      'expired' || 'missed' => expired,
+      _ => notStarted,
+    };
   }
+
+  // Alias getters for backward compatibility
+  static MealWalkStatus get pending => mealCountdown;
+  static MealWalkStatus get prompted => readyToWalk;
+  static MealWalkStatus get partial => paused;
+  static MealWalkStatus get missed => expired;
 }
 
 /// Minutes from local midnight. Domain stays Flutter-free.
@@ -105,24 +126,66 @@ class MealWalkSession {
     required this.mealType,
     required this.mealStartedAt,
     required this.status,
+    this.walkAvailableAt,
     this.walkPromptedAt,
     this.walkStartedAt,
     this.walkCompletedAt,
-    this.walkDurationSec,
-    this.distanceM,
+    this.walkDurationSec = 0,
+    this.distanceM = 0.0,
+    this.steps = 0,
+    this.targetSeconds = 900,
     this.recordingSessionId,
   });
 
   final String id;
   final MealType mealType;
   final DateTime mealStartedAt;
+  final DateTime? walkAvailableAt;
   final DateTime? walkPromptedAt;
   final DateTime? walkStartedAt;
   final DateTime? walkCompletedAt;
-  final int? walkDurationSec;
-  final double? distanceM;
+  final int walkDurationSec; // accumulatedWalkSeconds
+  final double distanceM;
+  final int steps;
+  final int targetSeconds;
   final MealWalkStatus status;
   final String? recordingSessionId;
+
+  int get remainingTargetSeconds {
+    final left = targetSeconds - walkDurationSec;
+    return left < 0 ? 0 : left;
+  }
+
+  bool get isCompleted => status == MealWalkStatus.completed || walkDurationSec >= targetSeconds;
+}
+
+MealWalkStatus evaluateSessionStatus(MealWalkSession session, DateTime now) {
+  if (session.status == MealWalkStatus.completed || session.walkDurationSec >= session.targetSeconds) {
+    return MealWalkStatus.completed;
+  }
+  if (!sameLocalDay(session.mealStartedAt, now)) {
+    return MealWalkStatus.expired;
+  }
+  if (session.status == MealWalkStatus.walking) {
+    return MealWalkStatus.walking;
+  }
+
+  final availableAt = session.walkAvailableAt ?? session.mealStartedAt.add(MealWalkRules.promptAfterMeal);
+  if (now.isBefore(availableAt)) {
+    return MealWalkStatus.mealCountdown;
+  }
+
+  if (session.walkDurationSec > 0 && session.walkDurationSec < session.targetSeconds) {
+    return MealWalkStatus.paused;
+  }
+
+  return MealWalkStatus.readyToWalk;
+}
+
+Duration remainingCountdown(MealWalkSession session, DateTime now) {
+  final availableAt = session.walkAvailableAt ?? session.mealStartedAt.add(MealWalkRules.promptAfterMeal);
+  final remaining = availableAt.difference(now);
+  return remaining.isNegative ? Duration.zero : remaining;
 }
 
 class MealWalkRules {

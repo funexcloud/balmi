@@ -41,6 +41,7 @@ class MealWalkController extends ChangeNotifier {
   var ownsRecording = false;
   Set<MealType> mealsToday = {};
   StreamSubscription<MealWalkAlarmTap>? _taps;
+  Timer? _liveCountdownTimer;
 
   bool get enabled => schedule.featureEnabled;
 
@@ -77,20 +78,68 @@ class MealWalkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void addListener(VoidCallback listener) {
+    super.addListener(listener);
+    _syncTimer();
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    _syncTimer();
+  }
+
+  @override
+  void notifyListeners() {
+    _syncTimer();
+    super.notifyListeners();
+  }
+
+  void _syncTimer() {
+    if (open != null && open!.status == MealWalkStatus.mealCountdown && hasListeners) {
+      _liveCountdownTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+        final session = open;
+        if (session != null && session.status == MealWalkStatus.mealCountdown) {
+          final now = DateTime.now();
+          final avail = session.walkAvailableAt ?? session.mealStartedAt.add(MealWalkRules.promptAfterMeal);
+          if (!now.isBefore(avail)) {
+            unawaited(catchUp());
+          } else {
+            super.notifyListeners();
+          }
+        } else {
+          _liveCountdownTimer?.cancel();
+          _liveCountdownTimer = null;
+        }
+      });
+    } else {
+      _liveCountdownTimer?.cancel();
+      _liveCountdownTimer = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _liveCountdownTimer?.cancel();
+    _liveCountdownTimer = null;
+    recording.removeListener(_onRecording);
+    _taps?.cancel();
+    super.dispose();
+  }
+
   Future<void> catchUp({DateTime? now}) async {
     final t = now ?? DateTime.now();
     final session = open ?? await store.openWalkSession();
     if (session == null) return;
-    if (isMissed(session: session, now: t)) {
-      await store.markMissed(session.id);
-      lastFeedback = const MealWalkFeedback(skipCopy);
+
+    final evaluatedStatus = evaluateSessionStatus(session, t);
+    if (evaluatedStatus != session.status) {
+      if (evaluatedStatus == MealWalkStatus.readyToWalk && session.walkPromptedAt == null) {
+        await store.markWalkPrompted(session.id, at: t);
+      }
       open = await store.sessionById(session.id);
       notifyListeners();
-      return;
-    }
-    if (session.status == MealWalkStatus.pending &&
-        !t.isBefore(walkPromptAt(session.mealStartedAt))) {
-      await _promptWalk(session, at: t);
     }
   }
 
@@ -170,17 +219,17 @@ class MealWalkController extends ChangeNotifier {
   Future<MealWalkSession?> confirmMealStart(
     MealType meal, {
     DateTime? at,
+    int targetSeconds = 900,
   }) async {
     if (!enabled) return null;
     final t = at ?? DateTime.now();
     final used = await store.promptedMealsOn(t);
-    if (!canSendMealReminder(promptedToday: used, meal: meal) &&
-        used.contains(meal)) {
+    if (!canSendMealReminder(promptedToday: used, meal: meal) && used.contains(meal)) {
       open = await store.openWalkSession();
       notifyListeners();
       return open;
     }
-    final session = await store.startMeal(mealType: meal, at: t);
+    final session = await store.startMeal(mealType: meal, at: t, targetSeconds: targetSeconds);
     open = session;
     mealsToday = await store.promptedMealsOn(t);
     try {
@@ -198,32 +247,7 @@ class MealWalkController extends ChangeNotifier {
     if (session == null) return;
     final t = at ?? DateTime.now();
     await store.markWalkPrompted(sessionId, at: t);
-    if (shouldAutoCompleteDuringRecording(
-      isRecording: recording.isRecording,
-      sessionElapsed: recording.elapsed,
-      sessionDistanceM: recording.snapshot?.totalDistM ?? 0,
-    )) {
-      await _complete(
-        session,
-        elapsed: recording.elapsed,
-        distanceM: recording.snapshot?.totalDistM ?? 0,
-        at: t,
-        stopRecording: false,
-      );
-      return;
-    }
-    if (shouldSuppressWalkNotification(isRecording: recording.isRecording) &&
-        recording.isRecording) {
-      await store.markWalkStarted(
-        sessionId,
-        at: t,
-        recordingSessionId: recording.snapshot?.sessionId,
-      );
-      ownsRecording = false;
-      open = await store.sessionById(sessionId);
-      notifyListeners();
-      return;
-    }
+
     final ok = await recording.start(activity: ActivityKind.walk);
     if (!ok) {
       lastFeedback = MealWalkFeedback(recording.lastError ?? skipCopy);
@@ -247,11 +271,15 @@ class MealWalkController extends ChangeNotifier {
     if (!recording.isRecording) return;
     final elapsed = recording.elapsed;
     final dist = recording.snapshot?.totalDistM ?? 0;
-    if (meetsWalkGoal(elapsed: elapsed, distanceM: dist)) {
+    const steps = 0;
+
+    final totalSec = session.walkDurationSec + elapsed.inSeconds;
+    if (totalSec >= session.targetSeconds) {
       await _complete(
         session,
         elapsed: elapsed,
         distanceM: dist,
+        steps: steps,
         stopRecording: ownsRecording,
       );
     }
@@ -263,68 +291,41 @@ class MealWalkController extends ChangeNotifier {
     if (session.status != MealWalkStatus.walking) return;
     final elapsed = recording.isRecording ? recording.elapsed : Duration.zero;
     final dist = recording.snapshot?.totalDistM ?? 0;
-    final status = statusAfterWalkStop(elapsed: elapsed, distanceM: dist);
-    if (status == MealWalkStatus.completed) {
+    const steps = 0;
+
+    final totalSec = session.walkDurationSec + elapsed.inSeconds;
+    final isCompleted = totalSec >= session.targetSeconds;
+
+    if (isCompleted) {
       await _complete(
         session,
         elapsed: elapsed,
         distanceM: dist,
+        steps: steps,
         stopRecording: ownsRecording,
       );
       return;
     }
-    await store.finishWalk(
+
+    final updated = await store.accumulateWalkProgress(
       id: session.id,
-      status: MealWalkStatus.partial,
-      elapsed: elapsed,
-      distanceM: dist,
+      addDurationSec: elapsed.inSeconds,
+      addDistanceM: dist,
+      addSteps: steps,
+      status: MealWalkStatus.paused,
     );
+
     try {
       await alarms.cancelWalk(session.id);
     } catch (_) {}
-    lastFeedback = MealWalkFeedback(partialFeedback(elapsed: elapsed));
+    lastFeedback = MealWalkFeedback(partialFeedback(elapsed: Duration(seconds: updated.walkDurationSec)));
     if (ownsRecording && recording.isRecording) {
       await recording.stop();
     }
     ownsRecording = false;
     recording.mealWalkSessionId = null;
-    open = await store.sessionById(session.id);
+    open = updated;
     vasa = computeMealWalkVasa(await store.listSessions());
-    notifyListeners();
-  }
-
-  Future<void> _promptWalk(MealWalkSession session, {DateTime? at}) async {
-    final t = at ?? DateTime.now();
-    await store.markWalkPrompted(session.id, at: t);
-    if (shouldAutoCompleteDuringRecording(
-      isRecording: recording.isRecording,
-      sessionElapsed: recording.elapsed,
-      sessionDistanceM: recording.snapshot?.totalDistM ?? 0,
-    )) {
-      await _complete(
-        session,
-        elapsed: recording.elapsed,
-        distanceM: recording.snapshot?.totalDistM ?? 0,
-        at: t,
-        stopRecording: false,
-      );
-      return;
-    }
-    if (shouldSuppressWalkNotification(isRecording: recording.isRecording)) {
-      await store.markWalkStarted(
-        session.id,
-        at: t,
-        recordingSessionId: recording.snapshot?.sessionId,
-      );
-      ownsRecording = false;
-      open = await store.sessionById(session.id);
-      notifyListeners();
-      return;
-    }
-    try {
-      await alarms.scheduleWalkPrompt(sessionId: session.id, at: t);
-    } catch (_) {}
-    open = await store.sessionById(session.id);
     notifyListeners();
   }
 
@@ -332,43 +333,64 @@ class MealWalkController extends ChangeNotifier {
     MealWalkSession session, {
     required Duration elapsed,
     required double distanceM,
+    required int steps,
     DateTime? at,
-    required bool stopRecording,
+    bool stopRecording = true,
   }) async {
     final t = at ?? DateTime.now();
-    await store.finishWalk(
+    final updated = await store.accumulateWalkProgress(
       id: session.id,
+      addDurationSec: elapsed.inSeconds,
+      addDistanceM: distanceM,
+      addSteps: steps,
       status: MealWalkStatus.completed,
-      elapsed: elapsed,
-      distanceM: distanceM,
       at: t,
     );
-    await store.earnBadge(t);
-    badgeAt = await store.badgeEarnedAt();
     try {
       await alarms.cancelWalk(session.id);
     } catch (_) {}
-    final pin = recording.livePin;
-    await repo.applyMealWalkReward(
-      lat: pin?.latitude ?? 0,
-      lng: pin?.longitude ?? 0,
-      now: t,
-    );
-    if (stopRecording && recording.isRecording) {
+    await store.earnBadge(t);
+    badgeAt = await store.badgeEarnedAt();
+    if (stopRecording && ownsRecording && recording.isRecording) {
       await recording.stop();
     }
     ownsRecording = false;
     recording.mealWalkSessionId = null;
-    lastFeedback = const MealWalkFeedback(BalmiCopy.mealWalkDone);
-    open = await store.sessionById(session.id);
+    open = updated;
     vasa = computeMealWalkVasa(await store.listSessions());
+    lastFeedback = const MealWalkFeedback(BalmiCopy.mealWalkDone);
     notifyListeners();
   }
+}
 
-  @override
-  void dispose() {
-    recording.removeListener(_onRecording);
-    _taps?.cancel();
-    super.dispose();
+MealWalkVasa computeMealWalkVasa(List<MealWalkSession> sessions) {
+  var prompted = 0;
+  var completed = 0;
+  final reactions = <Duration>[];
+  for (final s in sessions) {
+    if (s.status == MealWalkStatus.readyToWalk ||
+        s.status == MealWalkStatus.walking ||
+        s.status == MealWalkStatus.paused ||
+        s.status == MealWalkStatus.completed ||
+        s.status == MealWalkStatus.expired) {
+      prompted++;
+    }
+    if (s.status == MealWalkStatus.completed || s.walkDurationSec >= s.targetSeconds) {
+      completed++;
+    }
+    if (s.walkPromptedAt != null && s.walkStartedAt != null) {
+      final d = s.walkStartedAt!.difference(s.walkPromptedAt!);
+      if (!d.isNegative) reactions.add(d);
+    }
   }
+  Duration? mean;
+  if (reactions.isNotEmpty) {
+    final sumMs = reactions.fold<int>(0, (a, b) => a + b.inMilliseconds);
+    mean = Duration(milliseconds: sumMs ~/ reactions.length);
+  }
+  return MealWalkVasa(
+    promptedSessions: prompted,
+    completedSessions: completed,
+    meanReaction: mean,
+  );
 }
