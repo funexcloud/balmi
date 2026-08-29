@@ -1,367 +1,261 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>balmi × VASA — 걸음은 멈춰도, 기록은 멈추지 않도록</title>
-  <link rel="canonical" href="https://balmi.im">
-  <meta property="og:url" content="https://balmi.im">
-  <meta property="og:title" content="balmi × VASA — 오프라인 무손실 이동 기록 앱">
-  <meta property="og:description" content="걸음은 멈춰도, 기록은 멈추지 않도록. 1초 단위 로컬 포스트 무손실 엔진 Balmi × VASA">
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --ink: #2E2320;
-      --paper: #FAF6EF;
-      --amber: #E39A3B;
-      --plum: #6E3B4B;
-      --plumLt: #C98FA1;
-      --sage: #7C8F6D;
-      --line: #E4DCCB;
-      --sub: #8A7F72;
-      --potato: #D97757;
-      --potatoDk: #A8482A;
-    }
-    body {
-      font-family: 'Pretendard', sans-serif;
-      background-color: var(--paper);
-      color: var(--ink);
-    }
-    .font-baloo {
-      font-family: 'Baloo 2', cursive;
-    }
-    .brand-gradient {
-      background: linear-gradient(135deg, #2E2320 0%, #6E3B4B 60%, #8A3D52 100%);
-    }
-    .potato-card {
-      background: #FFFFFF;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(46, 35, 32, 0.05);
-    }
-    .glass-pill {
-      background: rgba(250, 246, 239, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(228, 220, 203, 0.6);
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2e2320">
+  <title>Balmi × VASA — 걸음은 멈춰도, 기록은 멈추지 않도록</title>
+  <meta name="description" content="걷고, 달리고, 길을 남기세요. Balmi는 통신이 끊겨도 움직임을 기기에 먼저 보존하는 액티비티 기록 앱입니다.">
+  <link rel="canonical" href="https://balmi.im/">
+  <link rel="icon" type="image/png" href="assets/balmi-app-icon.png">
+  <link rel="apple-touch-icon" href="assets/balmi-app-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:site_name" content="Balmi">
+  <meta property="og:url" content="https://balmi.im/">
+  <meta property="og:title" content="Balmi — 걸음은 멈춰도, 기록은 멈추지 않도록">
+  <meta property="og:description" content="걷고, 달리고, 길을 남기세요. 기록부터 지키는 액티비티 앱 Balmi.">
+  <meta property="og:image" content="https://balmi.im/assets/og-balmi.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Balmi 로고와 걸음은 멈춰도 기록은 멈추지 않도록 슬로건">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Balmi — 걸음은 멈춰도, 기록은 멈추지 않도록">
+  <meta name="twitter:description" content="발걸음에서 기록까지. 기록에서 이해까지.">
+  <meta name="twitter:image" content="https://balmi.im/assets/og-balmi.png">
+  <link rel="preload" href="assets/fonts/Baloo2-Variable.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/media/balmi-dawn-run.mp4" as="video" type="video/mp4">
+  <link rel="stylesheet" href="story.css?v=20260829a">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Balmi",
+    "alternateName": "Balmi × VASA",
+    "operatingSystem": "Android",
+    "applicationCategory": "HealthApplication",
+    "softwareVersion": "0.1.13",
+    "description": "통신이 끊겨도 움직임을 기기에 먼저 보존하는 걷기·달리기 기록 앱",
+    "url": "https://balmi.im/",
+    "downloadUrl": "https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk",
+    "author": {"@type": "Organization", "name": "주식회사 동반", "alternateName": "DONGVAN Co., Ltd."}
+  }
+  </script>
 </head>
-<body class="antialiased min-h-screen">
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+  <div class="scroll-progress" aria-hidden="true"><i data-scroll-progress></i></div>
 
-  <!-- Header -->
-  <header class="sticky top-0 z-50 glass-pill border-b border-[var(--line)] px-6 py-4 transition-all">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="font-baloo text-3xl font-extrabold text-[var(--ink)] tracking-tight">balmi</span>
-        <span class="text-[var(--amber)] text-xl font-bold">×</span>
-        <span class="font-baloo text-2xl font-bold text-[var(--plum)] tracking-wider">VASA</span>
-      </div>
-      <nav class="hidden md:flex items-center gap-8 font-semibold text-sm text-[var(--sub)]">
-        <a href="#features" class="hover:text-[var(--plum)] transition">핵심기능</a>
-        <a href="#farm" class="hover:text-[var(--plum)] transition">농장 & 날씨</a>
-        <a href="#meal" class="hover:text-[var(--plum)] transition">식후 워킹</a>
-        <a href="#watch" class="hover:text-[var(--plum)] transition">스마트워치</a>
-        <a href="#b2b" class="hover:text-[var(--plum)] transition">기업 웰니스</a>
-      </nav>
-      <a href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk" 
-         class="bg-[var(--plum)] hover:bg-[var(--ink)] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2">
-        <span>APK 0.1.13 다운로드</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-      </a>
-    </div>
+  <header class="site-header" data-header>
+    <a class="brand-plate" href="#scene-01" aria-label="Balmi 홈으로">
+      <span class="brand-name">balmi</span>
+      <svg class="brand-pulse" viewBox="0 0 150 20" aria-hidden="true"><path d="M3 11H62L68 11L72 2.4L77 18.4L81 11H138"/></svg>
+    </a>
+    <nav aria-label="주요 메뉴">
+      <a href="#scene-03">기록 원칙</a>
+      <a href="#scene-08">Balmi × VASA</a>
+      <a class="header-cta" href="https://github.com/funexcloud/balmi" target="_blank" rel="noreferrer">GitHub 연결 <span aria-hidden="true">↗</span></a>
+    </nav>
   </header>
 
-  <!-- Hero Section -->
-  <section class="relative px-6 pt-16 pb-20 max-w-6xl mx-auto text-center md:text-left">
-    <div class="grid md:grid-cols-12 gap-12 items-center">
-      <div class="md:col-span-7 space-y-6">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[rgba(110,59,75,0.08)] border border-[rgba(110,59,75,0.15)] text-[var(--plum)] text-xs font-bold">
-          <span class="w-2 h-2 rounded-full bg-[var(--amber)] animate-pulse"></span>
-          v0.1.13 Official Release · 무손실 이동 기록 앱
+  <main id="main">
+    <!-- 01 HERO — recovered from the former /v2 route and reused as a shared media composition -->
+    <section class="scene hero" id="scene-01" aria-labelledby="hero-title" data-scene="01">
+      <div class="run-media" data-run-media>
+        <video autoplay muted loop playsinline preload="metadata" aria-label="새벽 한국 동네를 달리는 장면">
+          <source src="assets/media/balmi-dawn-run.mp4" type="video/mp4">
+        </video>
+        <div class="run-media-shade" aria-hidden="true"></div>
+        <div class="media-status" aria-label="기기에 기록 중">
+          <i aria-hidden="true"></i>
+          <span><small>LOCAL RECORDING</small><strong>기기에 저장 중</strong></span>
         </div>
-        
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[var(--ink)] leading-[1.25] tracking-tight">
-          걸음은 멈춰도,<br>
-          <span class="text-[var(--plum)] underline decoration-[var(--amber)] decoration-wavy decoration-2">기록은 멈추지 않도록</span>
-        </h1>
-        
-        <p class="text-lg text-[var(--sub)] font-medium leading-relaxed">
-          네트워크 연결이 끊겨도 1초 단위로 안전하게 기기에 저장되는 오프라인 무손실 저장 엔진.<br class="hidden sm:inline">
-          발걸음에서 심장까지, 심장에서 혈관 건강까지 연동되는 <b>Balmi × VASA</b>를 만나보세요.
-        </p>
-
-        <div class="flex flex-wrap items-center gap-4 pt-2 justify-center md:justify-start">
-          <a href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk" 
-             class="bg-[var(--ink)] hover:bg-[var(--plum)] text-white px-7 py-4 rounded-2xl font-extrabold shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-3">
-            <svg class="w-6 h-6 text-[var(--amber)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414C17.06 15.3414 16.6836 14.965 16.6836 14.5016C16.6836 14.0382 17.06 13.6618 17.523 13.6618C17.9864 13.6618 18.3628 14.0382 18.3628 14.5016C18.3628 14.965 17.9864 15.3414 17.523 15.3414ZM6.47702 15.3414C6.01362 15.3414 5.63721 14.965 5.63721 14.5016C5.63721 14.0382 6.01362 13.6618 6.47702 13.6618C6.94042 13.6618 7.31683 14.0382 7.31683 14.5016C7.31683 14.965 6.94042 15.3414 6.47702 15.3414ZM17.9712 9.53951L19.7431 6.4704C19.9056 6.18902 19.8092 5.82902 19.5278 5.66652C19.2464 5.50402 18.8864 5.60042 18.7239 5.88182L16.9118 9.02051C15.4262 8.33771 13.7634 7.95471 12 7.95471C10.2366 7.95471 8.57382 8.33771 7.08822 9.02051L5.27612 5.88182C5.11362 5.60042 4.75362 5.50402 4.47222 5.66652C4.19082 5.82902 4.09442 6.18902 4.25692 6.4704L6.02882 9.53951C2.65802 11.3853 0.364424 14.6865 0 18.6667H24C23.6356 14.6865 21.342 11.3853 17.9712 9.53951Z"/></svg>
-            <div class="text-left">
-              <div class="text-xs font-normal opacity-80">Android release APK</div>
-              <div class="text-base leading-none mt-0.5">v0.1.13 설치 파일 다운로드</div>
-            </div>
-          </a>
-
-          <a href="https://github.com/funexcloud/balmi/releases/tag/v0.1.13-mvp" target="_blank"
-             class="potato-card px-6 py-4 font-bold text-[var(--ink)] hover:border-[var(--plum)] transition flex items-center gap-2">
-            <span>GitHub Release</span>
-            <span class="text-xs bg-[var(--line)] px-2 py-0.5 rounded text-[var(--sub)]">v0.1.13-mvp</span>
-          </a>
-        </div>
-
-        <div class="pt-4 flex items-center gap-6 text-xs text-[var(--sub)] font-semibold justify-center md:justify-start">
-          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 1초 단위 SQLite 무손실</span>
-          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 오프라인 자동 복구</span>
-          <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--sage)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 헬스케어 비의료 웰니스</span>
-        </div>
+        <span class="media-modes">WALK · RUN · TRACK</span>
       </div>
-
-      <!-- App Mockup Preview Widget -->
-      <div class="md:col-span-5 flex justify-center">
-        <div class="relative w-[300px] h-[600px] bg-[#1E1917] rounded-[48px] p-4 shadow-2xl border-4 border-[#3A312D]">
-          <!-- Top Notch -->
-          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#1E1917] rounded-full z-20 flex items-center justify-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-[#111]"></div>
-            <div class="w-2 h-2 rounded-full bg-[#111]"></div>
-          </div>
-          
-          <!-- Screen Content Container -->
-          <div class="w-full h-full bg-[var(--paper)] rounded-[36px] overflow-hidden flex flex-col pt-8 relative text-[var(--ink)]">
-            <!-- App Bar -->
-            <div class="px-5 py-3 flex items-center justify-between border-b border-[var(--line)] bg-white/80">
-              <span class="font-baloo font-extrabold text-xl">balmi</span>
-              <span class="text-xs font-bold text-[var(--plum)] bg-[rgba(110,59,75,0.1)] px-2.5 py-0.5 rounded-full">v0.1.13</span>
-            </div>
-
-            <!-- Scrollable Content -->
-            <div class="flex-1 p-4 space-y-3.5 overflow-y-auto text-left text-xs">
-              
-              <!-- Farm Weather Card -->
-              <div class="bg-[rgba(250,246,239,0.95)] border border-[var(--line)] rounded-2xl p-3 shadow-sm space-y-1.5">
-                <div class="flex items-center justify-between font-bold">
-                  <span>☀️ 맑음 · 24°</span>
-                  <span class="text-[var(--potatoDk)] text-[10px]">체감 26°</span>
-                </div>
-                <div class="text-[10px] text-[var(--sub)]">🌅 05:48 · 🌇 19:02 &nbsp;|&nbsp; 💧 강수 20% · 🌬️ 2.4m/s</div>
-                <div class="text-[10px] text-[var(--sage)] font-semibold">🌱 토양 21° · 수분 31%</div>
-              </div>
-
-              <!-- Speech Bubble -->
-              <div class="bg-white border border-[var(--line)] rounded-2xl p-3 shadow-sm relative space-y-1">
-                <div class="text-[11px] text-[#4a4138]">"금요일의 활기찬 걸음이 목장을 더욱 푸르게 만들어요! 🌾"</div>
-                <div class="flex justify-end">
-                  <span class="inline-flex items-center gap-1 bg-[rgba(217,119,87,0.1)] px-2 py-0.5 rounded-full text-[9px] text-[var(--potatoDk)] font-bold">
-                    👉 ➔
-                  </span>
-                </div>
-              </div>
-
-              <!-- Meal Walk Card -->
-              <div class="bg-white border border-[var(--line)] rounded-2xl p-3 shadow-sm space-y-1.5">
-                <div class="font-bold flex items-center justify-between text-[11px]">
-                  <span>🍚 식사 시작과 동시에 눌러주세요</span>
-                  <span class="text-[var(--amber)]">▶</span>
-                </div>
-                <div class="text-[10px] text-[var(--sub)]">식후 30분 뒤 15분 혈당 산책 알림</div>
-              </div>
-
-              <!-- Activity Card -->
-              <div class="bg-[var(--ink)] text-white rounded-2xl p-3.5 space-y-2">
-                <div class="flex justify-between items-center text-[10px] opacity-80">
-                  <span>오늘의 운동</span>
-                  <span>자동 종목 판정</span>
-                </div>
-                <div class="text-xl font-black font-baloo text-[var(--amber)]">6,420 <span class="text-xs font-normal text-white/80">걸음</span></div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] text-white/80 border-t border-white/10 pt-1.5">
-                  <div>걷기 42분 · 3.2km</div>
-                  <div>뛰기 18분 · 2.4km</div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Bottom Navigation Bar -->
-            <div class="bg-white border-t border-[var(--line)] px-6 py-3 flex justify-around text-center text-[10px] font-bold text-[var(--sub)]">
-              <span class="text-[var(--plum)]">🏠 홈</span>
-              <span>🌾 농장</span>
-              <span>📊 기록</span>
-              <span>⚙️ 더보기</span>
-            </div>
-
+      <div class="hero-layout shell">
+        <div class="hero-copy">
+          <p class="eyebrow" data-hero-detail>ACTIVITY RECORDING · 0.1.13</p>
+          <h1 id="hero-title"><span data-hero-line>걸음은 멈춰도,</span><br><em data-hero-line>기록은 멈추지 않도록.</em></h1>
+          <p class="hero-intro" data-hero-detail>걷고, 달리고, 길을 남기세요.<br>Balmi는 당신이 지나온 움직임을<br class="mobile-hide"> 기록하고 지키는 액티비티 앱입니다.</p>
+          <div class="hero-actions" data-hero-detail>
+            <a class="button button-acid" href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk">Balmi 시작하기 <span aria-hidden="true">↓</span></a>
+            <span>Android APK · v0.1.13</span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Core Features Section -->
-  <section id="features" class="py-16 px-6 bg-white border-y border-[var(--line)]">
-    <div class="max-w-6xl mx-auto space-y-12">
-      <div class="text-center space-y-3">
-        <h2 class="text-xs font-bold text-[var(--plum)] tracking-widest uppercase">CORE FEATURES</h2>
-        <p class="text-3xl font-extrabold text-[var(--ink)]">Balmi 6대 핵심 기능 아키텍처</p>
-      </div>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        <!-- F1 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(110,59,75,0.08)] flex items-center justify-center text-2xl">🛡️</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F1. 무손실 오프라인 포스트</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            GPS 포인트를 1초마다 로컬 SQLite에 즉시 저장합니다. 산속이나 지하 터널에서 네트워크가 끊겨도 단 한 걸음도 유실되지 않습니다.
-          </p>
-        </div>
-
-        <!-- F2 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(227,154,59,0.1)] flex items-center justify-center text-2xl">🏃</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F2. 자동 걷기 ↔ 뛰기 판정</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            GPS 도플러 속도와 가속도계 케이던스를 조합한 히스테리시스 엔진으로 걷기와 뛰기를 자동으로 분류하여 세그먼트로 기록합니다.
-          </p>
-        </div>
-
-        <!-- F3 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(124,143,109,0.1)] flex items-center justify-center text-2xl">🏟️</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F3. 트랙 랩 & 성우 TTS</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            400m/300m/200m 트랙 진입 시 출발점 18m 반경을 감지하여 바퀴 수와 랩 타임을 한국어 TTS 성우 음성으로 자동 안내합니다.
-          </p>
-        </div>
-
-        <!-- F4 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(217,119,87,0.1)] flex items-center justify-center text-2xl">🌾</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F4. 농장 가미피케이션</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            운동량으로 획득한 물과 사료로 목초를 가꾸고 닭·양·소 동물을 분양받으세요. 요일과 시간대에 맞춘 다채로운 농장 말풍선이 작동합니다.
-          </p>
-        </div>
-
-        <!-- F5 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(110,59,75,0.08)] flex items-center justify-center text-2xl">⛅</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F5. GPS 기후 & 토양 정보</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            Open-Meteo REST API를 통해 농장 위치의 현재 기온, 체감온도, 일출·일몰, 강수확률 및 농업용 토양 수분/온도 카드를 제공합니다.
-          </p>
-        </div>
-
-        <!-- F6 -->
-        <div class="potato-card p-6 space-y-3 hover:border-[var(--plum)] transition">
-          <div class="w-12 h-12 rounded-2xl bg-[rgba(227,154,59,0.1)] flex items-center justify-center text-2xl">⌚</div>
-          <h3 class="text-lg font-bold text-[var(--ink)]">F6. 독립형 스마트워치 연동</h3>
-          <p class="text-sm text-[var(--sub)] leading-relaxed">
-            Apple Watch (watchOS) & Galaxy Watch (Wear OS) 단독 앱을 지원하여 스마트폰 없이 시계 단독 러닝과 심박수 측정을 지원합니다.
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Meal Walk & Health Habit Section -->
-  <section id="meal" class="py-16 px-6 max-w-6xl mx-auto">
-    <div class="grid md:grid-cols-2 gap-12 items-center">
-      <div class="space-y-6">
-        <span class="text-xs font-bold text-[var(--plum)] tracking-widest uppercase">HEALTH HABIT</span>
-        <h2 class="text-3xl md:text-4xl font-extrabold text-[var(--ink)]">식사 시작 후 30분,<br>15분 혈당 워킹 프로세스</h2>
-        <p class="text-[var(--sub)] leading-relaxed">
-          식후 30분이 되면 혈당 조절에 가장 효과적인 15분 산책 타이머가 작동합니다.
-          스마트폰 알림과 함께 가볍게 나가서 걸을 수 있도록 친절하게 안내합니다.
-        </p>
-
-        <div class="space-y-4 pt-2 text-sm">
-          <div class="flex items-start gap-4 potato-card p-4">
-            <div class="w-8 h-8 rounded-full bg-[var(--plum)] text-white font-bold flex items-center justify-center shrink-0">1</div>
-            <div>
-              <div class="font-bold text-[var(--ink)]">식사 시작 클릭</div>
-              <div class="text-xs text-[var(--sub)]">"식사 시작과 동시에 눌러주세요" 버튼으로 30분 카운트다운 시작</div>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4 potato-card p-4">
-            <div class="w-8 h-8 rounded-full bg-[var(--amber)] text-white font-bold flex items-center justify-center shrink-0">2</div>
-            <div>
-              <div class="font-bold text-[var(--ink)]">식후 30분 스마트 푸시</div>
-              <div class="text-xs text-[var(--sub)]">"식후 30분이 되었어요! 15분 산책을 시작해보세요 👟" 알림 도착</div>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4 potato-card p-4">
-            <div class="w-8 h-8 rounded-full bg-[var(--sage)] text-white font-bold flex items-center justify-center shrink-0">3</div>
-            <div>
-              <div class="font-bold text-[var(--ink)]">15분 산책 & 달성 배지</div>
-              <div class="text-xs text-[var(--sub)]">15분 걷기 완수 시 '혈당지킴이' 달성 배지 및 VASA 반응 시간 기록</div>
-            </div>
-          </div>
+        <div class="route-hud" data-hero-detail aria-label="로컬 경로 기록 예시">
+          <div class="route-hud-head"><span>LIVE ROUTE</span><b>00:32:18</b></div>
+          <svg viewBox="0 0 280 200" role="img" aria-label="끊김 없이 저장되는 이동 경로">
+            <path class="hud-grid" d="M20 38H260M20 82H260M20 126H260M20 170H260M64 20V184M116 20V184M168 20V184M220 20V184"/>
+            <path class="hud-route" d="M26 158C50 140 58 112 83 118S112 160 138 141 143 75 176 84 192 132 221 111 233 62 257 46"/>
+            <circle cx="257" cy="46" r="6"/>
+          </svg>
+          <div class="route-hud-stats"><span><small>DISTANCE</small><strong>4.82 km</strong></span><span><small>LOCAL POINTS</small><strong>1,938</strong></span></div>
         </div>
       </div>
+      <span class="hero-scroll">SCROLL TO FOLLOW THE RECORD <i aria-hidden="true">↓</i></span>
+    </section>
 
-      <!-- Meal Walk Card Illustration -->
-      <div class="potato-card p-8 space-y-6 border-2 border-[var(--line)]">
-        <div class="flex items-center justify-between border-b border-[var(--line)] pb-4">
-          <span class="font-bold text-lg">🍚 혈당 워킹 알림 현황</span>
-          <span class="text-xs bg-[var(--sage)] text-white px-2.5 py-1 rounded-full font-bold">건강 습관</span>
+    <!-- 02 PROBLEM -->
+    <section class="scene problem" id="scene-02" aria-labelledby="problem-title" data-scene="02">
+      <div class="sticky-frame shell">
+        <div class="scene-heading" data-reveal>
+          <p class="eyebrow dark">02 · THE LOST MOMENT</p>
+          <h2 id="problem-title">운동 기록에서<br>가장 아쉬운 순간은<br>언제일까요?</h2>
         </div>
-
-        <div class="bg-[var(--paper)] p-4 rounded-xl space-y-2 border border-[var(--line)]">
-          <div class="flex justify-between font-bold text-sm">
-            <span>⏳ 식사 후 30분 대기 중</span>
-            <span class="font-baloo text-lg text-[var(--potatoDk)]">18:42</span>
-          </div>
-          <div class="text-xs text-[var(--sub)]">30분 뒤 알림이 오면 15분 산책을 시작하세요</div>
+        <div class="problem-copy" data-reveal>
+          <p>조금 천천히 걸었을 때도,<br>목표 거리를 채우지 못했을 때도 아닙니다.</p>
+          <strong>기록이 사라졌을 때입니다.</strong>
+          <ul aria-label="사라질 수 있는 기록의 예"><li>30분을 걸었는데</li><li>10km를 달렸는데</li><li>산길을 몇 시간이나 지나왔는데</li></ul>
         </div>
+        <div class="broken-route" aria-hidden="true">
+          <svg viewBox="0 0 1000 220" preserveAspectRatio="none"><path class="problem-track" d="M15 178C130 64 235 178 340 97S525 33 606 106"/><path class="problem-track ghost" d="M648 120C745 188 840 47 985 91"/></svg>
+          <div class="disconnect-mark"><i></i><span>SIGNAL LOST</span></div>
+        </div>
+        <p class="problem-end" data-reveal>통신이 끊기고, 앱이 예기치 않게 종료되고,<br><b>내가 지나온 시간이 사라지는 순간.</b></p>
+      </div>
+    </section>
 
-        <div class="p-4 bg-white rounded-xl border border-[var(--line)] flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🏅</span>
-            <div>
-              <div class="font-bold text-xs">혈당지킴이 배지</div>
-              <div class="text-[11px] text-[var(--sub)]">식후 걷기 완수 시 수여</div>
-            </div>
-          </div>
-          <span class="text-xs text-[var(--plum)] font-bold">참여율 94%</span>
+    <!-- 03 RECORD SURVIVAL -->
+    <section class="scene survival" id="scene-03" aria-labelledby="survival-title" data-scene="03">
+      <div class="shell survival-layout">
+        <div class="scene-heading inverse" data-reveal><p class="eyebrow">03 · RECORD SURVIVAL</p><h2 id="survival-title">그래서 Balmi는<br><em>기록부터 지킵니다.</em></h2><p>기록과 동기화를 분리하고, 먼저 기기에 남깁니다.</p></div>
+        <ol class="principle-list">
+          <li data-reveal><span>01</span><div><strong>Offline Ready</strong><p>통신 없이도 기록이 계속되도록 설계했습니다.</p></div><i>LOCAL</i></li>
+          <li data-reveal><span>02</span><div><strong>Background Recording</strong><p>화면이 꺼져도 기록 세션을 유지합니다.</p></div><i>ACTIVE</i></li>
+          <li data-reveal><span>03</span><div><strong>Recovery Ready</strong><p>중단된 세션을 발견하고 이어서 기록할 수 있습니다.</p></div><i>READY</i></li>
+          <li data-reveal><span>04</span><div><strong>Reliable Sync</strong><p>네트워크가 돌아오면 대기 기록을 다시 동기화합니다.</p></div><i>QUEUED</i></li>
+        </ol>
+      </div>
+      <p class="manifesto" aria-label="Balmi 기록 철학"><span>Record First.</span><span>Local First.</span><span>Recovery Ready.</span></p>
+    </section>
+
+    <!-- 04 ONE STEP -->
+    <section class="scene one-step" id="scene-04" aria-labelledby="one-step-title" data-scene="04">
+      <div class="sticky-frame one-step-frame">
+        <div class="one-step-copy shell"><p class="eyebrow dark">04 · ONE STEP</p><h2 id="one-step-title">단 한 걸음도<br><em>잃어버리지 않도록.</em></h2></div>
+        <div class="recovery-route" aria-label="GPS 신호가 끊겼다가 복구되는 경로">
+          <svg viewBox="0 0 1440 360" preserveAspectRatio="none" role="img" aria-hidden="true"><path class="route-base" d="M-30 248C170 77 316 297 485 175S755 42 878 155 1122 302 1470 96"/><path class="route-live" data-recovery-path d="M-30 248C170 77 316 297 485 175S755 42 878 155 1122 302 1470 96"/></svg>
+          <span class="gps-label lost">GPS LOST</span><span class="gps-label restored">GPS RESTORED</span><i class="route-point" aria-hidden="true"></i>
+        </div>
+        <p class="one-step-end">한 걸음. 또 한 걸음.<br><b>그리고 그 걸음들이 이어져 만들어진 길.</b></p>
+      </div>
+    </section>
+
+    <!-- 05 HEART — the exact same /v2 running visual asset is reused -->
+    <section class="scene heart" id="scene-05" aria-labelledby="heart-title" data-scene="05">
+      <div class="sticky-frame heart-frame">
+        <div class="run-media" data-run-media><video autoplay muted loop playsinline preload="metadata" aria-label="새벽 한국 동네를 달리는 장면"><source src="assets/media/balmi-dawn-run.mp4" type="video/mp4"></video><div class="run-media-shade heart-shade" aria-hidden="true"></div></div>
+        <div class="heart-copy shell"><p class="eyebrow">05 · FROM STEP TO HEART</p><h2 id="heart-title"><span>그런데,</span><br>발걸음은<br><em>어디로 갈까요?</em></h2><p class="heart-intro">걷기와 달리기는<br>지도 위에 남는 것만이 아닙니다.</p></div>
+        <svg class="heartbeat-line" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"><path data-heart-path d="M0 120H452L482 120 510 78 540 168 574 40 610 146 644 120H1440"/></svg>
+        <div class="heart-statements" aria-live="polite"><p>움직이면 심장이 반응합니다.</p><p>심장이 뛰고, 혈액이 흐르고, 몸이 변화합니다.</p><strong>발걸음은 심장으로 이어집니다.</strong></div>
+      </div>
+    </section>
+
+    <!-- 06 WHY SWEET POTATO -->
+    <section class="scene sweet-potato" id="scene-06" aria-labelledby="potato-title" data-scene="06">
+      <div class="shell potato-layout">
+        <div class="potato-orbit" data-reveal aria-hidden="true"><span>BALMI</span><i></i><b>SWEET<br>POTATO</b></div>
+        <div class="scene-heading" data-reveal><p class="eyebrow light">06 · COLOR WITH A STORY</p><h2 id="potato-title">그래서 Balmi는<br><em>고구마색입니다.</em></h2><p class="potato-lead">심장이 좋아하는 고구마처럼.</p><p>이 문장은 효능을 약속하는 말이 아니라, 움직임과 몸을 따뜻하게 연결하는 Balmi의 브랜드 이야기입니다.</p><p>움직임을 기록하는 것에서 시작해 우리 몸의 변화를 이해하는 것까지.</p><span class="brand-chip">BALMI SWEET POTATO · #D97757</span></div>
+      </div>
+    </section>
+
+    <!-- 07 VASA REVEAL -->
+    <section class="scene vasa-reveal" id="scene-07" aria-labelledby="vasa-title" data-scene="07">
+      <div class="sticky-frame vasa-frame shell">
+        <div class="vasa-copy" data-reveal><p class="eyebrow">07 · VASA REVEAL</p><h2 id="vasa-title">발걸음에서<br><em>혈관까지.</em></h2><p>기록된 움직임이 언젠가 몸의 변화를 이해하는 데이터가 되도록.</p></div>
+        <div class="signal-morph" aria-label="이동 경로가 심박 파형과 혈관으로 이어지는 과정"><svg viewBox="0 0 880 520" role="img" aria-hidden="true"><path class="morph-path route-form" data-morph-route d="M70 389C160 330 151 210 260 242S355 410 455 331 520 144 627 198 690 332 812 137"/><path class="morph-path pulse-form" data-morph-pulse d="M70 292H270L312 292 349 219 388 370 430 113 478 334 522 292H812"/><path class="morph-path vessel-form" data-morph-vessel d="M70 295C188 292 257 298 347 278 440 257 468 193 542 146M347 278C446 288 503 356 580 402M542 146C625 89 708 86 812 95M580 402C660 449 732 437 812 416"/></svg><div class="morph-labels"><span>GPS ROUTE</span><span>HEARTBEAT</span><span>VASCULAR FLOW</span></div></div>
+        <div class="vasa-brand" data-reveal><span class="vasa-word">VASA</span><p>Vascular &amp; Activity Intelligence</p><div><span><b>BALMI</b> RECORD</span><i aria-hidden="true">→</i><span><b>VASA</b> INTERPRET <small>ROADMAP</small></span></div><strong>Balmi records. VASA understands.</strong></div>
+      </div>
+    </section>
+
+    <!-- 08 BALMI × VASA -->
+    <section class="scene balmi-vasa" id="scene-08" aria-labelledby="balmi-vasa-title" data-scene="08">
+      <div class="shell">
+        <div class="scene-heading center" data-reveal><p class="eyebrow dark">08 · PRODUCT &amp; DIRECTION</p><h2 id="balmi-vasa-title">움직임을 기록하고,<br><em>몸의 변화를 이해하다.</em></h2><p>현재 제품과 다음 방향을 분명히 나눕니다.</p></div>
+        <div class="duo-grid">
+          <article class="duo-card balmi-card" data-reveal><span class="status current">현재 앱</span><h3>balmi</h3><p>움직임을 잃지 않고 기록하는 제품</p><ul><li>걷기 · 달리기</li><li>트랙과 랩</li><li>GPS 경로</li><li>로컬 우선 기록</li><li>중단 세션 복구</li></ul></article>
+          <div class="duo-cross" aria-hidden="true"><span>×</span><small>Movement<br>becomes meaningful.</small></div>
+          <article class="duo-card vasa-card" data-reveal><span class="status roadmap">제품 방향</span><h3>VASA</h3><p>활동과 몸의 변화를 해석하는 미래 레이어</p><ul><li>활동 데이터 연결</li><li>신체 데이터 연결</li><li>회복과 변화 이해</li><li>근거 추적형 인사이트</li><li>워치 데이터 연동</li></ul><small>현재 작동 기능이 아닌 개발 로드맵입니다.</small></article>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- B2B Wellness Proposal Banner -->
-  <section id="b2b" class="py-16 px-6 bg-[var(--ink)] text-[var(--paper)]">
-    <div class="max-w-6xl mx-auto grid md:grid-cols-12 gap-8 items-center">
-      <div class="md:col-span-8 space-y-4">
-        <span class="text-xs font-bold text-[var(--plumLt)] tracking-widest uppercase">B2B CORPORATE SOLUTION</span>
-        <h2 class="text-3xl font-extrabold leading-tight">걸음은 직원이 걷고,<br><span class="text-[var(--amber)]">인사이트는 인사팀이 얻습니다</span></h2>
-        <p class="text-sm text-[#D9CFC2] leading-relaxed max-w-2xl">
-          balmi × VASA는 임직원 걷기·달리기 부서 대항 챌린지와 조직 심혈관 리스크 리포트 대시보드를 하나의 솔루션으로 제공합니다.
-        </p>
+    <!-- 09 ACTIVITY -->
+    <section class="scene activity" id="scene-09" aria-labelledby="activity-title" data-scene="09">
+      <div class="shell">
+        <div class="scene-heading" data-reveal><p class="eyebrow dark">09 · EVERY KIND OF MOVE</p><h2 id="activity-title">걷는 방법은<br><em>사람마다 다르니까.</em></h2></div>
+        <div class="activity-strip" role="list">
+          <article class="activity-card" role="listitem" data-reveal><span>01 · AVAILABLE</span><i class="activity-icon walk" aria-hidden="true"></i><h3>걷기</h3><p>출퇴근길도, 동네 산책도, 가벼운 하루도.</p></article>
+          <article class="activity-card" role="listitem" data-reveal><span>02 · AVAILABLE</span><i class="activity-icon run" aria-hidden="true"></i><h3>달리기</h3><p>기록에 시간, 페이스와 경로를.</p></article>
+          <article class="activity-card" role="listitem" data-reveal><span>03 · AVAILABLE</span><i class="activity-icon track" aria-hidden="true"></i><h3>트랙</h3><p>같은 길을 반복하며 랩을 남깁니다.</p></article>
+          <article class="activity-card" role="listitem" data-reveal><span>04 · AVAILABLE</span><i class="activity-icon route" aria-hidden="true"></i><h3>경로</h3><p>등산과 성묘길처럼 다시 확인할 길.</p></article>
+          <article class="activity-card planned" role="listitem" data-reveal><span>05 · ROADMAP</span><i class="activity-icon transfer" aria-hidden="true"></i><h3>Import / Export</h3><p>기록을 가져오고 내보내는 기능은 다음 단계입니다.</p></article>
+        </div>
       </div>
-      <div class="md:col-span-4 text-center md:text-right">
-        <a href="docs/balmi-vasa-wellness-proposal.html" target="_blank"
-           class="inline-block bg-[var(--plum)] hover:bg-[var(--amber)] hover:text-[var(--ink)] text-white font-extrabold px-6 py-4 rounded-2xl transition-all shadow-lg text-sm">
-          B2B 제안서 보기 📄
-        </a>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Footer -->
-  <footer class="py-12 px-6 border-t border-[var(--line)] bg-[var(--paper)] text-xs text-[var(--sub)]">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-      <div class="space-y-1 text-center md:text-left">
-        <div class="font-baloo font-extrabold text-2xl text-[var(--ink)]">balmi × VASA</div>
-        <div>주식회사 동반 (DONGVAN Co., Ltd.) · 대표자 명의 법인 소유 서비스</div>
-        <div>balmi.im · Version 0.1.13+21</div>
+    <!-- 10 REAL WORLD -->
+    <section class="scene real-world" id="scene-10" aria-labelledby="world-title" data-scene="10">
+      <div class="shell world-layout">
+        <div class="scene-heading inverse" data-reveal><p class="eyebrow">10 · THE REAL WORLD</p><h2 id="world-title">길은 언제나<br>인터넷이 되는 곳에만<br><em>있지 않습니다.</em></h2><p>Balmi가 기록해야 하는 곳은 사람들이 실제로 움직이는 모든 곳입니다.</p></div>
+        <div class="place-grid" aria-label="Balmi가 기록하는 다양한 장소"><div class="place city" data-reveal><span>01</span><strong>도시</strong><i aria-hidden="true"></i></div><div class="place park" data-reveal><span>02</span><strong>공원</strong><i aria-hidden="true"></i></div><div class="place stadium" data-reveal><span>03</span><strong>트랙</strong><i aria-hidden="true"></i></div><div class="place mountain" data-reveal><span>04</span><strong>산길</strong><i aria-hidden="true"></i></div><div class="place field" data-reveal><span>05</span><strong>농촌</strong><i aria-hidden="true"></i></div><div class="place memorial" data-reveal><span>06</span><strong>성묘길</strong><i aria-hidden="true"></i></div></div>
       </div>
-      <div class="flex items-center gap-6 font-semibold">
-        <a href="https://github.com/funexcloud/balmi" target="_blank" class="hover:text-[var(--ink)] transition">GitHub Repositories</a>
-        <a href="docs/WATCH_INTEGRATION_PLAN.md" target="_blank" class="hover:text-[var(--ink)] transition">Watch Specs</a>
-        <a href="docs/launch-sop/README.md" target="_blank" class="hover:text-[var(--ink)] transition">Launch SOP</a>
+    </section>
+
+    <!-- 11 TRUST -->
+    <section class="scene trust" id="scene-11" aria-labelledby="trust-title" data-scene="11">
+      <div class="shell">
+        <div class="trust-top"><div class="scene-heading" data-reveal><p class="eyebrow dark">11 · BALMI RECORD INTEGRITY</p><h2 id="trust-title">기록을 많이 하는 것보다<br><em>기록을 제대로 남기는 것.</em></h2></div><p data-reveal>보이지 않는 저장 원칙을<br>사용자가 확인할 수 있는 신뢰로 만듭니다.</p></div>
+        <div class="integrity-line" aria-hidden="true"><i></i><b></b><i></i><b></b><i></i><b></b><i></i></div>
+        <ol class="integrity-list"><li data-reveal><span>01</span><strong>RECORD FIRST</strong><p>먼저 기록합니다.</p></li><li data-reveal><span>02</span><strong>LOCAL FIRST</strong><p>기기에 우선 보존합니다.</p></li><li data-reveal><span>03</span><strong>RECOVERY</strong><p>복구에 대비합니다.</p></li><li data-reveal><span>04</span><strong>SYNC</strong><p>다시 안전하게 동기화합니다.</p></li></ol>
       </div>
-    </div>
+    </section>
+
+    <!-- 12 BRAND ORIGIN -->
+    <section class="scene origin" id="scene-12" aria-labelledby="origin-title" data-scene="12">
+      <div class="shell origin-layout">
+        <div class="scene-heading inverse" data-reveal><p class="eyebrow">12 · BRAND ORIGIN</p><h2 id="origin-title"><em>byme</em>에서,<br><strong>balmi</strong>로.</h2><p>Balmi의 시작에는 ‘나’가 있었습니다.<br><b>by me</b> — 나에 의해 만들어지는 움직임, 나를 위해 남기는 기록.<br><b>balmi</b> — 걷는 마음으로 발견했습니다.</p></div>
+        <div class="name-flow" aria-label="byme에서 balmi를 거쳐 VASA로 이어지는 브랜드 구조"><span data-reveal><small>START</small>byme</span><i aria-hidden="true">→</i><span class="active" data-reveal><small>PRODUCT</small>balmi</span><i aria-hidden="true">→</i><span data-reveal><small>DIRECTION</small>VASA</span></div>
+        <p class="origin-end" data-reveal>나의 움직임을,<br><strong>나를 이해하는 데이터로.</strong></p>
+      </div>
+    </section>
+
+    <!-- 13 FINAL BRAND MOMENT -->
+    <section class="scene brand-moment" id="scene-13" aria-labelledby="moment-title" data-scene="13">
+      <div class="brand-moment-inner shell"><p class="eyebrow light">13 · WHY WE MOVE</p><h2 id="moment-title" class="sr-only">Balmi 브랜드 선언</h2><div class="brand-lines"><p data-reveal>한 걸음에서 시작했습니다.</p><p data-reveal>그 걸음을 잃지 않으려 했습니다.</p><p data-reveal>그 움직임이 몸에 무엇을 말하는지<br>궁금했습니다.</p><p class="accent" data-reveal>발걸음에서 혈관까지.</p></div><div class="brand-lockup" data-reveal><span>balmi</span><i>×</i><strong>VASA</strong></div></div>
+    </section>
+
+    <!-- 14 FINAL CTA -->
+    <section class="scene final-cta" id="scene-14" aria-labelledby="cta-title" data-scene="14">
+      <div class="shell cta-layout"><div data-reveal><p class="eyebrow dark">14 · START WITH ONE STEP</p><h2 id="cta-title">오늘의 한 걸음부터<br><em>기록하세요.</em></h2></div><div class="cta-copy" data-reveal><p>걸어도 좋습니다. 달려도 좋습니다.<br>당신이 움직인다면 그 순간은 기록될 가치가 있습니다.</p><div><a class="button button-dark" href="https://github.com/funexcloud/balmi/releases/download/v0.1.13-mvp/balmi-0.1.13.apk">Balmi 시작하기 <span aria-hidden="true">↓</span></a><a class="text-link" href="#scene-03">Balmi 알아보기 <span aria-hidden="true">→</span></a></div><small>Android · 직접 설치 APK · v0.1.13</small></div></div>
+    </section>
+
+    <!-- 15 SCROLL MOTION -->
+    <section class="scene motion-story" id="scene-15" aria-labelledby="motion-title" data-scene="15">
+      <div class="sticky-frame motion-frame shell"><div class="motion-copy"><p class="eyebrow">15 · ONE SIGNAL, FOUR MEANINGS</p><h2 id="motion-title">하나의 선이<br><em>의미가 되는 과정.</em></h2></div><div class="motion-canvas"><svg viewBox="0 0 920 430" role="img" aria-label="GPS 트랙에서 혈관 흐름으로 변화하는 선"><path class="story-path gps" data-story-path="0" d="M55 325C118 279 147 175 227 221S316 356 395 298 454 109 551 171 643 352 731 266 787 128 865 92"/><path class="story-path heartbeat" data-story-path="1" d="M55 229H272L314 229 353 163 393 320 438 61 485 280 529 229H865"/><path class="story-path vessel" data-story-path="2" d="M55 231C226 231 312 244 407 214S502 123 572 91M407 214C518 227 546 319 630 362M572 91C666 52 748 56 865 82M630 362C718 397 779 380 865 344"/></svg><ol class="motion-steps"><li class="is-active">GPS Track</li><li>Running Route</li><li>Heartbeat</li><li>Blood Vessel</li></ol></div></div>
+    </section>
+
+    <!-- 16 STORY FLOW -->
+    <section class="scene story-flow" id="scene-16" aria-labelledby="flow-title" data-scene="16">
+      <div class="shell"><div class="scene-heading center" data-reveal><p class="eyebrow dark">16 · THE WHOLE STORY</p><h2 id="flow-title">움직임이<br><em>이해가 되기까지.</em></h2></div><ol class="story-timeline"><li data-reveal><span>01</span><strong>걷는다.</strong></li><li data-reveal><span>02</span><strong>기록한다.</strong></li><li data-reveal><span>03</span><strong>기록을 잃지 않는다.</strong></li><li data-reveal><span>04</span><strong>움직임이 쌓인다.</strong></li><li data-reveal><span>05</span><strong>심장이 반응한다.</strong></li><li data-reveal><span>06</span><strong>혈관으로 이어진다.</strong></li><li class="future" data-reveal><span>07</span><strong>VASA가 해석한다.</strong><small>ROADMAP</small></li><li class="future" data-reveal><span>08</span><strong>나를 이해한다.</strong><small>DIRECTION</small></li></ol></div>
+    </section>
+
+    <!-- 17 BRAND ESSENCE -->
+    <section class="scene essence" id="scene-17" aria-labelledby="essence-title" data-scene="17">
+      <div class="shell"><div class="scene-heading inverse" data-reveal><p class="eyebrow">17 · BRAND ESSENCE</p><h2 id="essence-title">Balmi를 이루는<br><em>다섯 문장.</em></h2></div><dl class="essence-list"><div data-reveal><dt>MASTER SLOGAN</dt><dd>걸음은 멈춰도,<br>기록은 멈추지 않도록.</dd></div><div data-reveal><dt>PRODUCT PROMISE</dt><dd>단 한 걸음도<br>잃어버리지 않도록.</dd></div><div data-reveal><dt>HEALTH NARRATIVE</dt><dd>발걸음에서<br>혈관까지.</dd></div><div data-reveal><dt>RECORDING PHILOSOPHY</dt><dd>Record First.<br>Local First.<br>Recovery Ready.</dd></div><div data-reveal><dt>BRAND ARCHITECTURE</dt><dd>Balmi × VASA</dd></div></dl><p class="legal-note">제품 슬로건은 브랜드 약속이며, 모든 환경에서의 절대적 무손실을 보증하는 법적 표현은 아닙니다. VASA는 현재 제품에 완성된 의료 평가 기능이 아닌 장기 제품 방향입니다.</p></div>
+    </section>
+  </main>
+
+  <!-- 18 FOOTER -->
+  <footer class="site-footer" id="scene-18" data-scene="18">
+    <div class="shell footer-top"><div><div class="footer-lockup"><span>balmi</span><i>×</i><strong>VASA</strong></div><p>걸음은 멈춰도,<br>기록은 멈추지 않도록.</p></div><nav aria-label="정책 및 문의"><span>이용약관 <small>준비 중</small></span><span>개인정보처리방침 <small>준비 중</small></span><span>위치기반서비스 이용약관 <small>준비 중</small></span><a href="https://github.com/funexcloud/balmi/issues" target="_blank" rel="noreferrer">문의하기 <span aria-hidden="true">↗</span></a></nav></div>
+    <div class="shell footer-bottom"><span>주식회사 동반 · DONGVAN Co., Ltd. · HealthTech</span><span>© <span data-year>2026</span> DONGVAN Co., Ltd. All rights reserved.</span></div>
   </footer>
 
+  <noscript><div class="noscript">스크롤 모션은 JavaScript가 켜져 있을 때 제공됩니다. 모든 핵심 내용은 현재 화면에서도 읽을 수 있습니다.</div></noscript>
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script src="assets/vendor/ScrollTrigger.min.js"></script>
+  <script src="assets/vendor/lenis.min.js"></script>
+  <script src="story.js?v=20260829a"></script>
 </body>
 </html>
