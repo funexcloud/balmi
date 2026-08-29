@@ -398,6 +398,11 @@ abstract final class BalmiCopy {
   static const mealWalkOff = '꺼짐';
   static const mealWalkDismiss = '닫기';
   static const mealWalkWalkGoal = '15분 걷기';
+  static const mealWalkHubTitle = '식후 혈당관리';
+  static const mealWalkHubSubtitle = '식사 후 30분 대기 ➔ 15분 산책으로 혈당 조절 습관 형성';
+  static const mealWalkHubOpenBtn = '식후 혈당관리 전체 메뉴';
+  static const mealWalkCatchUpHint = '알림이 지났거나 바빠서 바로 못 걸으셨나요? 하루 중 언제라도 15분 걷기를 수행할 수 있어요.';
+  static const mealWalkStartWalkNow = '15분 걷기 시작';
   static const breakfast = '아침';
   static const lunch = '점심';
   static const dinner = '저녁';

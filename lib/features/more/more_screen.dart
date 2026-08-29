@@ -6,6 +6,7 @@ import '../activity/my_activity_screen.dart';
 import '../events/events_screen.dart';
 import '../land/farm_preview_screen.dart';
 import '../land/land_map_screen.dart';
+import '../meal_walk/meal_walk_hub_screen.dart';
 import '../missions/missions_screen.dart';
 import '../settings/health_habits_screen.dart';
 import '../settings/settings_screen.dart';
@@ -72,6 +73,11 @@ class MoreScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _MoreGroup(
           rows: [
+            (
+              Icons.restaurant_outlined,
+              BalmiCopy.mealWalkHubTitle,
+              () => openMealWalkHub(context),
+            ),
             (
               Icons.favorite_outline,
               BalmiCopy.mealWalkHealthSection,

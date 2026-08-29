@@ -22,6 +22,7 @@ import '../activity_recovery/activity_recovery_flow.dart';
 import '../land/farm_preview_screen.dart';
 import '../meal_walk/meal_walk_cards.dart';
 import '../meal_walk/meal_walk_controller.dart';
+import '../meal_walk/meal_walk_hub_screen.dart';
 import '../meal_walk/meal_walk_onboarding.dart';
 import '../settings/step_goal_controller.dart';
 import '../recording/recording_controller.dart';
@@ -292,6 +293,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 MealWalkGoCard(
                   onGo: () => meal.beginWalk(meal.open!.id),
+                ),
+              ],
+              if (meal.enabled && !showStart && !showPending && !showGo) ...[
+                const SizedBox(height: 12),
+                MealWalkStatusHubCard(
+                  onOpenHub: () => openMealWalkHub(context),
                 ),
               ],
               if (rec.lastError != null) ...[

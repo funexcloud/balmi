@@ -238,6 +238,67 @@ class MealWalkCountdownBanner extends StatelessWidget {
   }
 }
 
+class MealWalkStatusHubCard extends StatelessWidget {
+  const MealWalkStatusHubCard({
+    super.key,
+    required this.onOpenHub,
+  });
+
+  final VoidCallback onOpenHub;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: BalmiColors.mist,
+      borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(BalmiTheme.cardRadius),
+        onTap: onOpenHub,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Row(
+            children: [
+              const Icon(Icons.restaurant, color: BalmiColors.potato, size: 34),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      BalmiCopy.mealWalkHubTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BalmiTheme.body(size: 14, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '아침 · 점심 · 저녁 15분 걷기 관리',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BalmiTheme.body(size: 12, color: BalmiColors.sub),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '메뉴',
+                    style: BalmiTheme.body(size: 12, color: BalmiColors.potato, weight: FontWeight.w800),
+                  ),
+                  const Icon(Icons.chevron_right, color: BalmiColors.potato, size: 22),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 Future<void> snackMealWalk(BuildContext context, MealWalkController meal) {
   final msg = meal.lastFeedback?.message;
   if (msg == null) return Future.value();
